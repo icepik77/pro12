@@ -15,14 +15,20 @@ interface NatalChartProps {
   birthData: BirthData;
 }
 
+const formatPosition = (decimalDegrees: number) => {
+  const degrees = Math.floor(decimalDegrees);
+  const minutes = Math.floor((decimalDegrees - degrees) * 60);
+  const seconds = Math.floor(((decimalDegrees - degrees) * 60 - minutes) * 60);
+  return `${degrees}° ${minutes}′ ${seconds}″`;
+};
+
 const NatalChart: React.FC<NatalChartProps> = ({ birthData }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const [chartData, setChartData] = useState<any>(null);
+  const [planetPositions, setPlanetPositions] = useState<any[]>([]);
 
   useEffect(() => {
     if (!birthData.date || !birthData.time || !birthData.latitude || !birthData.longitude) return;
-
-    console.log("Полученные данные:", birthData);
 
     const [year, month, day] = birthData.date.split('-').map(Number);
     const [hour, minute] = birthData.time.split(':').map(Number);
@@ -55,8 +61,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData }) => {
       language: 'en',
     });
 
-    console.log("Гороскоп рассчитан:", horoscope);
-
     const planetsData = horoscope.CelestialBodies;
     const cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
 
@@ -79,9 +83,27 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData }) => {
       cusps: cuspsData, // Куспы домов
     };
 
-    console.log("Данные для карты:", astroData);
+    // Формируем данные для вывода положения планет в знаках и домах
+    const planetPositionsList = Object.entries(planetsData).map(([key, planet]: any) => {
+      if (!planet?.ChartPosition?.Ecliptic?.DecimalDegrees) return null;
+    
+      const ecliptic = planet.ChartPosition.Ecliptic.DecimalDegrees;
+      const sign = getZodiacSign(ecliptic);
+      const position = formatPosition(ecliptic);
+      const house = findHouseForPlanet(ecliptic, cuspsData);
+    
+      return {
+        name: key,
+        sign,
+        position,
+        house,
+      };
+    }).filter(Boolean);
 
     setChartData(astroData);
+    setPlanetPositions(planetPositionsList.slice(1));
+
+
   }, [birthData]);
 
   useEffect(() => {
@@ -91,9 +113,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData }) => {
       return;
     }
 
-    console.log("Отрисовка карты с данными:", chartData);
-
-    // Удаляем предыдущий canvas, чтобы не дублировать
     chartRef.current.innerHTML = '';
 
     const chart = new Chart(chartRef.current.id, 800, 800);
@@ -101,9 +120,57 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData }) => {
     radix.aspects();
   }, [chartData]);
 
+  // Функция для получения знака по углу
+  const getZodiacSign = (decimalDegrees: number) => {
+    const zodiacSigns = [
+      'Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы'
+    ];
+    const index = Math.floor(decimalDegrees / 30) % 12;
+    return zodiacSigns[index];
+  };
+
+  // Функция для нахождения дома для планеты
+  const findHouseForPlanet = (decimalDegrees: number, cuspsData: number[]) => {
+    for (let i = 0; i < cuspsData.length; i++) {
+      const nextIndex = (i + 1) % cuspsData.length;
+      const start = cuspsData[i];
+      const end = cuspsData[nextIndex];
+  
+      if (start < end) {
+        if (decimalDegrees >= start && decimalDegrees < end) return i + 1;
+      } else {
+        // Случай, когда дом охватывает 360° переход (например, кусп 12-го дома на 330°, кусп 1-го на 10°)
+        if (decimalDegrees >= start || decimalDegrees < end) return i + 1;
+      }
+    }
+    return 12; // Если ничего не найдено, предположим, что это 12-й дом
+  };
+
   return (
-    <div className="flex justify-center items-center w-full">
-      <div id="chart-container" ref={chartRef} className="w-[800px] h-[800px] border border-gray-300"></div>
+    <div className="flex flex-col items-center w-full">
+      <div id="chart-container" ref={chartRef} className="w-[800px] h-[800px] border border-gray-300 mb-6"></div>
+
+      <div className="w-full max-w-7xl p-4">
+        <h3 className="text-xl font-bold mb-4">Положение планет в знаках и домах</h3>
+        <table className="table-auto w-full border-collapse">
+          <thead>
+            <tr>
+              <th className="border p-2 text-left">Планета</th>
+              <th className="border p-2 text-left">Положение</th>
+              <th className="border p-2 text-left">Дом</th>
+            </tr>
+          </thead>
+          <tbody>
+            {planetPositions.map((planet, index) => (
+              <tr key={index}>
+                <td className="border p-2">{planet.name}</td>
+                <td className="border p-2">{planet.sign} {planet.position}</td>
+                <td className="border p-2">{planet.house}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
