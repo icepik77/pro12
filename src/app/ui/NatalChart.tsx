@@ -57,14 +57,26 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData }) => {
 
     console.log("Гороскоп рассчитан:", horoscope);
 
+    const planetsData = horoscope.CelestialBodies;
+    const cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
+
+    // Преобразуем данные в формат, пригодный для astrochart
     const astroData = {
-      planets: Object.fromEntries(
-        Object.entries(horoscope.CelestialBodies.all).map(([key, body]: any) => [
-          key,
-          [body.ChartPosition.Ecliptic.DecimalDegrees],
-        ])
-      ),
-      cusps: horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees),
+      planets: {
+        "Sun": [planetsData.sun?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],  // Солнце
+        "Moon": [planetsData.moon?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Луна
+        "Mercury": [planetsData.mercury?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Меркурий
+        "Venus": [planetsData.venus?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Венера
+        "Mars": [planetsData.mars?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Марс
+        "Jupiter": [planetsData.jupiter?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Юпитер
+        "Saturn": [planetsData.saturn?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Сатурн
+        "Uranus": [planetsData.uranus?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Уран
+        "Neptune": [planetsData.neptune?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Нептун
+        "Pluto": [planetsData.pluto?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Плутон
+        "Lilith": [planetsData.lilith?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Лилит
+        "Chiron": [planetsData.chiron?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Хирон
+      },
+      cusps: cuspsData, // Куспы домов
     };
 
     console.log("Данные для карты:", astroData);
@@ -91,7 +103,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData }) => {
 
   return (
     <div className="flex justify-center items-center w-full">
-      <div id="chart-container" ref={chartRef}></div>
+      <div id="chart-container" ref={chartRef} className="w-[800px] h-[800px] border border-gray-300"></div>
     </div>
   );
 };
