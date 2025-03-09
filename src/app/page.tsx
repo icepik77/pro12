@@ -1,11 +1,12 @@
-'use client';
+'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BirthForm from "./ui/BirthForm";
 import NatalChart from "./ui/NatalChart";
+import PlanetTable from "./ui/PlanetTable";
+import { motion } from "framer-motion"; // Импортируем framer-motion
 
 export default function Home() {
-  // Состояние для хранения данных из формы
   const [birthData, setBirthData] = useState({
     date: "",
     time: "",
@@ -13,19 +14,62 @@ export default function Home() {
     longitude: ""
   });
 
+  const [planetPositions, setPlanetPositions] = useState<any[]>([]);
+
+  // Отслеживаем изменение данных в planetPositions
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+
+  useEffect(() => {
+    if (planetPositions.length > 0) {
+      setIsDataLoaded(true); // Когда данные загружены, запускаем анимацию
+    }
+  }, [planetPositions]); // useEffect срабатывает, когда planetPositions обновляются
+
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] pt-3 bg-black">
       <main className="w-full items-center sm:items-start bg-black">
         <div className="w-full bg-white rounded-t-[50px] p-10 shadow-lg">
-          <div className="flex flex-col justify-center items-center gap-10 w-full max-w-7xl mx-auto">
-            {/* Передаем setBirthData, чтобы обновлять состояние */}
-            <BirthForm setBirthData={setBirthData} />
-            {/* Передаем данные в Натальную карту */}
-            <NatalChart birthData={birthData} />
+          <div className="flex flex-wrap justify-center gap-10 w-full max-w-7xl mx-auto">
+            <motion.div
+              className="w-full md:w-[48%] flex justify-center"
+              initial={{ opacity: 0 }} // Начальная прозрачность
+              animate={{ opacity: 1 }}  // Конечная прозрачность
+              transition={{ duration: 1 }} // Плавное появление за 1 секунду
+            >
+              <BirthForm setBirthData={setBirthData} />
+            </motion.div>
+
+            {/* Плавное появление карты только после загрузки данных */}
+            <motion.div
+              className="w-full md:w-[48%] flex justify-center"
+              initial={{ opacity: 0 }} // Начальная прозрачность
+              animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+              transition={{ duration: 1 }} // Плавное появление за 1 секунду
+            >
+              <NatalChart birthData={birthData} setPlanetPositions={setPlanetPositions} />
+            </motion.div>
+
+            {/* Плавное появление таблицы только после загрузки данных */}
+            <motion.div
+              className="w-full flex justify-center"
+              initial={{ opacity: 0 }} // Начальная прозрачность
+              animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+              transition={{ duration: 1 }} // Плавное появление за 1 секунду
+            >
+              <PlanetTable planetPositions={planetPositions} />
+            </motion.div>
           </div>
         </div>
+          {/* Футер */}
+        <footer className="bg-black p-6 rounded-t-[50px]">
+          <div className="text-white text-center">
+            <p>© 2025 Натальная карта. Все права защищены.</p>
+          </div>
+        </footer>
       </main>
-      <footer className="flex gap-6 flex-wrap items-center justify-center bg-black h-[100px] w-full rounded-t-[30px]"></footer>
+
+      
     </div>
+
   );
 }

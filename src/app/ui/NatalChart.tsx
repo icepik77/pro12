@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
 import { Origin, Horoscope } from 'circular-natal-horoscope-js';
@@ -13,6 +11,7 @@ interface BirthData {
 
 interface NatalChartProps {
   birthData: BirthData;
+  setPlanetPositions: (positions: any[]) => void;
 }
 
 const formatPosition = (decimalDegrees: number) => {
@@ -22,10 +21,9 @@ const formatPosition = (decimalDegrees: number) => {
   return `${degrees}° ${minutes}′ ${seconds}″`;
 };
 
-const NatalChart: React.FC<NatalChartProps> = ({ birthData }) => {
+const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const [chartData, setChartData] = useState<any>(null);
-  const [planetPositions, setPlanetPositions] = useState<any[]>([]);
 
   useEffect(() => {
     if (!birthData.date || !birthData.time || !birthData.latitude || !birthData.longitude) return;
@@ -67,23 +65,23 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData }) => {
     // Преобразуем данные в формат, пригодный для astrochart
     const astroData = {
       planets: {
-        "Sun": [planetsData.sun?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],  // Солнце
-        "Moon": [planetsData.moon?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Луна
-        "Mercury": [planetsData.mercury?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Меркурий
-        "Venus": [planetsData.venus?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Венера
-        "Mars": [planetsData.mars?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Марс
-        "Jupiter": [planetsData.jupiter?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Юпитер
-        "Saturn": [planetsData.saturn?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Сатурн
-        "Uranus": [planetsData.uranus?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Уран
-        "Neptune": [planetsData.neptune?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Нептун
-        "Pluto": [planetsData.pluto?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Плутон
-        "Lilith": [planetsData.lilith?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Лилит
-        "Chiron": [planetsData.chiron?.ChartPosition?.Ecliptic?.DecimalDegrees || 0], // Хирон
+        "Sun": [planetsData.sun?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
+        "Moon": [planetsData.moon?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
+        "Mercury": [planetsData.mercury?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
+        "Venus": [planetsData.venus?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
+        "Mars": [planetsData.mars?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
+        "Jupiter": [planetsData.jupiter?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
+        "Saturn": [planetsData.saturn?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
+        "Uranus": [planetsData.uranus?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
+        "Neptune": [planetsData.neptune?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
+        "Pluto": [planetsData.pluto?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
+        "Lilith": [planetsData.lilith?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
+        "Chiron": [planetsData.chiron?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
       },
-      cusps: cuspsData, // Куспы домов
+      cusps: cuspsData,
     };
 
-    // Формируем данные для вывода положения планет в знаках и домах
+    // Формируем данные для таблицы
     const planetPositionsList = Object.entries(planetsData).map(([key, planet]: any) => {
       if (!planet?.ChartPosition?.Ecliptic?.DecimalDegrees) return null;
     
@@ -92,84 +90,52 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData }) => {
       const position = formatPosition(ecliptic);
       const house = findHouseForPlanet(ecliptic, cuspsData);
     
-      return {
-        name: key,
-        sign,
-        position,
-        house,
-      };
+      return { name: key, sign, position, house };
     }).filter(Boolean);
 
     setChartData(astroData);
     setPlanetPositions(planetPositionsList.slice(1));
 
-
   }, [birthData]);
 
   useEffect(() => {
-    if (!chartData) return;
-    if (!chartRef.current) {
-      console.error("Элемент контейнера не найден!");
-      return;
-    }
-
+    if (!chartData || !chartRef.current) return;
+  
+    const containerSize = chartRef.current.clientWidth;
+    const chartSize = Math.min(containerSize, 800);
+  
     chartRef.current.innerHTML = '';
-
-    const chart = new Chart(chartRef.current.id, 800, 800);
+  
+    const chart = new Chart(chartRef.current.id, chartSize, chartSize);
     const radix = chart.radix(chartData);
     radix.aspects();
   }, [chartData]);
 
-  // Функция для получения знака по углу
   const getZodiacSign = (decimalDegrees: number) => {
-    const zodiacSigns = [
-      'Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы'
-    ];
+    const zodiacSigns = ['Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы'];
     const index = Math.floor(decimalDegrees / 30) % 12;
     return zodiacSigns[index];
   };
 
-  // Функция для нахождения дома для планеты
   const findHouseForPlanet = (decimalDegrees: number, cuspsData: number[]) => {
     for (let i = 0; i < cuspsData.length; i++) {
       const nextIndex = (i + 1) % cuspsData.length;
       const start = cuspsData[i];
       const end = cuspsData[nextIndex];
-  
+
       if (start < end) {
         if (decimalDegrees >= start && decimalDegrees < end) return i + 1;
       } else {
-        // Случай, когда дом охватывает 360° переход (например, кусп 12-го дома на 330°, кусп 1-го на 10°)
         if (decimalDegrees >= start || decimalDegrees < end) return i + 1;
       }
     }
-    return 12; // Если ничего не найдено, предположим, что это 12-й дом
+    return 12;
   };
 
   return (
     <div className="flex flex-col items-center w-full">
-      <div id="chart-container" ref={chartRef} className="w-[800px] h-[800px] border border-gray-300 mb-6"></div>
-
-      <div className="w-full max-w-7xl p-4">
-        <h3 className="text-xl font-bold mb-4">Положение планет в знаках и домах</h3>
-        <table className="table-auto w-full border-collapse">
-          <thead>
-            <tr>
-              <th className="border p-2 text-left">Планета</th>
-              <th className="border p-2 text-left">Положение</th>
-              <th className="border p-2 text-left">Дом</th>
-            </tr>
-          </thead>
-          <tbody>
-            {planetPositions.map((planet, index) => (
-              <tr key={index}>
-                <td className="border p-2">{planet.name}</td>
-                <td className="border p-2">{planet.sign} {planet.position}</td>
-                <td className="border p-2">{planet.house}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="w-full max-w-[800px]">
+        <div id="chart-container" ref={chartRef} className="w-full aspect-square mb-6"></div>
       </div>
     </div>
   );
