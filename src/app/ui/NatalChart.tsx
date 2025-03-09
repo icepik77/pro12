@@ -50,19 +50,19 @@ const NatalChart: React.FC = () => {
   useEffect(() => {
     // Пример данных для расчёта, укажите свои координаты и дату
     const origin = new Origin({
-      year: 2001,
-      month: 1,  // 0 = январь, 7 = август
-      date: 9,
-      hour: 17,
-      minute: 0,
-      latitude: 52.5311,  // Широта Лондона
-      longitude: 85.2072, // Долгота Лондона
+      year: 1992,
+      month: 2,  // 0 = январь, 2 = март
+      date: 21,
+      hour: 8,
+      minute: 45,
+      latitude: 51.5074,  // Широта Лондона
+      longitude: -0.1278, // Долгота Лондона
     });
     
     // Создаем объект натальной карты
     const horoscope = new Horoscope({
       origin: origin,
-      houseSystem: 'whole-sign',
+      houseSystem: 'placidus',
       zodiac: 'tropical',
       aspectPoints: ['bodies', 'points', 'angles'],
       aspectWithPoints: ['bodies', 'points', 'angles'],
@@ -71,9 +71,14 @@ const NatalChart: React.FC = () => {
       language: 'en',
     });
 
+  
+    // console.log(JSON.stringify(horoscope.Houses[0], null, 2));
+
+
     // Получаем данные для отрисовки карты
     const planetsData = horoscope.CelestialBodies;
-    const cuspsData = horoscope.Houses.map((house: House) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
+    const cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
+
 
     // Преобразуем данные в формат, пригодный для astrochart
     const astroData = {
@@ -94,8 +99,6 @@ const NatalChart: React.FC = () => {
       cusps: cuspsData, // Куспы домов
     };
 
-    console.log(JSON.stringify(astroData.cusps, null, 2)); // null, 2 — для красивого форматирования
-
     setChartData(astroData);
   }, []);
 
@@ -112,10 +115,13 @@ const NatalChart: React.FC = () => {
   }, [chartData]);
 
   return (
-    <div>
-      <div id="paper" ref={chartRef}></div>
+    <div className='flex flex-row'>
+      <div id="paper" ref={chartRef} className='flex w-full'></div>
     </div>
   );
 };
 
 export default NatalChart;
+
+
+

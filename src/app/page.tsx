@@ -1,18 +1,20 @@
 import Image from "next/image";
 import NatalChart from "./ui/NatalChart";
+import BirthForm from "./ui/BirthForm";
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <div>
-          <h1>Натальная карта</h1>
+    <div className="min-h-screen font-[family-name:var(--font-geist-sans)] pt-3 bg-black">
+      <main className="w-full items-center sm:items-start bg-black">
+        <div className="w-full bg-white rounded-t-[50px] p-10 shadow-lg flex flex-row gap-10">
+          <BirthForm />
           <NatalChart />
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-       
+      <footer className="flex gap-6 flex-wrap items-center justify-center bg-black h-[100px] w-full rounded-t-[30px]">
       </footer>
     </div>
   );
 }
+
+
