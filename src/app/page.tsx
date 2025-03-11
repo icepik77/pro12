@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import BirthForm from "./ui/BirthForm";
 import NatalChart from "./ui/NatalChart";
 import PlanetTable from "./ui/PlanetTable";
+import HouseTable from "./ui/HouseTable"
 import { motion } from "framer-motion"; // Импортируем framer-motion
 
 export default function Home() {
@@ -15,15 +16,16 @@ export default function Home() {
   });
 
   const [planetPositions, setPlanetPositions] = useState<any[]>([]);
+  const [housePositions, setHousePositions] = useState<any[]>([]);
 
   // Отслеживаем изменение данных в planetPositions
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   useEffect(() => {
-    if (planetPositions.length > 0) {
+    if (planetPositions.length > 0 && housePositions.length > 0) {
       setIsDataLoaded(true); // Когда данные загружены, запускаем анимацию
     }
-  }, [planetPositions]); // useEffect срабатывает, когда planetPositions обновляются
+  }, [planetPositions, housePositions]); // useEffect срабатывает, когда planetPositions обновляются
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] pt-3 bg-black">
@@ -46,7 +48,7 @@ export default function Home() {
               animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
               transition={{ duration: 1 }} // Плавное появление за 1 секунду
             >
-              <NatalChart birthData={birthData} setPlanetPositions={setPlanetPositions} />
+              <NatalChart birthData={birthData} setPlanetPositions={setPlanetPositions} setHousePositions={setHousePositions}/>
             </motion.div>
 
             {/* Плавное появление таблицы только после загрузки данных */}
@@ -57,6 +59,16 @@ export default function Home() {
               transition={{ duration: 1 }} // Плавное появление за 1 секунду
             >
               <PlanetTable planetPositions={planetPositions} />
+            </motion.div>
+
+            {/* Плавное появление таблицы домов только после загрузки данных */}
+            <motion.div
+              className="w-full flex justify-center"
+              initial={{ opacity: 0 }} // Начальная прозрачность
+              animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+              transition={{ duration: 1 }} // Плавное появление за 1 секунду
+            >
+              <HouseTable housePositions={housePositions} />
             </motion.div>
           </div>
         </div>

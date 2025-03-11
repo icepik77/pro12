@@ -12,6 +12,7 @@ interface BirthData {
 interface NatalChartProps {
   birthData: BirthData;
   setPlanetPositions: (positions: any[]) => void;
+  setHousePositions: (positions: any[]) => void;
 }
 
 const formatPosition = (decimalDegrees: number) => {
@@ -22,7 +23,30 @@ const formatPosition = (decimalDegrees: number) => {
   return `${degrees}° ${minutes}′ ${seconds}″`;
 };
 
-const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions }) => {
+const getZodiacSign = (decimalDegrees: number) => {
+  const zodiacSigns: string[] = [
+    'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+  ];
+  const index = Math.floor(decimalDegrees / 30) % 12;
+  return zodiacSigns[index];
+};
+
+const findHouseForPlanet = (decimalDegrees: number, cuspsData: number[]) => {
+  for (let i = 0; i < cuspsData.length; i++) {
+    const nextIndex = (i + 1) % cuspsData.length;
+    const start = cuspsData[i];
+    const end = cuspsData[nextIndex];
+
+    if (start < end) {
+      if (decimalDegrees >= start && decimalDegrees < end) return i + 1;
+    } else {
+      if (decimalDegrees >= start || decimalDegrees < end) return i + 1;
+    }
+  }
+  return 12;
+};
+
+const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const [chartData, setChartData] = useState<any>(null);
 
@@ -62,8 +86,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions }
 
     const planetsData = horoscope.CelestialBodies;
     const cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
-
-   
 
     // Преобразуем данные в формат, пригодный для astrochart
     const astroData = {
@@ -117,8 +139,36 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions }
       }
     }
 
+    // Список значений для поля name
+    const houseNames = [
+      'Asc', 'II', 'III', 'IC', 'V', 'VI', 'Dsc', 'VIII', 'IX', 'MC', 'XI', 'XII'
+    ];
+
+    // Формируем данные для таблицы домов
+    const housePositionsList = cuspsData
+    .map((ecliptic: number, index: number) => {
+      if (ecliptic == null) return null; // Проверка на null или undefined
+
+      const sign = getZodiacSign(ecliptic);
+      const position = formatPosition(ecliptic);
+
+      // Сопоставляем значения для поля name с соответствующими значениями из houseNames
+      const name = houseNames[index];
+
+      return { name, position, sign };
+    })
+    .filter(Boolean); // Убираем null-значения
+
+
+
+
     setChartData(astroData);
     setPlanetPositions(planetPositionsList);
+    if (housePositionsList.length > 0) {
+      setHousePositions(housePositionsList);
+    } else {
+      console.error("Данные домов пустые или некорректные");
+    }
 
   }, [birthData]);
 
@@ -136,29 +186,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions }
     radix.aspects();
   }, [chartData]);
 
-  const getZodiacSign = (decimalDegrees: number) => {
-    const zodiacSigns: string[] = [
-      'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
-    ];
-    const index = Math.floor(decimalDegrees / 30) % 12;
-    return zodiacSigns[index];
-  };
-
-  const findHouseForPlanet = (decimalDegrees: number, cuspsData: number[]) => {
-    for (let i = 0; i < cuspsData.length; i++) {
-      const nextIndex = (i + 1) % cuspsData.length;
-      const start = cuspsData[i];
-      const end = cuspsData[nextIndex];
-
-      if (start < end) {
-        if (decimalDegrees >= start && decimalDegrees < end) return i + 1;
-      } else {
-        if (decimalDegrees >= start || decimalDegrees < end) return i + 1;
-      }
-    }
-    return 12;
-  };
-
+  
   return (
     <div className="flex flex-col items-center w-full">
       <div className="w-full max-w-[800px]">
