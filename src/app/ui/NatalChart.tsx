@@ -8,6 +8,17 @@ interface BirthData {
   latitude: string;
   longitude: string;
 }
+// Интерфейс для координат планет
+interface PlanetPositions {
+  [key: string]: [number]; // Каждая планета содержит массив с одним числом (градус в эклиптике)
+}
+
+// Интерфейс для натальных данных
+interface AstroData {
+  planets: PlanetPositions;
+  cusps: number[]; // Дома представлены массивом чисел (градусы начала домов)
+}
+
 
 interface NatalChartProps {
   birthData: BirthData;
@@ -46,9 +57,46 @@ const findHouseForPlanet = (decimalDegrees: number, cuspsData: number[]) => {
   return 12;
 };
 
+const createFormedAspects = (aspectsArray : any[], astroData: AstroData) => {
+  return aspectsArray.map((aspect) => {
+    const pointPosition = astroData.planets[aspect.point1Label]?.[0] || 0;
+    const toPointPosition = astroData.planets[aspect.point2Label]?.[0] || 0;
+
+    return {
+      point: {
+        name: aspect.point1Label,
+        position: pointPosition
+      },
+      toPoint: {
+        name: aspect.point2Label,
+        position: toPointPosition
+      },
+      aspect: {
+        name: aspect.aspectKey,
+        degree: aspect.orb,  // Используем orb для угла аспекта
+        color: getColorForAspect(aspect.aspectKey),
+        orbit: aspect.orbUsed
+      },
+      precision: "exact"
+    };
+  });
+}
+
+const getColorForAspect = (aspectKey: string): string => {
+  const positiveAspects = ["trine", "sextile"]; // Гармоничные аспекты (зеленый)
+  const negativeAspects = ["conjunction", "square", "opposition"]; // Напряженные аспекты (красный)
+
+  if (positiveAspects.includes(aspectKey)) return "#00FF00"; // Зеленый
+  if (negativeAspects.includes(aspectKey)) return "#FF0000"; // Красный
+
+  return "#FFFFFF"; // Если аспект неизвестен, используем белый
+};
+
+
 const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const [chartData, setChartData] = useState<any>(null);
+  const [aspectsData, setAspectsData] = useState<any>(null);
 
   useEffect(() => {
     if (!birthData.date || !birthData.time || !birthData.latitude || !birthData.longitude) return;
@@ -77,15 +125,16 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       origin,
       houseSystem: 'placidus',
       zodiac: 'tropical',
-      aspectPoints: ['bodies', 'points', 'angles'],
-      aspectWithPoints: ['bodies', 'points', 'angles'],
-      aspectTypes: ['major', 'minor'],
+      aspectPoints: ['bodies'],
+      aspectWithPoints: ['bodies'],
+      aspectTypes: ['major'],
       customOrbs: {},
       language: 'en',
     });
 
     const planetsData = horoscope.CelestialBodies;
     const cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
+    const aspectsData = horoscope.Aspects.all;
 
     // Преобразуем данные в формат, пригодный для astrochart
     const astroData = {
@@ -106,7 +155,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       cusps: cuspsData,
     };
 
-    console.log("Данные о планетах", horoscope.CelestialPoints);
+    console.log("Данные о аспектах", horoscope.Aspects);
 
     // Формируем данные для таблицы
     const planetPositionsList = Object.entries(planetsData)
@@ -159,9 +208,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     })
     .filter(Boolean); // Убираем null-значения
 
-
-
-
     setChartData(astroData);
     setPlanetPositions(planetPositionsList);
     if (housePositionsList.length > 0) {
@@ -169,6 +215,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     } else {
       console.error("Данные домов пустые или некорректные");
     }
+    setAspectsData(aspectsData);
 
   }, [birthData]);
 
@@ -182,11 +229,11 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
   
     const chart = new Chart(chartRef.current.id, chartSize, chartSize);
     const radix = chart.radix(chartData);
-    radix.addPointsOfInterest( {"As":[chartData.cusps[0]],"Ic":[chartData.cusps[3]],"Ds":[chartData.cusps[6]],"Mc":[chartData.cusps[9]]});
-    radix.aspects();
+    // radix.addPointsOfInterest( {"As":[chartData.cusps[0]],"Ic":[chartData.cusps[3]],"Ds":[chartData.cusps[6]],"Mc":[chartData.cusps[9]]});
+    const customAspects = createFormedAspects(aspectsData, chartData);
+    radix.aspects(customAspects);
   }, [chartData]);
 
-  
   return (
     <div className="flex flex-col items-center w-full">
       <div className="w-full max-w-[800px]">
