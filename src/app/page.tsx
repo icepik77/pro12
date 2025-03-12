@@ -5,6 +5,7 @@ import BirthForm from "./ui/BirthForm";
 import NatalChart from "./ui/NatalChart";
 import PlanetTable from "./ui/PlanetTable";
 import HouseTable from "./ui/HouseTable"
+import AspectTable from "./ui/AspectTable";
 import { motion } from "framer-motion"; // Импортируем framer-motion
 
 export default function Home() {
@@ -17,6 +18,7 @@ export default function Home() {
 
   const [planetPositions, setPlanetPositions] = useState<any[]>([]);
   const [housePositions, setHousePositions] = useState<any[]>([]);
+  const [aspectPositions, setAspectPositions] = useState<any[]>([]);
 
   // Отслеживаем изменение данных в planetPositions
   const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -48,7 +50,7 @@ export default function Home() {
               animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
               transition={{ duration: 1 }} // Плавное появление за 1 секунду
             >
-              <NatalChart birthData={birthData} setPlanetPositions={setPlanetPositions} setHousePositions={setHousePositions}/>
+              <NatalChart birthData={birthData} setPlanetPositions={setPlanetPositions} setHousePositions={setHousePositions} setAspectPositions={setAspectPositions}/>
             </motion.div>
 
             {/* Плавное появление таблицы только после загрузки данных */}
@@ -69,6 +71,16 @@ export default function Home() {
               transition={{ duration: 1 }} // Плавное появление за 1 секунду
             >
               <HouseTable housePositions={housePositions} />
+            </motion.div>
+
+            {/* Плавное появление таблицы аспектов только после загрузки данных */}
+            <motion.div
+              className="w-full flex justify-center"
+              initial={{ opacity: 0 }} // Начальная прозрачность
+              animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+              transition={{ duration: 1 }} // Плавное появление за 1 секунду
+            >
+              <AspectTable aspectsPositions ={aspectPositions} />
             </motion.div>
           </div>
         </div>

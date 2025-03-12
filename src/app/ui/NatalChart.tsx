@@ -18,12 +18,11 @@ interface AstroData {
   planets: PlanetPositions;
   cusps: number[]; // Дома представлены массивом чисел (градусы начала домов)
 }
-
-
 interface NatalChartProps {
   birthData: BirthData;
   setPlanetPositions: (positions: any[]) => void;
   setHousePositions: (positions: any[]) => void;
+  setAspectPositions: (positions: any[]) => void;
 }
 
 const formatPosition = (decimalDegrees: number) => {
@@ -93,7 +92,7 @@ const getColorForAspect = (aspectKey: string): string => {
 };
 
 
-const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions }) => {
+const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const [chartData, setChartData] = useState<any>(null);
   const [aspectsData, setAspectsData] = useState<any>(null);
@@ -125,8 +124,8 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       origin,
       houseSystem: 'placidus',
       zodiac: 'tropical',
-      aspectPoints: ['bodies'],
-      aspectWithPoints: ['bodies'],
+      aspectPoints: ['bodies', 'points'],
+      aspectWithPoints: ['bodies', 'points'],
       aspectTypes: ['major'],
       customOrbs: {},
       language: 'en',
@@ -216,6 +215,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       console.error("Данные домов пустые или некорректные");
     }
     setAspectsData(aspectsData);
+    setAspectPositions(aspectsData);
 
   }, [birthData]);
 
