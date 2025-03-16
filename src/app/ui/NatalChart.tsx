@@ -1,30 +1,9 @@
+'use client'
 import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
 import { Origin, Horoscope } from 'circular-natal-horoscope-js';
 
-interface BirthData {
-  date: string;
-  time: string;
-  latitude: string;
-  longitude: string;
-  houseSystem: string
-}
-// Интерфейс для координат планет
-interface PlanetPositions {
-  [key: string]: [number]; // Каждая планета содержит массив с одним числом (градус в эклиптике)
-}
-
-// Интерфейс для натальных данных
-interface AstroData {
-  planets: PlanetPositions;
-  cusps: number[]; // Дома представлены массивом чисел (градусы начала домов)
-}
-interface NatalChartProps {
-  birthData: BirthData;
-  setPlanetPositions: (positions: any[]) => void;
-  setHousePositions: (positions: any[]) => void;
-  setAspectPositions: (positions: any[]) => void;
-}
+import { BirthData, PlanetPositions, AstroData, NatalChartProps } from '../lib/definitions';
 
 const formatPosition = (decimalDegrees: number) => {
   const degreesInSign = decimalDegrees % 30; // Ограничиваем до 30 градусов
