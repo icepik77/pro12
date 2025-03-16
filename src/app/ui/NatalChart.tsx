@@ -7,6 +7,7 @@ interface BirthData {
   time: string;
   latitude: string;
   longitude: string;
+  houseSystem: string
 }
 // Интерфейс для координат планет
 interface PlanetPositions {
@@ -85,8 +86,8 @@ const getColorForAspect = (aspectKey: string): string => {
   const positiveAspects = ["trine", "sextile"]; // Гармоничные аспекты (зеленый)
   const negativeAspects = ["conjunction", "square", "opposition"]; // Напряженные аспекты (красный)
 
-  if (positiveAspects.includes(aspectKey)) return "#00FF00"; // Зеленый
-  if (negativeAspects.includes(aspectKey)) return "#FF0000"; // Красный
+  if (positiveAspects.includes(aspectKey)) return "#006400"; // Зеленый
+  if (negativeAspects.includes(aspectKey)) return "#B22222"; // Красный
 
   return "#FFFFFF"; // Если аспект неизвестен, используем белый
 };
@@ -96,6 +97,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
   const chartRef = useRef<HTMLDivElement>(null);
   const [chartData, setChartData] = useState<any>(null);
   const [aspectsData, setAspectsData] = useState<any>(null);
+  const houseSystem = birthData.houseSystem || 'koch'; // Берём систему домов
 
   useEffect(() => {
     if (!birthData.date || !birthData.time || !birthData.latitude || !birthData.longitude) return;
@@ -122,7 +124,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
     const horoscope = new Horoscope({
       origin,
-      houseSystem: 'placidus',
+      houseSystem: houseSystem,
       zodiac: 'tropical',
       aspectPoints: ['bodies', 'points'],
       aspectWithPoints: ['bodies', 'points'],
@@ -133,7 +135,10 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
     const planetsData = horoscope.CelestialBodies;
     const cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
-    const aspectsData = horoscope.Aspects.all;
+    const aspectsData = horoscope.Aspects.all.filter(item => 
+      !item.point2Key.toLowerCase().includes('southnode') && 
+      !item.point2Key.toLowerCase().includes('sirius')
+    );;
 
     // Преобразуем данные в формат, пригодный для astrochart
     const astroData = {
@@ -226,10 +231,27 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     const chartSize = Math.min(containerSize, 800);
   
     chartRef.current.innerHTML = '';
+
+    var settings = {
+      SYMBOL_SCALE: 0.8, 
+      COLORS_SIGNS: [
+        "#FFAD99", // Мягкий красный
+        "#D2A679", // Тёплый коричневый
+        "#A7C7E7", // Пастельный голубой
+        "#9FD3C7", // Нежный бирюзовый
+        "#F4A988", // Персиковый
+        "#C4A484", // Светлый бежевый
+        "#B0D6E8", // Светло-голубой
+        "#A3C9A8", // Мягкий зелёный
+        "#FFB6A3", // Светлый коралловый
+        "#D4A373", // Светло-охристый
+        "#C1E1EC", // Голубовато-серый
+        "#B5E2B6", // Пастельно-зелёный
+      ]
+    };
   
-    const chart = new Chart(chartRef.current.id, chartSize, chartSize);
+    const chart = new Chart(chartRef.current.id, chartSize, chartSize, settings);
     const radix = chart.radix(chartData);
-    // radix.addPointsOfInterest( {"As":[chartData.cusps[0]],"Ic":[chartData.cusps[3]],"Ds":[chartData.cusps[6]],"Mc":[chartData.cusps[9]]});
     const customAspects = createFormedAspects(aspectsData, chartData);
     radix.aspects(customAspects);
   }, [chartData]);

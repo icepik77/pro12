@@ -40,17 +40,9 @@ interface AspectTableProps {
 // Компонент таблицы аспектов
 const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions }) => {
   return (
-    <div className="w-full max-w-5xl p-4">
-      <h3 className="text-xl font-bold mb-4 text-center">Аспекты</h3>
-      <table className="table-auto w-full border-collapse border border-gray-300 shadow-lg">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="border p-3 text-center">Точка 1</th>
-            <th className="border p-3 text-center">Аспект</th>
-            <th className="border p-3 text-center">Точка 2</th>
-            <th className="border p-3 text-center">Орбис</th>
-          </tr>
-        </thead>
+    <div className="w-full max-w-5xl p-4 flex flex-col items-center text-[14px]">
+      <h3 className="text-xl font-medium mb-4 text-center">Аспекты</h3>
+      <table className="table-auto w-full max-w-[400px] border-collapse">
         <tbody>
           {aspectsPositions.map((aspect, index) => {
             const point1Symbol = planetSymbols[aspect.point1Key] || aspect.point1Label;
@@ -59,11 +51,14 @@ const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions }) => {
             const formattedOrb = formatOrb(aspect.orb);
 
             return (
-              <tr key={index} className="text-center hover:bg-gray-100">
-                <td className="border p-3 text-lg">{point1Symbol}</td>
-                <td className="border p-3 text-lg">{aspectSymbol}</td>
-                <td className="border p-3 text-lg">{point2Symbol}</td>
-                <td className="border p-3 text-lg">{formattedOrb}</td>
+              <tr
+                key={index}
+                className={`text-center ${index % 2 === 1 ? 'bg-gray-100' : ''} hover:bg-gray-200`}
+              >
+                <td className="p-3 font-bold text-base">{point1Symbol}</td>
+                <td className="p-3 font-bold text-base">{aspectSymbol}</td>
+                <td className="p-3 font-bold text-base">{point2Symbol}</td>
+                <td className="p-3">{formattedOrb}</td>
               </tr>
             );
           })}

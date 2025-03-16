@@ -47,32 +47,27 @@ interface PlanetTableProps {
 
 const PlanetTable: React.FC<PlanetTableProps> = ({ planetPositions }) => {
   return (
-    <div className="w-full max-w-7xl p-4">
-      <h3 className="text-xl font-bold mb-4 text-center">
+    <div className="w-full max-w-7xl p-4 flex flex-col items-center text-[14px]">
+      <h3 className="text-xl font-medium mb-4 text-center">
         Положение планет в знаках и домах
       </h3>
-      <table className="table-auto w-full border-collapse border border-gray-300 shadow-lg">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="border p-3 text-center">Планета</th>
-            <th className="border p-3 text-center">Знак</th>
-            <th className="border p-3 text-center">Градусы</th>
-            <th className="border p-3 text-center">Дом</th>
-          </tr>
-        </thead>
+      <table className="table-auto w-full max-w-[400px] border-collapse">
         <tbody>
           {planetPositions.map((planet, index) => {
             const signSymbol = zodiacSymbols[planet.sign.toLowerCase()] || planet.sign;
-            const degrees = planet.position.replace("°", ""); // Убираем символ градуса
+            const degrees = planet.position;
 
             return (
-              <tr key={index} className="text-center hover:bg-gray-100">
-                <td className="border p-3 text-lg">
+              <tr
+                key={index}
+                className={`text-center ${index % 2 === 1 ? 'bg-gray-100' : ''} hover:bg-gray-200`}
+              >
+                <td className="p-3 text-lg font-bold">
                   {planetSymbols[planet.name.toLowerCase()] || planet.name}
                 </td>
-                <td className="border p-3 text-lg">{signSymbol}</td>
-                <td className="border p-3 text-lg">{degrees}°</td>
-                <td className="border p-3 text-lg">{planet.house}</td>
+                <td className="p-3 font-bold">{signSymbol}</td>
+                <td className="p-3">{degrees}</td>
+                <td className="p-3">{planet.house}</td>
               </tr>
             );
           })}
@@ -81,5 +76,6 @@ const PlanetTable: React.FC<PlanetTableProps> = ({ planetPositions }) => {
     </div>
   );
 };
+
 
 export default PlanetTable;

@@ -7,13 +7,15 @@ import PlanetTable from "./ui/PlanetTable";
 import HouseTable from "./ui/HouseTable"
 import AspectTable from "./ui/AspectTable";
 import { motion } from "framer-motion"; // Импортируем framer-motion
+import Header from "./ui/Header";
 
 export default function Home() {
   const [birthData, setBirthData] = useState({
     date: "",
     time: "",
     latitude: "",
-    longitude: ""
+    longitude: "",
+    houseSystem: ""
   });
 
   const [planetPositions, setPlanetPositions] = useState<any[]>([]);
@@ -30,10 +32,11 @@ export default function Home() {
   }, [planetPositions, housePositions]); // useEffect срабатывает, когда planetPositions обновляются
 
   return (
-    <div className="min-h-screen font-[family-name:var(--font-geist-sans)] pt-3 bg-black">
-      <main className="w-full items-center sm:items-start bg-black">
-        <div className="w-full bg-white rounded-t-[50px] p-10 shadow-lg">
-          <div className="flex flex-wrap justify-center gap-10 w-full max-w-7xl mx-auto">
+    <div className="min-h-screen font-[family-name:var(--font-geist-sans)] pt-3">
+      <main className="w-full items-center sm:items-start">
+        <div className="w-full bg-white rounded-t-[50px]">
+          <Header/>
+          <div className="flex flex-col flex-wrap items-center justify-center gap-10 w-full max-w-7xl mx-auto">
             <motion.div
               className="w-full md:w-[48%] flex justify-center"
               initial={{ opacity: 0 }} // Начальная прозрачность
@@ -85,7 +88,7 @@ export default function Home() {
           </div>
         </div>
           {/* Футер */}
-        <footer className="bg-black p-6 rounded-t-[50px]">
+        <footer className="p-6 rounded-t-[50px] bg-[#7D58C6]">
           <div className="text-white text-center">
             <p>© 2025 Натальная карта. Все права защищены.</p>
           </div>
