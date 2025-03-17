@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int     @id @default(autoincrement())
+  email       String  @unique
+  name        String
+  phone       String?
+  password    String
+  natalCharts NatalChart[]
+}
+
+model NatalChart {
+  id          Int     @id @default(autoincrement())
+  userId      Int
+  name        String
+  birthDate   DateTime
+  birthTime   String
+  city        String
+  latitude    Float?
+  longitude   Float?
+  utcOffset   Float?
+  houseSystem String  @default("placidus")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
