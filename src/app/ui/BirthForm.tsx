@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { searchCityCoordinates } from "../../../utils/geo";
-import { useFormState } from "react-dom";
+import { formatUtcOffset } from "../lib/utils";
 
 interface BirthFormProps {
   setBirthData: (data: any) => void;
@@ -17,14 +17,6 @@ const houseSystemNames: Record<string, string> = {
   "equal-house": "Равнодомная система",
   "regiomontanus": "Региомонтан",
   "topocentric": "Топоцентрическая",
-};
-
-
-// Функция для форматирования UTC смещения в "±HH:MM"
-const formatUtcOffset = (offset: number) => {
-  const hours = Math.floor(offset);
-  const minutes = Math.abs((offset % 1) * 60);
-  return `UTC${hours >= 0 ? "+" : ""}${hours}:${minutes.toFixed(0).padStart(2, "0")}`;
 };
 
 export default function BirthForm({ setBirthData }: BirthFormProps) {
