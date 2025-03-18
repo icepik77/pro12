@@ -58,7 +58,14 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
         ]
       };
     }
-    return {}; // Возвращаем пустой объект по умолчанию
+    return {
+      SYMBOL_SCALE: 0.8, 
+      COLORS_SIGNS: [
+        "#FFABAB", "#FFC3A0", "#FFDCB8", "#FFE6A9", "#D9FF97", 
+        "#C5FF80", "#A6FF76", "#8BFF6D", "#76FF7C", "#6FFFD8", 
+        "#B8FFFB", "#B0D3FF"
+      ]
+    }; // Возвращаем пустой объект по умолчанию
   };
 
   useEffect(() => {
@@ -204,7 +211,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     const radix = chart.radix(chartData);
     const customAspects = createFormedAspects(aspectsData, chartData);
     radix.aspects(customAspects);
-  }, [chartData, style]); // Добавляем style в зависимости
+  }, [chartData]); // Добавляем style в зависимости
 
   return (
     <div className="flex flex-col items-center w-full">
