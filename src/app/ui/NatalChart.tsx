@@ -3,16 +3,63 @@
 import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
 import { Origin, Horoscope } from 'circular-natal-horoscope-js';
-import {NatalChartProps } from '../lib/definitions';
+import { NatalChartProps } from '../lib/definitions';
 import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects } from '../lib/utils';
-
-
 
 const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions, setLocalTime }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const [chartData, setChartData] = useState<any>(null);
   const [aspectsData, setAspectsData] = useState<any>(null);
+  const [style, setStyle] = useState<string>('elements'); // Добавляем состояние для стиля оформления
   const houseSystem = birthData.houseSystem || 'koch'; // Берём систему домов
+
+  // Функция для определения цветов в зависимости от стиля
+  const getStyleSettings = () => {
+    if (birthData.style === 'heavenly') {
+      return {
+        SYMBOL_SCALE: 0.8, 
+        COLOR_ARIES: "#7D58C6",
+        COLOR_TAURUS: "#7D58C6",
+        COLOR_GEMINI: "#7D58C6",
+        COLOR_CANCER: "#7D58C6",
+        COLOR_LEO: "#7D58C6",
+        COLOR_VIRGO: "#7D58C6",
+        COLOR_LIBRA: "#7D58C6",
+        COLOR_SCORPIO: "#7D58C6",
+        COLOR_SAGITTARIUS: "#7D58C6",
+        COLOR_CAPRICORN: "#7D58C6",
+        COLOR_AQUARIUS: "#7D58C6",
+        COLOR_PISCES: "#7D58C6",
+        COLORS_SIGNS: [
+          "#FFAD99", "#D2A679", "#A7C7E7", "#9FD3C7", "#F4A988", 
+          "#C4A484", "#B0D6E8", "#A3C9A8", "#FFB6A3", "#D4A373", 
+          "#C1E1EC", "#B5E2B6"
+        ]
+      };
+    } else if (birthData.style === 'management') {
+      return {
+        SYMBOL_SCALE: 0.8, 
+        COLOR_ARIES: "#FF5733", // Овен - оранжевый
+        COLOR_TAURUS: "#FF8C00", // Телец - темно-оранжевый
+        COLOR_GEMINI: "#1E90FF", // Близнецы - синий
+        COLOR_CANCER: "#20B2AA", // Рак - светло-бирюзовый
+        COLOR_LEO: "#FFD700",    // Лев - золотой
+        COLOR_VIRGO: "#32CD32",  // Дева - лайм
+        COLOR_LIBRA: "#8A2BE2",  // Весы - синий фиолетовый
+        COLOR_SCORPIO: "#D2691E",// Скорпион - коричнево-оранжевый
+        COLOR_SAGITTARIUS: "#FF4500", // Стрелец - оранжево-красный
+        COLOR_CAPRICORN: "#4682B4", // Козерог - стальной синий
+        COLOR_AQUARIUS: "#00BFFF", // Водолей - ярко-голубой
+        COLOR_PISCES: "#9932CC",  // Рыбы - фиолетовый
+        COLORS_SIGNS: [
+          "#FFABAB", "#FFC3A0", "#FFDCB8", "#FFE6A9", "#D9FF97", 
+          "#C5FF80", "#A6FF76", "#8BFF6D", "#76FF7C", "#6FFFD8", 
+          "#B8FFFB", "#B0D3FF"
+        ]
+      };
+    }
+    return {}; // Возвращаем пустой объект по умолчанию
+  };
 
   useEffect(() => {
     if (!birthData.date || !birthData.time || !birthData.latitude || !birthData.longitude) return;
@@ -53,7 +100,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     const aspectsData = horoscope.Aspects.all.filter(item => 
       !item.point2Key.toLowerCase().includes('southnode') && 
       !item.point2Key.toLowerCase().includes('sirius')
-    );;
+    );
 
     // Преобразуем данные в формат, пригодный для astrochart
     const astroData = {
@@ -79,8 +126,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     if (setLocalTime) {
       setLocalTime(utcTime);
     }
-
-
 
     // Формируем данные для таблицы
     const planetPositionsList = Object.entries(planetsData)
@@ -153,29 +198,13 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
   
     chartRef.current.innerHTML = '';
 
-    var settings = {
-      SYMBOL_SCALE: 0.8, 
-      COLORS_SIGNS: [
-        "#FFAD99", // Мягкий красный
-        "#D2A679", // Тёплый коричневый
-        "#A7C7E7", // Пастельный голубой
-        "#9FD3C7", // Нежный бирюзовый
-        "#F4A988", // Персиковый
-        "#C4A484", // Светлый бежевый
-        "#B0D6E8", // Светло-голубой
-        "#A3C9A8", // Мягкий зелёный
-        "#FFB6A3", // Светлый коралловый
-        "#D4A373", // Светло-охристый
-        "#C1E1EC", // Голубовато-серый
-        "#B5E2B6", // Пастельно-зелёный
-      ]
-    };
-  
+    const settings = getStyleSettings(); // Получаем настройки в зависимости от стиля
+
     const chart = new Chart(chartRef.current.id, chartSize, chartSize, settings);
     const radix = chart.radix(chartData);
     const customAspects = createFormedAspects(aspectsData, chartData);
     radix.aspects(customAspects);
-  }, [chartData]);
+  }, [chartData, style]); // Добавляем style в зависимости
 
   return (
     <div className="flex flex-col items-center w-full">

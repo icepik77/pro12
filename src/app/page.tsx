@@ -13,11 +13,15 @@ import CreateUserForm from "./ui/CreateUserForm";
 
 export default function Home() {
   const [birthData, setBirthData] = useState({
+    name: "",
     date: "",
     time: "",
+    city: "",
     latitude: "",
     longitude: "",
-    houseSystem: ""
+    utcOffset: "",
+    houseSystem: "",
+    style: "",
   });
 
   const [planetPositions, setPlanetPositions] = useState<any[]>([]);

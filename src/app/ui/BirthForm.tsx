@@ -21,6 +21,13 @@ const houseSystemNames: Record<string, string> = {
   "topocentric": "Топоцентрическая",
 };
 
+// Словарь для выбора оформления
+const styleOptions = [
+  { value: "heavenly", label: "Небесная" },
+  { value: "management", label: "Управление" },
+  { value: "elements", label: "Стихии" },
+];
+
 interface BirthFormProps {
   setBirthData: (data: any) => void;
   localTime?: string;
@@ -36,6 +43,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     longitude: "",
     utcOffset: "",
     houseSystem: "koch",
+    style: "elements", // Новый выбор для оформления
   });
 
   const [submittedData, setSubmittedData] = useState<any | null>(null);
@@ -176,6 +184,16 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                 ))}
               </select>
             </div>
+
+            {/* Выбор оформления */}
+            <div>
+              <label className="block text-gray-700 text-sm mb-1">Выбор оформления</label>
+              <select name="style" value={formData.style} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none">
+                {styleOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <button type="submit" className="mt-6 w-full p-3 bg-[#7D58C6] text-white font-medium rounded-md hover:bg-gray-800 transition">Построить карту</button>
@@ -190,6 +208,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             <p><strong>Широта:</strong> {submittedData.latitude}</p>
             <p><strong>Долгота:</strong> {submittedData.longitude}</p>
             <p><strong>Система домов:</strong> {houseSystemNames[submittedData.houseSystem]}</p>
+            <p><strong>Оформление:</strong> {styleOptions.find(option => option.value === submittedData.style)?.label}</p>
           </div>
         )}
       </div>

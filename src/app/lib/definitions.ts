@@ -3,7 +3,8 @@ export interface BirthData {
     time: string;
     latitude: string;
     longitude: string;
-    houseSystem: string
+    houseSystem: string;
+    style: string;
 }
   // Интерфейс для координат планет
 export interface PlanetPositions {
