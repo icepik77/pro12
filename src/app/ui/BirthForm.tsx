@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 // Функция для поиска городов с использованием Nominatim API
 async function searchCities(query: string) {
@@ -8,10 +8,6 @@ async function searchCities(query: string) {
   const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&addressdetails=1&limit=5`);
   const data = await response.json();
   return data || [];
-}
-
-interface BirthFormProps {
-  setBirthData: (data: any) => void;
 }
 
 // Словарь для перевода систем домов
@@ -25,20 +21,47 @@ const houseSystemNames: Record<string, string> = {
   "topocentric": "Топоцентрическая",
 };
 
-export default function BirthForm({ setBirthData }: BirthFormProps) {
+interface BirthFormProps {
+  setBirthData: (data: any) => void;
+  localTime?: string;
+}
+
+export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   const [formData, setFormData] = useState({
     name: "Иван Иванов",
     date: "1990-01-01",
     time: "12:00",
-    city: "Москва",
+    city: "",
     latitude: "",
     longitude: "",
     utcOffset: "",
-    houseSystem: "placidus",
+    houseSystem: "koch",
   });
 
   const [submittedData, setSubmittedData] = useState<any | null>(null);
-  const [citySuggestions, setCitySuggestions] = useState<any[]>([]);  // Теперь хранит данные о городе, включая координаты
+  const [citySuggestions, setCitySuggestions] = useState<any[]>([]);
+
+  // Валидация координат
+  const validateCoordinates = (lat: string, lon: string) => {
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lon);
+    return (
+      !isNaN(latitude) && latitude >= -90 && latitude <= 90 &&
+      !isNaN(longitude) && longitude >= -180 && longitude <= 180
+    );
+  };
+
+  // Валидация часового пояса
+  const validateUtcOffset = (offset: string) => {
+    // Если строка пуста, то считаем, что это допустимо
+    if (offset === "") {
+      return true;
+    }
+
+    // Проверяем, что часовой пояс в правильном формате
+    const regex = /^([+-])([01]?\d|2[0-3]):([0-5]?\d)$/;
+    return regex.test(offset);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -49,32 +72,40 @@ export default function BirthForm({ setBirthData }: BirthFormProps) {
     setFormData({ ...formData, city });
 
     if (city.length > 2) {
-      // Получаем предложения для города с помощью Nominatim API
       const suggestions = await searchCities(city);
-      setCitySuggestions(suggestions); // Сохраняем полные данные о городах
+      setCitySuggestions(suggestions);
     } else {
       setCitySuggestions([]);
     }
   };
 
   const handleCitySelect = (city: any) => {
-    // Когда пользователь выбирает город, обновляем данные формы
     setFormData({
       ...formData,
       city: city.display_name,
       latitude: city.lat,
       longitude: city.lon,
-      utcOffset: "",  // Часовой пояс отключаем, оставляем пустым
     });
-
-    // Очищаем список предложений
     setCitySuggestions([]);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Проверяем координаты
+    if (!validateCoordinates(formData.latitude, formData.longitude)) {
+      alert("Ошибка: Введите корректные координаты!");
+      return;
+    }
+
+    // Проверяем часовой пояс
+    if (!validateUtcOffset(formData.utcOffset)) {
+      alert("Ошибка: Введите корректный часовой пояс в формате UTC±hh:mm");
+      return;
+    }
+
     setBirthData(formData);
-    setSubmittedData(formData); // Сохраняем данные для отображения
+    setSubmittedData(formData);
   };
 
   return (
@@ -88,62 +119,29 @@ export default function BirthForm({ setBirthData }: BirthFormProps) {
             {/* Имя */}
             <div>
               <label className="block text-gray-700 text-sm mb-1">Имя</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
-                required
-              />
+              <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
             </div>
 
             {/* Дата */}
             <div>
               <label className="block text-gray-700 text-sm mb-1">Дата рождения</label>
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
-                required
-              />
+              <input type="date" name="date" value={formData.date} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
             </div>
 
             {/* Время */}
             <div>
               <label className="block text-gray-700 text-sm mb-1">Время рождения</label>
-              <input
-                type="time"
-                name="time"
-                value={formData.time}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
-                required
-              />
+              <input type="time" name="time" value={formData.time} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
             </div>
 
             {/* Город */}
             <div>
-              <label className="block text-gray-700 text-sm mb-1">Город рождения</label>
-              <input
-                type="text"
-                name="city"
-                value={formData.city}
-                onChange={handleCityChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
-                required
-              />
-              {/* Выпадающий список предложений */}
+              <label className="block text-gray-700 text-sm mb-1">Город рождения (необязательно)</label>
+              <input type="text" name="city" value={formData.city} onChange={handleCityChange} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
               {citySuggestions.length > 0 && (
                 <ul className="border border-gray-300 mt-2 max-h-48 overflow-y-auto bg-white">
                   {citySuggestions.map((city, index) => (
-                    <li
-                      key={index}
-                      onClick={() => handleCitySelect(city)}  // Обработчик выбора города
-                      className="p-2 cursor-pointer hover:bg-gray-200"
-                    >
+                    <li key={index} onClick={() => handleCitySelect(city)} className="p-2 cursor-pointer hover:bg-gray-200">
                       {city.display_name}
                     </li>
                   ))}
@@ -154,79 +152,40 @@ export default function BirthForm({ setBirthData }: BirthFormProps) {
             {/* Широта */}
             <div>
               <label className="block text-gray-700 text-sm mb-1">Широта</label>
-              <input
-                type="text"
-                name="latitude"
-                value={formData.latitude}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
-                placeholder="Широта будет заполнена автоматически"
-                readOnly  // Поле только для чтения
-              />
+              <input type="text" name="latitude" value={formData.latitude} onChange={handleChange} placeholder="Введите широту вручную" className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
             </div>
 
             {/* Долгота */}
             <div>
               <label className="block text-gray-700 text-sm mb-1">Долгота</label>
-              <input
-                type="text"
-                name="longitude"
-                value={formData.longitude}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
-                placeholder="Долгота будет заполнена автоматически"
-                readOnly  // Поле только для чтения
-              />
+              <input type="text" name="longitude" value={formData.longitude} onChange={handleChange} placeholder="Введите долготу вручную" className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
             </div>
 
-            {/* Часовой пояс (Оставляем поле, но оно не используется) */}
+            {/* Часовой пояс */}
             <div>
               <label className="block text-gray-700 text-sm mb-1">Часовой пояс (UTC)</label>
-              <input
-                type="text"
-                name="utcOffset"
-                value={formData.utcOffset}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
-                placeholder="Часовой пояс (оставьте пустым)"
-              />
+              <input type="text" name="utcOffset" value={formData.utcOffset} onChange={handleChange} placeholder={localTime || "+00:00"} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
             </div>
 
             {/* Система домов */}
             <div>
               <label className="block text-gray-700 text-sm mb-1">Система домов</label>
-              <select
-                name="houseSystem"
-                value={formData.houseSystem}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
-              >
-                <option value="koch">Кох</option>
-                <option value="placidus">Плацидус</option>
-                <option value="campanus">Компано</option>
-                <option value="whole-sign">Целый знак</option>
-                <option value="equal-house">Равнодомная система</option>
-                <option value="regiomontanus">Региомонтан</option>
-                <option value="topocentric">Топоцентрическая</option>
+              <select name="houseSystem" value={formData.houseSystem} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none">
+                {Object.entries(houseSystemNames).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
               </select>
             </div>
           </div>
 
-          {/* Кнопка отправки */}
-          <button
-            type="submit"
-            className="mt-6 w-full p-3 bg-[#7D58C6] text-white font-medium rounded-md hover:bg-gray-800 transition"
-          >
-            Построить карту
-          </button>
+          <button type="submit" className="mt-6 w-full p-3 bg-[#7D58C6] text-white font-medium rounded-md hover:bg-gray-800 transition">Построить карту</button>
         </form>
 
-        {/* Отображение введенных данных */}
         {submittedData && (
           <div className="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700">
             <h3 className="text-lg font-medium">Введенные данные:</h3>
             <p><strong>Имя:</strong> {submittedData.name}</p>
-            <p><strong>Дата, время (часовой пояс):</strong> {submittedData.date}, {submittedData.time} ({submittedData.utcOffset})</p>
+            <p><strong>Дата, время (часовой пояс):</strong> {submittedData.date}, {submittedData.time} ({submittedData.utcOffset || localTime})</p>
             <p><strong>Город:</strong> {submittedData.city}</p>
             <p><strong>Широта:</strong> {submittedData.latitude}</p>
             <p><strong>Долгота:</strong> {submittedData.longitude}</p>

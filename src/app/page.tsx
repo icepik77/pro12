@@ -10,6 +10,7 @@ import { motion } from "framer-motion"; // Импортируем framer-motion
 import Header from "./ui/Header";
 import CreateUserForm from "./ui/CreateUserForm";
 
+
 export default function Home() {
   const [birthData, setBirthData] = useState({
     date: "",
@@ -22,6 +23,7 @@ export default function Home() {
   const [planetPositions, setPlanetPositions] = useState<any[]>([]);
   const [housePositions, setHousePositions] = useState<any[]>([]);
   const [aspectPositions, setAspectPositions] = useState<any[]>([]);
+  const [localTime, setLocalTime] = useState<string | undefined>();
 
   // Отслеживаем изменение данных в planetPositions
   const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -44,7 +46,7 @@ export default function Home() {
               animate={{ opacity: 1 }}  // Конечная прозрачность
               transition={{ duration: 1 }} // Плавное появление за 1 секунду
             >
-              <BirthForm setBirthData={setBirthData} />
+              <BirthForm setBirthData={setBirthData} localTime={localTime}/>
             </motion.div>
 
             {/* Плавное появление карты только после загрузки данных */}
@@ -54,7 +56,7 @@ export default function Home() {
               animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
               transition={{ duration: 1 }} // Плавное появление за 1 секунду
             >
-              <NatalChart birthData={birthData} setPlanetPositions={setPlanetPositions} setHousePositions={setHousePositions} setAspectPositions={setAspectPositions}/>
+              <NatalChart birthData={birthData} setPlanetPositions={setPlanetPositions} setHousePositions={setHousePositions} setAspectPositions={setAspectPositions} setLocalTime={setLocalTime}/>
             </motion.div>
 
             {/* Плавное появление таблицы только после загрузки данных */}

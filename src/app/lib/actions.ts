@@ -5,6 +5,7 @@ import prisma from "../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+
 const UserSchema = z.object({
   email: z.string().email({ message: "Invalid email format." }),
   name: z.string().min(1, { message: "Name is required." }),
@@ -42,5 +43,5 @@ export async function createUser(state: any, formData: FormData) {
         message: "Database Error: Failed to create user.",
       };
     }
-  }
-  
+}
+

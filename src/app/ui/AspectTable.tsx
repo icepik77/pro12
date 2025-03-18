@@ -38,6 +38,7 @@ interface AspectTableProps {
 }
 
 // Компонент таблицы аспектов
+// Компонент таблицы аспектов
 const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions }) => {
   return (
     <div className="w-full max-w-5xl p-4 flex flex-col items-center text-[14px]">
@@ -50,13 +51,27 @@ const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions }) => {
             const point2Symbol = planetSymbols[aspect.point2Key] || aspect.point2Label;
             const formattedOrb = formatOrb(aspect.orb);
 
+            // Выбираем цвет для символа аспекта
+            let aspectColor = '';
+            if (aspect.aspectKey === 'opposition') {
+              aspectColor = 'text-red-600'; // Красный для оппозиции
+            } else if (['trine', 'sextile'].includes(aspect.aspectKey)) {
+              aspectColor = 'text-green-600'; // Зеленый для гармоничных аспектов
+            } else if (aspect.aspectKey === 'conjunction') {
+              aspectColor = 'text-black'; // Черный для соединений
+            } else if (aspect.aspectKey === 'square') {
+              aspectColor = 'text-red-600'; // Красный для квадрата
+            }
+
             return (
               <tr
                 key={index}
                 className={`text-center ${index % 2 === 1 ? 'bg-gray-100' : ''} hover:bg-gray-200`}
               >
                 <td className="p-3 font-bold text-base">{point1Symbol}</td>
-                <td className="p-3 font-bold text-base">{aspectSymbol}</td>
+                <td className="p-3 font-bold text-base">
+                  <span className={aspectColor}>{aspectSymbol}</span>
+                </td>
                 <td className="p-3 font-bold text-base">{point2Symbol}</td>
                 <td className="p-3">{formattedOrb}</td>
               </tr>
@@ -67,5 +82,8 @@ const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions }) => {
     </div>
   );
 };
+
+
+
 
 export default AspectTable;

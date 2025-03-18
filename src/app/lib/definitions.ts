@@ -20,4 +20,5 @@ export interface NatalChartProps {
     setPlanetPositions: (positions: any[]) => void;
     setHousePositions: (positions: any[]) => void;
     setAspectPositions: (positions: any[]) => void;
+    setLocalTime?: (time: string) => void;
 }

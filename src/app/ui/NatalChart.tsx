@@ -7,7 +7,8 @@ import {NatalChartProps } from '../lib/definitions';
 import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects } from '../lib/utils';
 
 
-const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions }) => {
+
+const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions, setLocalTime }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const [chartData, setChartData] = useState<any>(null);
   const [aspectsData, setAspectsData] = useState<any>(null);
@@ -73,7 +74,13 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       cusps: cuspsData,
     };
 
-    console.log("Данные о аспектах", horoscope.Aspects);
+    console.log("Данные о аспектах", origin);
+    const utcTime = origin.localTimeFormatted?.slice(-6) || ""; 
+    if (setLocalTime) {
+      setLocalTime(utcTime);
+    }
+
+
 
     // Формируем данные для таблицы
     const planetPositionsList = Object.entries(planetsData)
