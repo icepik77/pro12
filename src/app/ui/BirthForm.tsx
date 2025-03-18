@@ -1,7 +1,14 @@
 'use client';
 
-import { useState } from "react";
-import { formatUtcOffset } from "../lib/utils"; // Оставляем только для визуализации UTC, если нужно.
+import { useState, useEffect } from "react";
+
+// Функция для поиска городов с использованием Nominatim API
+async function searchCities(query: string) {
+  if (!query) return [];
+  const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&addressdetails=1&limit=5`);
+  const data = await response.json();
+  return data || [];
+}
 
 interface BirthFormProps {
   setBirthData: (data: any) => void;
@@ -26,14 +33,42 @@ export default function BirthForm({ setBirthData }: BirthFormProps) {
     city: "Москва",
     latitude: "",
     longitude: "",
-    utcOffset: "", // Оставляем поле для часового пояса, но не будем использовать его.
+    utcOffset: "",
     houseSystem: "placidus",
   });
 
   const [submittedData, setSubmittedData] = useState<any | null>(null);
+  const [citySuggestions, setCitySuggestions] = useState<any[]>([]);  // Теперь хранит данные о городе, включая координаты
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleCityChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const city = e.target.value;
+    setFormData({ ...formData, city });
+
+    if (city.length > 2) {
+      // Получаем предложения для города с помощью Nominatim API
+      const suggestions = await searchCities(city);
+      setCitySuggestions(suggestions); // Сохраняем полные данные о городах
+    } else {
+      setCitySuggestions([]);
+    }
+  };
+
+  const handleCitySelect = (city: any) => {
+    // Когда пользователь выбирает город, обновляем данные формы
+    setFormData({
+      ...formData,
+      city: city.display_name,
+      latitude: city.lat,
+      longitude: city.lon,
+      utcOffset: "",  // Часовой пояс отключаем, оставляем пустым
+    });
+
+    // Очищаем список предложений
+    setCitySuggestions([]);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -96,10 +131,24 @@ export default function BirthForm({ setBirthData }: BirthFormProps) {
                 type="text"
                 name="city"
                 value={formData.city}
-                onChange={handleChange}
+                onChange={handleCityChange}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
                 required
               />
+              {/* Выпадающий список предложений */}
+              {citySuggestions.length > 0 && (
+                <ul className="border border-gray-300 mt-2 max-h-48 overflow-y-auto bg-white">
+                  {citySuggestions.map((city, index) => (
+                    <li
+                      key={index}
+                      onClick={() => handleCitySelect(city)}  // Обработчик выбора города
+                      className="p-2 cursor-pointer hover:bg-gray-200"
+                    >
+                      {city.display_name}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             {/* Широта */}
@@ -111,7 +160,8 @@ export default function BirthForm({ setBirthData }: BirthFormProps) {
                 value={formData.latitude}
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
-                placeholder="Введите широту вручную"
+                placeholder="Широта будет заполнена автоматически"
+                readOnly  // Поле только для чтения
               />
             </div>
 
@@ -124,7 +174,8 @@ export default function BirthForm({ setBirthData }: BirthFormProps) {
                 value={formData.longitude}
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
-                placeholder="Введите долготу вручную"
+                placeholder="Долгота будет заполнена автоматически"
+                readOnly  // Поле только для чтения
               />
             </div>
 
