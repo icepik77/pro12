@@ -30,11 +30,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
         COLOR_CAPRICORN: "#7D58C6",
         COLOR_AQUARIUS: "#7D58C6",
         COLOR_PISCES: "#7D58C6",
-        COLORS_SIGNS: [
-          "#FFAD99", "#D2A679", "#A7C7E7", "#9FD3C7", "#F4A988", 
-          "#C4A484", "#B0D6E8", "#A3C9A8", "#FFB6A3", "#D4A373", 
-          "#C1E1EC", "#B5E2B6"
-        ]
       };
     } else if (birthData.style === 'management') {
       return {
@@ -51,11 +46,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
         COLOR_CAPRICORN: "#4682B4", // Козерог - стальной синий
         COLOR_AQUARIUS: "#00BFFF", // Водолей - ярко-голубой
         COLOR_PISCES: "#9932CC",  // Рыбы - фиолетовый
-        COLORS_SIGNS: [
-          "#FFABAB", "#FFC3A0", "#FFDCB8", "#FFE6A9", "#D9FF97", 
-          "#C5FF80", "#A6FF76", "#8BFF6D", "#76FF7C", "#6FFFD8", 
-          "#B8FFFB", "#B0D3FF"
-        ]
       };
     }
     return {
