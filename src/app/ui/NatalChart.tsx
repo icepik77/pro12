@@ -123,8 +123,10 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     const cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
     const aspectsData = horoscope.Aspects.all.filter(item => 
       !item.point2Key.toLowerCase().includes('southnode') && 
-      !item.point2Key.toLowerCase().includes('sirius')
+      !item.point2Key.toLowerCase().includes('sirius') &&
+      !item.point2Key.toLowerCase().includes('chiron')
     );
+
 
     // Преобразуем данные в формат, пригодный для astrochart
     const astroData = {
@@ -140,12 +142,12 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
         "Neptune": [planetsData.neptune?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
         "Pluto": [planetsData.pluto?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
         "Lilith": [horoscope.CelestialPoints.lilith?.ChartPosition.Ecliptic?.DecimalDegrees || 0],
-        "Chiron": [planetsData.chiron?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
+        "NNode": [horoscope.CelestialPoints.northnode?.ChartPosition.Ecliptic?.DecimalDegrees || 0],
       },
       cusps: cuspsData,
     };
 
-    console.log("Данные о аспектах", origin);
+    console.log("Данные об аспектах", aspectsData);
     const utcTime = origin.localTimeFormatted?.slice(-6) || ""; 
     if (setLocalTime) {
       setLocalTime(utcTime);
@@ -179,6 +181,23 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       } else {
         // Если список пуст, просто добавляем Лилит
         planetPositionsList.push({ name: "lilith", sign, position, house });
+      }
+    }
+
+    // Данные о Северном узле
+    const nNode = horoscope.CelestialPoints.northnode?.ChartPosition?.Ecliptic?.DecimalDegrees;
+
+    if (nNode) {
+      const sign = getZodiacSign(nNode);
+      const position = formatPosition(nNode);
+      const house = findHouseForPlanet(nNode, cuspsData);
+
+      // Заменяем последний элемент в списке на NN
+      if (planetPositionsList.length > 0) {
+        planetPositionsList[planetPositionsList.length - 2] = { name: "northnode", sign, position, house };
+      } else {
+        // Если список пуст, просто добавляем NN
+        planetPositionsList.push({ name: "northnode", sign, position, house });
       }
     }
 
@@ -228,7 +247,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     const radix = chart.radix(chartData);
     const customAspects = createFormedAspects(aspectsData, chartData);
     radix.aspects(customAspects);
-  }, [chartData]); // Добавляем style в зависимости
+  }, [chartData]);
 
   return (
     <div className="flex flex-col items-center w-full">

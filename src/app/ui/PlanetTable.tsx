@@ -14,7 +14,7 @@ const planetSymbols: Record<string, string> = {
   uranus: "♅",  // Уран
   neptune: "♆", // Нептун
   pluto: "♇",   // Плутон
-  chiron: "⚷",  // Хирон
+  northnode: "☊", // Северный Узел (Раху)
   lilith: "⚸"   // Лилит
 };
 

@@ -2,7 +2,6 @@
 
 import React from "react";
 
-// Сопоставление планет и точек с Unicode-символами
 const planetSymbols: Record<string, string> = {
   sun: "☉",     // Солнце
   moon: "☽",    // Луна
@@ -14,9 +13,11 @@ const planetSymbols: Record<string, string> = {
   uranus: "♅",  // Уран
   neptune: "♆", // Нептун
   pluto: "♇",   // Плутон
-  chiron: "⚷",  // Хирон
-  lilith: "⚸"   // Лилит
+  northnode: "☊", // Северный Узел (Раху)
+  lilith: "⚸",  // Лилит
+  
 };
+
 
 // Сопоставление знаков зодиака с Unicode-символами
 const zodiacSymbols: Record<string, string> = {
@@ -54,7 +55,7 @@ const HouseTable: React.FC<HouseTableProps> = ({ housePositions }) => {
         <tbody>
           {housePositions.map((house, index) => {
             const signSymbol = zodiacSymbols[house.sign.toLowerCase()] || house.sign;
-            const degrees = house.position; // Убираем символ градуса
+            const degrees = house.position; 
 
             return (
               <tr
