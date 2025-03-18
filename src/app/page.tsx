@@ -8,6 +8,7 @@ import HouseTable from "./ui/HouseTable"
 import AspectTable from "./ui/AspectTable";
 import { motion } from "framer-motion"; // Импортируем framer-motion
 import Header from "./ui/Header";
+import CreateUserForm from "./ui/CreateUserForm";
 
 export default function Home() {
   const [birthData, setBirthData] = useState({
@@ -17,22 +18,6 @@ export default function Home() {
     longitude: "",
     houseSystem: ""
   });
-
-  const createUser = async () => {
-    const response = await fetch("/api/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: "test@example.com",
-        name: "Тестовый Пользователь",
-        phone: "+1234567890",
-        password: "securepassword",
-      }),
-    });
-
-    const data = await response.json();
-    console.log("Создан пользователь:", data);
-  };
 
   const [planetPositions, setPlanetPositions] = useState<any[]>([]);
   const [housePositions, setHousePositions] = useState<any[]>([]);
@@ -52,12 +37,6 @@ export default function Home() {
       <main className="w-full items-center sm:items-start">
         <div className="w-full bg-white rounded-t-[50px]">
           <Header/>
-
-          <div>
-            <h1>Next.js + PostgreSQL</h1>
-            <button onClick={createUser}>Создать пользователя</button>
-          </div>
-
           <div className="flex flex-col flex-wrap items-center justify-center gap-10 w-full max-w-7xl mx-auto">
             <motion.div
               className="w-full md:w-[48%] flex justify-center"

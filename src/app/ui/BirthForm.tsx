@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import { searchCityCoordinates } from "../../../utils/geo";
-import { formatUtcOffset } from "../lib/utils";
+import { formatUtcOffset } from "../lib/utils"; // Оставляем только для визуализации UTC, если нужно.
 
 interface BirthFormProps {
   setBirthData: (data: any) => void;
@@ -27,7 +26,7 @@ export default function BirthForm({ setBirthData }: BirthFormProps) {
     city: "Москва",
     latitude: "",
     longitude: "",
-    utcOffset: "",
+    utcOffset: "", // Оставляем поле для часового пояса, но не будем использовать его.
     houseSystem: "placidus",
   });
 
@@ -35,25 +34,6 @@ export default function BirthForm({ setBirthData }: BirthFormProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleCityChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const city = e.target.value;
-    setFormData({ ...formData, city });
-
-    if (city.length > 2) {
-      const coords = await searchCityCoordinates(city);
-      if (coords) {
-        const utcOffset = formatUtcOffset(coords.lon / 15);
-
-        setFormData((prev) => ({
-          ...prev,
-          latitude: coords.lat.toFixed(4),
-          longitude: coords.lon.toFixed(4),
-          utcOffset,
-        }));
-      }
-    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -116,13 +96,39 @@ export default function BirthForm({ setBirthData }: BirthFormProps) {
                 type="text"
                 name="city"
                 value={formData.city}
-                onChange={handleCityChange}
+                onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
                 required
               />
             </div>
 
-            {/* Часовой пояс */}
+            {/* Широта */}
+            <div>
+              <label className="block text-gray-700 text-sm mb-1">Широта</label>
+              <input
+                type="text"
+                name="latitude"
+                value={formData.latitude}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
+                placeholder="Введите широту вручную"
+              />
+            </div>
+
+            {/* Долгота */}
+            <div>
+              <label className="block text-gray-700 text-sm mb-1">Долгота</label>
+              <input
+                type="text"
+                name="longitude"
+                value={formData.longitude}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
+                placeholder="Введите долготу вручную"
+              />
+            </div>
+
+            {/* Часовой пояс (Оставляем поле, но оно не используется) */}
             <div>
               <label className="block text-gray-700 text-sm mb-1">Часовой пояс (UTC)</label>
               <input
@@ -131,6 +137,7 @@ export default function BirthForm({ setBirthData }: BirthFormProps) {
                 value={formData.utcOffset}
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
+                placeholder="Часовой пояс (оставьте пустым)"
               />
             </div>
 
@@ -170,6 +177,8 @@ export default function BirthForm({ setBirthData }: BirthFormProps) {
             <p><strong>Имя:</strong> {submittedData.name}</p>
             <p><strong>Дата, время (часовой пояс):</strong> {submittedData.date}, {submittedData.time} ({submittedData.utcOffset})</p>
             <p><strong>Город:</strong> {submittedData.city}</p>
+            <p><strong>Широта:</strong> {submittedData.latitude}</p>
+            <p><strong>Долгота:</strong> {submittedData.longitude}</p>
             <p><strong>Система домов:</strong> {houseSystemNames[submittedData.houseSystem]}</p>
           </div>
         )}

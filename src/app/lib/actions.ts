@@ -1,28 +1,46 @@
-'use server'
+"use server";
 
-import { NextApiRequest, NextApiResponse } from "next";
-import prisma from "../lib/prisma"; // путь к файлу prisma.ts
+import { z } from "zod";
+import prisma from "../lib/prisma";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === "POST") {
-    try {
-      const { email, name, phone, password } = req.body as {
-        email: string;
-        name: string;
-        phone?: string;
-        password: string;
+const UserSchema = z.object({
+  email: z.string().email({ message: "Invalid email format." }),
+  name: z.string().min(1, { message: "Name is required." }),
+  phone: z.string().optional(),
+  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+});
+
+export async function createUser(state: any, formData: FormData) {
+    const validatedFields = UserSchema.safeParse({
+      email: formData.get("email"),
+      name: formData.get("name"),
+      phone: formData.get("phone"),
+      password: formData.get("password"),
+    });
+  
+    if (!validatedFields.success) {
+      return {
+        errors: validatedFields.error.flatten().fieldErrors,
+        message: "Invalid fields. Failed to create user.",
       };
-
-      const user = await prisma.user.create({
-        data: { email, name, phone, password },
-      });
-
-      res.status(201).json(user);
-    } catch (error) {
-      res.status(500).json({ error: "Ошибка при создании пользователя" });
     }
-  } else {
-    res.setHeader("Allow", ["POST"]);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+  
+    try {
+      await prisma.user.create({
+        data: validatedFields.data,
+      });
+  
+      // ✅ Если все успешно, возвращаем пустой объект
+      return { message: null };
+    } catch (error) {
+      console.error("Database Error:", error); // Логируем ошибку
+  
+      return {
+        errors: {},
+        message: "Database Error: Failed to create user.",
+      };
+    }
   }
-}
+  
