@@ -122,8 +122,11 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     const planetsData = horoscope.CelestialBodies;
     const cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
     const aspectsData = horoscope.Aspects.all.filter(item => 
-      !item.point2Key.toLowerCase().includes('southnode') && 
+      !item.point1Key.toLowerCase().includes('sirius') && 
       !item.point2Key.toLowerCase().includes('sirius') &&
+      !item.point1Key.toLowerCase().includes('southnode') && 
+      !item.point2Key.toLowerCase().includes('southnode') &&
+      !item.point1Key.toLowerCase().includes('chiron') && 
       !item.point2Key.toLowerCase().includes('chiron')
     );
 

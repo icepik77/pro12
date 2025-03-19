@@ -97,6 +97,16 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     setCitySuggestions([]);
   };
 
+  const handleCityClear = () => {
+    setFormData({
+      ...formData,
+      city: "",
+      latitude: "",
+      longitude: "",
+    });
+    setCitySuggestions([]);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -145,7 +155,24 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             {/* Город */}
             <div>
               <label className="block text-gray-700 text-sm mb-1">Город рождения (необязательно)</label>
-              <input type="text" name="city" value={formData.city} onChange={handleCityChange} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
+              <div className="relative">
+                <input
+                  type="text"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleCityChange}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none pr-10"
+                />
+                {formData.city && (
+                  <button
+                    type="button"
+                    onClick={handleCityClear}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  >
+                    &#10005;
+                  </button>
+                )}
+              </div>
               {citySuggestions.length > 0 && (
                 <ul className="border border-gray-300 mt-2 max-h-48 overflow-y-auto bg-white">
                   {citySuggestions.map((city, index) => (
