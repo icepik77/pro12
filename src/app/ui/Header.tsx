@@ -10,7 +10,7 @@ const Header = () => {
       </div>
 
       {/* Кнопка входа */}
-      <Link href="/login">
+      <Link href="">
         <button className="py-2 px-4 bg-[#7D58C6] text-white font-medium rounded-md hover:bg-gray-800 transition">
           Вход
         </button>
