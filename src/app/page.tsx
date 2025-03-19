@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import BirthForm from "./ui/BirthForm";
-import NatalChart from "./ui/NatalChart";
 import PlanetTable from "./ui/PlanetTable";
 import HouseTable from "./ui/HouseTable"
 import AspectTable from "./ui/AspectTable";
 import { motion } from "framer-motion"; // Импортируем framer-motion
 import Header from "./ui/Header";
-import CreateUserForm from "./ui/CreateUserForm";
+import dynamic from 'next/dynamic';
+
+const NatalChart = dynamic(() => import('./ui/NatalChart'), { ssr: false });
 
 
 export default function Home() {
