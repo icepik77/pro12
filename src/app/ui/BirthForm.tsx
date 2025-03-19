@@ -3,9 +3,16 @@
 import { useState } from "react";
 
 // Функция для поиска городов с использованием Nominatim API
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 async function searchCities(query: string) {
   if (!query) return [];
-  const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&addressdetails=1&limit=5`);
+  await delay(1500); // задержка 1 секунда
+  const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&addressdetails=1&limit=5`, {
+    headers: {
+      'User-Agent': 'NatalChart/1.0 (icepik77@mail.ru)', // обязательно добавьте User-Agent
+    }
+  });
   const data = await response.json();
   return data || [];
 }
