@@ -99,7 +99,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       return;
     }
     
-    const second = 0;
 
     const origin = new Origin({
       year,
@@ -107,7 +106,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       date: day,
       hour,
       minute,
-      second,
       latitude,
       longitude,
     });
