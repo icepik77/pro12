@@ -90,7 +90,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     if (!birthData.date || !birthData.time || !birthData.latitude || !birthData.longitude) return;
 
     const [day, month, year] = birthData.date.split('.').map(Number);
-    const [hour, minute] = birthData.time.split(':').map(Number);
+    const [hour, minute, second] = birthData.time.split(':').map(Number);
     const latitude = parseFloat(birthData.latitude);
     const longitude = parseFloat(birthData.longitude);
 
@@ -105,6 +105,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       month: month - 1, // В JS месяцы с 0
       date: day,
       hour,
+      second,
       minute,
       latitude,
       longitude,

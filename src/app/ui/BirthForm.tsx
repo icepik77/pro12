@@ -43,11 +43,11 @@ interface BirthFormProps {
 export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   const [formData, setFormData] = useState({
     name: "",
-    date: "11.07.2012",
-    time: "17:35",
+    date: "07.08.1985",
+    time: "05:26",
     city: "",
-    latitude: "55.625578",
-    longitude: "37.6063916",
+    latitude: "",
+    longitude: "",
     utcOffset: "",
     houseSystem: "koch",
     style: "elements", // Новый выбор для оформления
@@ -127,7 +127,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   const handleTimeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/[^0-9]/g, ""); // Оставляем только цифры
   
-    if (value.length > 4) return; // Ограничиваем ввод 4 символами (ЧЧММ)
+    if (value.length > 6) return; // Ограничиваем ввод 6 символами (ЧЧММСС)
   
     // Убираем двоеточие перед обработкой
     value = value.replace(/:/g, "");
@@ -137,6 +137,11 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     // Если введено хотя бы 2 цифры, вставляем двоеточие
     if (value.length > 2) {
       formattedValue = `${value.slice(0, 2)}:${value.slice(2)}`;
+    }
+  
+    // Если введено хотя бы 4 цифры, вставляем второе двоеточие
+    if (value.length > 4) {
+      formattedValue = `${formattedValue.slice(0, 5)}:${formattedValue.slice(5)}`;
     }
   
     setFormData((prev) => ({ ...prev, time: formattedValue }));
