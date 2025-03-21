@@ -5,6 +5,7 @@ import Chart from '@astrodraw/astrochart';
 import { Origin, Horoscope } from 'circular-natal-horoscope-js';
 import { NatalChartProps } from '../lib/definitions';
 import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects } from '../lib/utils';
+import { homedir } from 'os';
 
 const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions, setLocalTime }) => {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -97,6 +98,8 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       console.error("Некорректные координаты:", latitude, longitude);
       return;
     }
+    
+    const second = 0;
 
     const origin = new Origin({
       year,
@@ -104,6 +107,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       date: day,
       hour,
       minute,
+      second,
       latitude,
       longitude,
     });
@@ -150,7 +154,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       cusps: cuspsData,
     };
 
-    console.log("Данные об аспектах", aspectsData);
+    console.log("Данные об аспектах", horoscope);
     const utcTime = origin.localTimeFormatted?.slice(-6) || ""; 
     if (setLocalTime) {
       setLocalTime(utcTime);
