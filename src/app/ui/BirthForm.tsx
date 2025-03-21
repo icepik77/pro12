@@ -73,16 +73,76 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   };
 
   // Валидация часового пояса
-  const validateUtcOffset = (offset: string) => {
-    // Если строка пуста, то считаем, что это допустимо
-    if (offset === "") {
-      return true;
+
+  const handleUtcOffsetInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/[^0-9+-:]/g, ""); // Оставляем только цифры, знаки +, -, и :
+  
+    // Проверяем, чтобы первый символ был либо +, либо -
+    if (value.length === 1 && !["+", "-"].includes(value)) {
+      value = ""; // Очищаем, если введен не + или -
+    }
+  
+    // Добавляем двоеточие после двух цифр, если его нет
+    if (value.length === 4 && !value.includes(":")) {
+      value = `${value.slice(0, 3)}:${value.slice(3)}`;
+    } else if (value.length === 4 && value.includes(":")) {
+      value = value.slice(0, 3); // Убираем двоеточие
     }
 
-    // Проверяем, что часовой пояс в правильном формате
-    const regex = /^([+-])([01]?\d|2[0-3]):([0-5]?\d)$/;
-    return regex.test(offset);
+    // Если введено 2 цифры для минут, то форматируем в +hh:mm или -hh:mm
+    if (value.length === 6) {
+      const [hours, minutes] = value.slice(1).split(":");
+      value = `${value[0]}${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
+    }
+  
+    // Ограничиваем длину ввода до 6 символов (например, +00:00 или -05:30)
+    if (value.length > 6) return;
+  
+    setFormData((prev) => ({ ...prev, utcOffset: value }));
   };
+
+  const handleDateInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/[^0-9]/g, ""); // Убираем все, кроме цифр
+  
+    if (value.length > 8) return; // Ограничиваем ввод 8 символами (ДДММГГГГ)
+  
+    // Убираем точки перед обработкой
+    value = value.replace(/\./g, ""); 
+  
+    let formattedValue = value;
+  
+    // Если введено хотя бы 2 цифры, вставляем первую точку
+    if (value.length > 2) {
+      formattedValue = `${value.slice(0, 2)}.${value.slice(2)}`;
+    }
+  
+    // Если введено хотя бы 4 цифры, вставляем вторую точку
+    if (value.length > 4) {
+      formattedValue = `${formattedValue.slice(0, 5)}.${formattedValue.slice(5)}`;
+    }
+  
+    setFormData((prev) => ({ ...prev, date: formattedValue }));
+  };
+  
+  const handleTimeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/[^0-9]/g, ""); // Оставляем только цифры
+  
+    if (value.length > 4) return; // Ограничиваем ввод 4 символами (ЧЧММ)
+  
+    // Убираем двоеточие перед обработкой
+    value = value.replace(/:/g, "");
+  
+    let formattedValue = value;
+  
+    // Если введено хотя бы 2 цифры, вставляем двоеточие
+    if (value.length > 2) {
+      formattedValue = `${value.slice(0, 2)}:${value.slice(2)}`;
+    }
+  
+    setFormData((prev) => ({ ...prev, time: formattedValue }));
+  };
+  
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -114,35 +174,10 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
         ? "Долгота должна быть в пределах от -180 до 180" 
         : "";
     }
-  
-    if (name === "utcOffset") {
-      newErrors.utcOffset = !validateUtcOffset(value) 
-        ? "Некорректный формат UTC (пример: +03:00)" 
-        : "";
-    }
-  
+
     setErrors(newErrors);
   };
   
-  
-  
-
-  // const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const { name, value } = e.target;
-
-  //   if (name === "latitude" || name === "longitude") {
-  //     if (!validateCoordinates(formData.latitude, formData.longitude)) {
-  //       setErrors({ ...errors, latitude: "Некорректные координаты", longitude: "Некорректные координаты" });
-  //     }
-  //   }
-
-  //   if (name === "utcOffset") {
-  //     if (!validateUtcOffset(value)) {
-  //       setErrors({ ...errors, utcOffset: "Некорректный формат UTC (пример: +03:00)" });
-  //     }
-  //   }
-  // };
-
   const handleCityChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const city = e.target.value;
     setFormData({ ...formData, city });
@@ -177,26 +212,20 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     let newErrors = { latitude: "", longitude: "", utcOffset: "" };
-
+  
     // Проверяем координаты
     if (!validateCoordinates(formData.latitude, formData.longitude)) {
       newErrors.latitude = "Некорректные координаты";
       newErrors.longitude = "Некорректные координаты";
     }
-
-    // Проверяем часовой пояс
-    if (!validateUtcOffset(formData.utcOffset)) {
-      newErrors.utcOffset = "Некорректный формат UTC (пример: +03:00)";
-    }
-
+  
     if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset) {
+      console.log('Передаваемые данные:', formData);  // Логируем данные перед отправкой
       setBirthData(formData);
       setSubmittedData(formData);
     }
-
-    
   };
 
   return (
@@ -218,19 +247,41 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
               {/* Дата */}
               <div className="flex-1 min-w-[120px]">
                 <label className="block text-gray-700 text-sm mb-1">Дата рождения</label>
-                <input type="date" name="date" value={formData.date} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
+                <input 
+                  type="text" 
+                  name="date" 
+                  value={formData.date} 
+                  onChange={handleDateInput} 
+                  placeholder="ДД.ММ.ГГГГ" 
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
+                />
               </div>
 
               {/* Время */}
               <div className="flex-1 min-w-[120px]">
                 <label className="block text-gray-700 text-sm mb-1">Время рождения</label>
-                <input type="time" name="time" value={formData.time} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
+                <input 
+                  type="text" 
+                  name="time" 
+                  value={formData.time} 
+                  onChange={handleTimeInput} 
+                  placeholder="ЧЧ:ММ" 
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
+                />
               </div>
+
 
               {/* UTC */}
               <div className="flex-1 min-w-[120px]">
-                <label className="block text-gray-700 text-sm mb-1">Часовой пояс (UTC)</label>
-                <input type="text" name="utcOffset" value={formData.utcOffset} onChange={handleChange} placeholder={localTime || "+00:00"} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
+                <label className="block text-gray-700 text-sm mb-1">UTC</label>
+                <input
+                  type="text"
+                  name="utcOffset"
+                  value={formData.utcOffset}
+                  onChange={handleUtcOffsetInput}
+                  placeholder={localTime || "+00:00"}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
+                />
               </div>
             </div>
 
