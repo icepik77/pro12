@@ -53,6 +53,12 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     style: "elements", // Новый выбор для оформления
   });
 
+  const [errors, setErrors] = useState({
+    latitude: "",
+    longitude: "",
+    utcOffset: "",
+  });
+
   const [submittedData, setSubmittedData] = useState<any | null>(null);
   const [citySuggestions, setCitySuggestions] = useState<any[]>([]);
 
@@ -79,8 +85,63 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [e.target.name]: value });
+
+    // Очистка ошибки при изменении
+    setErrors({
+      latitude: "",
+      longitude: "",
+      utcOffset: "",
+    });
   };
+
+
+  const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    let newErrors = { ...errors };
+  
+    if (name === "latitude") {
+      const latitude = parseFloat(value);
+      newErrors.latitude = isNaN(latitude) || latitude < -90 || latitude > 90 
+        ? "Широта должна быть в пределах от -90 до 90" 
+        : "";
+    }
+  
+    if (name === "longitude") {
+      const longitude = parseFloat(value);
+      newErrors.longitude = isNaN(longitude) || longitude < -180 || longitude > 180 
+        ? "Долгота должна быть в пределах от -180 до 180" 
+        : "";
+    }
+  
+    if (name === "utcOffset") {
+      newErrors.utcOffset = !validateUtcOffset(value) 
+        ? "Некорректный формат UTC (пример: +03:00)" 
+        : "";
+    }
+  
+    setErrors(newErrors);
+  };
+  
+  
+  
+
+  // const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const { name, value } = e.target;
+
+  //   if (name === "latitude" || name === "longitude") {
+  //     if (!validateCoordinates(formData.latitude, formData.longitude)) {
+  //       setErrors({ ...errors, latitude: "Некорректные координаты", longitude: "Некорректные координаты" });
+  //     }
+  //   }
+
+  //   if (name === "utcOffset") {
+  //     if (!validateUtcOffset(value)) {
+  //       setErrors({ ...errors, utcOffset: "Некорректный формат UTC (пример: +03:00)" });
+  //     }
+  //   }
+  // };
 
   const handleCityChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const city = e.target.value;
@@ -117,20 +178,25 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    let newErrors = { latitude: "", longitude: "", utcOffset: "" };
+
     // Проверяем координаты
     if (!validateCoordinates(formData.latitude, formData.longitude)) {
-      alert("Ошибка: Введите корректные координаты!");
-      return;
+      newErrors.latitude = "Некорректные координаты";
+      newErrors.longitude = "Некорректные координаты";
     }
 
     // Проверяем часовой пояс
     if (!validateUtcOffset(formData.utcOffset)) {
-      alert("Ошибка: Введите корректный часовой пояс в формате UTC±hh:mm");
-      return;
+      newErrors.utcOffset = "Некорректный формат UTC (пример: +03:00)";
     }
 
-    setBirthData(formData);
-    setSubmittedData(formData);
+    if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset) {
+      setBirthData(formData);
+      setSubmittedData(formData);
+    }
+
+    
   };
 
   return (
@@ -144,19 +210,45 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             {/* Имя */}
             <div>
               <label className="block text-gray-700 text-sm mb-1">Имя</label>
-              <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
+              <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
             </div>
 
-            {/* Дата */}
-            <div>
-              <label className="block text-gray-700 text-sm mb-1">Дата рождения</label>
-              <input type="date" name="date" value={formData.date} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
+            {/* Дата, время и UTC в одну строку */}
+            <div className="flex flex-wrap gap-4">
+              {/* Дата */}
+              <div className="flex-1 min-w-[120px]">
+                <label className="block text-gray-700 text-sm mb-1">Дата рождения</label>
+                <input type="date" name="date" value={formData.date} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
+              </div>
+
+              {/* Время */}
+              <div className="flex-1 min-w-[120px]">
+                <label className="block text-gray-700 text-sm mb-1">Время рождения</label>
+                <input type="time" name="time" value={formData.time} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
+              </div>
+
+              {/* UTC */}
+              <div className="flex-1 min-w-[120px]">
+                <label className="block text-gray-700 text-sm mb-1">Часовой пояс (UTC)</label>
+                <input type="text" name="utcOffset" value={formData.utcOffset} onChange={handleChange} placeholder={localTime || "+00:00"} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
+              </div>
             </div>
 
-            {/* Время */}
-            <div>
-              <label className="block text-gray-700 text-sm mb-1">Время рождения</label>
-              <input type="time" name="time" value={formData.time} onChange={handleChange} required className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
+            {/* Широта и долгота в одну строку */}
+            <div className="flex flex-wrap gap-4 mt-4">
+              {/* Широта */}
+              <div className="flex-1 min-w-[120px]">
+                <label className="block text-gray-700 text-sm mb-1">Широта</label>
+                <input type="text" name="latitude" value={formData.latitude} onChange={handleChange} onBlur={handleBlur} placeholder="Введите широту" className={`w-full p-3 border ${errors.latitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
+                {errors.latitude && <p className="text-red-500 text-sm mt-1">{errors.latitude}</p>}
+              </div>
+
+              {/* Долгота */}
+              <div className="flex-1 min-w-[120px]">
+                <label className="block text-gray-700 text-sm mb-1">Долгота</label>
+                <input type="text" name="longitude" value={formData.longitude} onChange={handleChange} onBlur={handleBlur} placeholder="Введите долготу" className={`w-full p-3 border ${errors.longitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
+                {errors.longitude && <p className="text-red-500 text-sm mt-1">{errors.longitude}</p>}
+              </div>
             </div>
 
             {/* Город */}
@@ -189,24 +281,6 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                   ))}
                 </ul>
               )}
-            </div>
-
-            {/* Широта */}
-            <div>
-              <label className="block text-gray-700 text-sm mb-1">Широта</label>
-              <input type="text" name="latitude" value={formData.latitude} onChange={handleChange} placeholder="Введите широту вручную" className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
-            </div>
-
-            {/* Долгота */}
-            <div>
-              <label className="block text-gray-700 text-sm mb-1">Долгота</label>
-              <input type="text" name="longitude" value={formData.longitude} onChange={handleChange} placeholder="Введите долготу вручную" className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
-            </div>
-
-            {/* Часовой пояс */}
-            <div>
-              <label className="block text-gray-700 text-sm mb-1">Часовой пояс (UTC)</label>
-              <input type="text" name="utcOffset" value={formData.utcOffset} onChange={handleChange} placeholder={localTime || "+00:00"} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
             </div>
 
             {/* Система домов */}
