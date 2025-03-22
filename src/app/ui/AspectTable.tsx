@@ -33,6 +33,8 @@ interface AspectTableProps {
 // Компонент таблицы аспектов
 const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions, planets }) => {
 
+  
+
   return (
     <div className="w-full max-w-5xl p-4 flex flex-col items-center text-[14px]">
       <h3 className="text-xl font-medium mb-4 text-center">Аспекты</h3>
@@ -45,6 +47,7 @@ const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions, planets }) 
             const formattedOrb = formatOrb(aspect.orb);
 
             const planet1 = planets.find(p => p.name == aspect.point1Key);
+            
             const isRetrograde1 = planet1?.isRetrograde;
 
             const planet2 = planets.find(p => p.name == aspect.point2Key);
@@ -67,11 +70,11 @@ const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions, planets }) 
                 key={index}
                 className={`text-left ${index % 2 === 1 ? 'bg-gray-100' : ''} hover:bg-gray-200`}
               >
-                <td className="p-1 font-bold text-base w-[50px]">{point1Symbol} <span className="align-baseline font-normal text-sm">{isRetrograde1 ? "нR" : "н"}</span></td>
+                <td className="p-1 font-bold text-base w-[50px]">{point1Symbol} </td>
                 <td className="p-1 font-bold text-base w-[40px]">
                   <span className={aspectColor}>{aspectSymbol}</span>
                 </td>
-                <td className="p-1 font-bold text-base">{point2Symbol} <span className="align-baseline font-normal text-sm">{isRetrograde2 ? "нR" : "н"}</span></td>
+                <td className="p-1 font-bold text-base">{point2Symbol} </td>
                 <td className="p-1">{formattedOrb}</td>
               </tr>
             );
@@ -86,3 +89,4 @@ const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions, planets }) 
 
 
 export default AspectTable;
+{/* <span className="align-baseline font-normal text-sm">{isRetrograde1 ? "нR" : "н"}</span> */}

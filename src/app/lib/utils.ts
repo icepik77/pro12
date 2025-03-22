@@ -34,9 +34,6 @@ export const findHouseForPlanet = (decimalDegrees: number, cuspsData: number[]) 
 
 export const createFormedAspects = (aspectsArray : any[], astroData: AstroData) => {
 
-  console.log("aspectsArray", aspectsArray);
-  console.log("astroData", astroData)
-
   return aspectsArray.map((aspect) => {
     const pointPosition = astroData.planets[aspect.point1Label.charAt(0).toUpperCase() + aspect.point1Label.slice(1)]?.[0] || 0;
     const toPointPosition = astroData.planets[aspect.point2Label.charAt(0).toUpperCase() + aspect.point2Label.slice(1)]?.[0] || 0;

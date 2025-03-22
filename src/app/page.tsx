@@ -99,7 +99,7 @@ export default function Home() {
           </div>
         </div>
           {/* Футер */}
-        <footer className="p-6 rounded-t-[50px] bg-[#7D58C6]">
+        <footer className="p-6 rounded-t-[50px] bg-[#172935]">
           <div className="text-white text-center">
             <p>© 2025 ORION. Все права защищены.</p>
           </div>

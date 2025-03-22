@@ -360,7 +360,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             </div>
           </div>
 
-          <button type="submit" className="mt-6 w-full p-3 bg-[#7D58C6] text-white font-medium rounded-md hover:bg-gray-800 transition">Построить карту</button>
+          <button type="submit" className="mt-6 w-full p-3 bg-[#172935] text-white font-medium rounded-md hover:bg-gray-800 transition">Построить карту</button>
         </form>
 
         {submittedData && (

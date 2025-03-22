@@ -239,22 +239,12 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     } else {
       console.error("Данные домов пустые или некорректные");
     }
-    // setAspectsData(aspectsData);
-
-    const formattedPlanetPositions: Planet[] = planetPositionsList
-    .filter((planet): planet is NonNullable<typeof planet> => planet !== null) // Убираем null-значения
-    .map((planet) => ({
-      name: String(planet.name), // Приводим к строке (если вдруг name будет `any`)
-      isRetrograde: planet.isRetrograde ? "retrograde" : "direct", // Приводим к строке
-      sign: planet.sign,
-      position: planet.position,
-      house: planet.house,
-    }));
-
+    
     const aspectDataPlanet = getAspectsForPlanet(astroData);
     setAspectsData(aspectDataPlanet);
-    
 
+    console.log("planetPositionsList", planetPositionsList);
+  
     const data = {
       planets: planetPositionsList,
       aspects: aspectDataPlanet,
