@@ -139,7 +139,7 @@ export const getAspectsForPlanet = (astroData: AstroData) => {
       });
     });
   });
-
+  console.log("foundAspects", foundAspects);
   return foundAspects;
 };
 
