@@ -1,6 +1,7 @@
 'use client'
 
 import React from "react";
+import { Planet } from "../lib/definitions";
 
 // Сопоставление планет и точек с Unicode-символами
 const planetSymbols: Record<string, string> = {
@@ -34,13 +35,6 @@ const zodiacSymbols: Record<string, string> = {
   pisces: "♓︎"
 };
 
-interface Planet {
-  name: string; // Например, "sun"
-  sign: string; // Например, "aries"
-  position: string; // Например, "15°"
-  house: number; // Например, 7
-}
-
 interface PlanetTableProps {
   planetPositions: Planet[];
 }
@@ -60,14 +54,14 @@ const PlanetTable: React.FC<PlanetTableProps> = ({ planetPositions }) => {
             return (
               <tr
                 key={index}
-                className={`text-center ${index % 2 === 1 ? 'bg-gray-100' : ''} hover:bg-gray-200`}
+                className={`text-left ${index % 2 === 1 ? 'bg-gray-100' : ''} hover:bg-gray-200`}
               >
-                <td className="p-3 text-lg font-bold">
-                  {planetSymbols[planet.name.toLowerCase()] || planet.name}
+                <td className="p-1 text-lg font-bold text-base">
+                  {planetSymbols[planet.name.toLowerCase()] || planet.name} <span className="align-baseline font-normal text-sm">{planet.isRetrograde ? "нR" : "н"}</span>
                 </td>
-                <td className="p-3 font-bold">{signSymbol}</td>
-                <td className="p-3">{degrees}</td>
-                <td className="p-3">{planet.house}</td>
+                <td className="p-1 font-bold text-base">{signSymbol}</td>
+                <td className="p-1">{degrees}</td>
+                <td className="p-1">{planet.house}</td>
               </tr>
             );
           })}
@@ -76,6 +70,5 @@ const PlanetTable: React.FC<PlanetTableProps> = ({ planetPositions }) => {
     </div>
   );
 };
-
 
 export default PlanetTable;

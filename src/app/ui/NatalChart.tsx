@@ -98,8 +98,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       console.error("Некорректные координаты:", latitude, longitude);
       return;
     }
-    
-
+  
     const origin = new Origin({
       year,
       month: month - 1, // В JS месяцы с 0
@@ -153,7 +152,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       cusps: cuspsData,
     };
 
-    console.log("Данные об аспектах", horoscope);
+    console.log("Данные об аспектах", astroData.planets);
     const utcTime = origin.localTimeFormatted?.slice(-6) || ""; 
     if (setLocalTime) {
       setLocalTime(utcTime);
@@ -165,11 +164,12 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       if (!planet?.ChartPosition?.Ecliptic?.DecimalDegrees) return null;
 
       const ecliptic = planet.ChartPosition.Ecliptic.DecimalDegrees;
+      const isRetrograde = planet.isRetrograde;
       const sign = getZodiacSign(ecliptic);
       const position = formatPosition(ecliptic);
       const house = findHouseForPlanet(ecliptic, cuspsData);
 
-      return { name: key, sign, position, house };
+      return { name: key, isRetrograde, sign, position, house };
     })
     .filter(Boolean); // Убираем null-значения
 
@@ -178,15 +178,16 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
     if (lilithData) {
       const sign = getZodiacSign(lilithData);
+      const isRetrograde = lilithData.isRetrograde;
       const position = formatPosition(lilithData);
       const house = findHouseForPlanet(lilithData, cuspsData);
-
+      
       // Заменяем последний элемент в списке на Лилит
       if (planetPositionsList.length > 0) {
-        planetPositionsList[planetPositionsList.length - 1] = { name: "lilith", sign, position, house };
+        planetPositionsList[planetPositionsList.length - 1] = { name: "lilith", isRetrograde, sign, position, house };
       } else {
         // Если список пуст, просто добавляем Лилит
-        planetPositionsList.push({ name: "lilith", sign, position, house });
+        planetPositionsList.push({ name: "lilith", isRetrograde, sign, position, house });
       }
     }
 
@@ -197,13 +198,14 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       const sign = getZodiacSign(nNode);
       const position = formatPosition(nNode);
       const house = findHouseForPlanet(nNode, cuspsData);
+      const isRetrograde = nNode.isRetrograde;
 
       // Заменяем последний элемент в списке на NN
       if (planetPositionsList.length > 0) {
-        planetPositionsList[planetPositionsList.length - 2] = { name: "northnode", sign, position, house };
+        planetPositionsList[planetPositionsList.length - 2] = { name: "northnode", isRetrograde, sign, position, house };
       } else {
         // Если список пуст, просто добавляем NN
-        planetPositionsList.push({ name: "northnode", sign, position, house });
+        planetPositionsList.push({ name: "northnode", isRetrograde, sign, position, house });
       }
     }
 
@@ -235,7 +237,13 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       console.error("Данные домов пустые или некорректные");
     }
     setAspectsData(aspectsData);
-    setAspectPositions(aspectsData);
+
+    const data = {
+      planets: planetPositionsList,
+      aspects: aspectsData,
+    };
+
+    setAspectPositions(data);
 
   }, [birthData]);
 

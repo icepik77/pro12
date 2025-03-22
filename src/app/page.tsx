@@ -27,7 +27,7 @@ export default function Home() {
 
   const [planetPositions, setPlanetPositions] = useState<any[]>([]);
   const [housePositions, setHousePositions] = useState<any[]>([]);
-  const [aspectPositions, setAspectPositions] = useState<any[]>([]);
+  const [aspectPositions, setAspectPositions] = useState<any>();
   const [localTime, setLocalTime] = useState<string | undefined>();
 
   // Отслеживаем изменение данных в planetPositions
@@ -37,7 +37,7 @@ export default function Home() {
     if (planetPositions.length > 0 && housePositions.length > 0) {
       setIsDataLoaded(true); // Когда данные загружены, запускаем анимацию
     }
-  }, [planetPositions, housePositions]); // useEffect срабатывает, когда planetPositions обновляются
+  }, [planetPositions, housePositions, aspectPositions]); // useEffect срабатывает, когда planetPositions обновляются
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] pt-3">
@@ -91,14 +91,17 @@ export default function Home() {
               animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
               transition={{ duration: 1 }} // Плавное появление за 1 секунду
             >
-              <AspectTable aspectsPositions ={aspectPositions} />
+              <AspectTable
+                aspectsPositions={aspectPositions ? aspectPositions.aspects : []}
+                planets={aspectPositions ? aspectPositions.planets : []}
+              />
             </motion.div>
           </div>
         </div>
           {/* Футер */}
         <footer className="p-6 rounded-t-[50px] bg-[#7D58C6]">
           <div className="text-white text-center">
-            <p>© 2025 Натальная карта. Все права защищены.</p>
+            <p>© 2025 ORION. Все права защищены.</p>
           </div>
         </footer>
       </main>

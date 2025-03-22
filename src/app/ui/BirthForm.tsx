@@ -236,8 +236,8 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   return (
     <div className="flex flex-col items-center bg-white text-black p-6">
       <div className="max-w-2xl w-full">
-        <h2 className="text-3xl font-medium mb-2">Заполните данные о рождении</h2>
-        <p className="text-gray-500 mb-8">Чтобы мы могли составить натальную карту</p>
+        <h2 className="text-3xl font-medium mb-2">Рассчитать натальную карту онлайн</h2>
+        <p className="text-gray-500 mb-8">Заполните данные о рождении</p>
 
         <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
           <div className="space-y-4">

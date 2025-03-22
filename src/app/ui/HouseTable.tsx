@@ -60,11 +60,11 @@ const HouseTable: React.FC<HouseTableProps> = ({ housePositions }) => {
             return (
               <tr
                 key={index}
-                className={`text-center ${index % 2 === 1 ? 'bg-gray-100' : ''} hover:bg-gray-200`}
+                className={`text-left ${index % 2 === 1 ? 'bg-gray-100' : ''} hover:bg-gray-200`}
               >
-                <td className="p-3">{house.name}</td>
-                <td className="p-3">{degrees}</td>
-                <td className="p-3 font-bold text-base">{signSymbol}</td>
+                <td className="p-1">{house.name}</td>
+                <td className="p-1">{degrees}</td>
+                <td className="p-1 font-bold text-base">{signSymbol}</td>
               </tr>
             );
           })}

@@ -1,6 +1,7 @@
 'use client';
 
 import React from "react";
+import { Planet, Aspect } from "../lib/definitions";
 
 // Сопоставление планет с их символами
 const planetSymbols: Record<string, string> = {
@@ -22,24 +23,16 @@ const formatOrb = (orb: number): string => {
   return `${degrees}° ${minutes}' ${seconds}''`;
 };
 
-// Интерфейс для аспекта
-interface Aspect {
-  point1Key: string;
-  point1Label: string;
-  point2Key: string;
-  point2Label: string;
-  aspectKey: string;
-  orb: number;
-}
-
 // Интерфейс пропсов компонента
 interface AspectTableProps {
     aspectsPositions: Aspect[];
+    planets: Planet[]
 }
 
 // Компонент таблицы аспектов
 // Компонент таблицы аспектов
-const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions }) => {
+const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions, planets }) => {
+
   return (
     <div className="w-full max-w-5xl p-4 flex flex-col items-center text-[14px]">
       <h3 className="text-xl font-medium mb-4 text-center">Аспекты</h3>
@@ -50,6 +43,12 @@ const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions }) => {
             const aspectSymbol = aspectSymbols[aspect.aspectKey] || aspect.aspectKey;
             const point2Symbol = planetSymbols[aspect.point2Key] || aspect.point2Label;
             const formattedOrb = formatOrb(aspect.orb);
+
+            const planet1 = planets.find(p => p.name == aspect.point1Key);
+            const isRetrograde1 = planet1?.isRetrograde;
+
+            const planet2 = planets.find(p => p.name == aspect.point2Key);
+            const isRetrograde2 = planet2?.isRetrograde;
 
             // Выбираем цвет для символа аспекта
             let aspectColor = '';
@@ -66,14 +65,14 @@ const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions }) => {
             return (
               <tr
                 key={index}
-                className={`text-center ${index % 2 === 1 ? 'bg-gray-100' : ''} hover:bg-gray-200`}
+                className={`text-left ${index % 2 === 1 ? 'bg-gray-100' : ''} hover:bg-gray-200`}
               >
-                <td className="p-3 font-bold text-base">{point1Symbol}</td>
-                <td className="p-3 font-bold text-base">
+                <td className="p-1 font-bold text-base w-[50px]">{point1Symbol} <span className="align-baseline font-normal text-sm">{isRetrograde1 ? "нR" : "н"}</span></td>
+                <td className="p-1 font-bold text-base w-[40px]">
                   <span className={aspectColor}>{aspectSymbol}</span>
                 </td>
-                <td className="p-3 font-bold text-base">{point2Symbol}</td>
-                <td className="p-3">{formattedOrb}</td>
+                <td className="p-1 font-bold text-base">{point2Symbol} <span className="align-baseline font-normal text-sm">{isRetrograde2 ? "нR" : "н"}</span></td>
+                <td className="p-1">{formattedOrb}</td>
               </tr>
             );
           })}

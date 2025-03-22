@@ -1,4 +1,5 @@
-import { AstroData } from "./definitions";
+import { AstroData, Planet } from "./definitions";
+
 
 export const formatPosition = (decimalDegrees: number) => {
   const degreesInSign = decimalDegrees % 30; // Ограничиваем до 30 градусов
@@ -72,3 +73,57 @@ export const formatUtcOffset = (offset: number) => {
   const minutes = Math.abs((offset % 1) * 60);
   return `UTC${hours >= 0 ? "+" : ""}${hours}:${minutes.toFixed(0).padStart(2, "0")}`;
 };
+
+// export const getAspectsPro = (planets : Planet) =>{
+
+//   const aspects = {
+//     conjunction: 0,    // Соединение
+//     opposition: 180,   // Оппозиция
+//     trine: 120,        // Тригон
+//     square: 90,        // Квадрат
+//     sextile: 60        // Секстиль
+//   };
+  
+//   // Задаём орбисы для каждой планеты
+//   const orbs = {
+//     Sun: 8,
+//     Moon: 6,
+//     Mercury: 5,
+//     Venus: 5,
+//     Mars: 6,
+//     Jupiter: 7,
+//     Saturn: 7,
+//     Uranus: 5,
+//     Neptune: 5,
+//     Pluto: 5
+//   };
+  
+//   let foundAspects = [];
+  
+//   planets.forEach((planetA, indexA) => {
+//     planets.forEach((planetB, indexB) => {
+//       if (indexA >= indexB) return; // Не сравниваем одну планету с собой
+
+//       const degreeA = planetA.position;
+//       const degreeB = planetB.position;
+//       const diff = Math.abs(degreeA - degreeB);
+//       const adjustedDiff = Math.min(diff, 360 - diff); // Учитываем круговую систему
+
+//       Object.entries(aspects).forEach(([aspect, aspectDegree]) => {
+//         const orbA = orbs[planetA.name] || 5; // Берём орбис планеты A (по умолчанию 5)
+//         const orbB = orbs[planetB.name] || 5; // Берём орбис планеты B
+
+//         const maxOrb = Math.max(orbA, orbB); // Используем более широкий орбис
+//         if (Math.abs(adjustedDiff - aspectDegree) <= maxOrb) {
+//           foundAspects.push({
+//             planetA: planetA.name,
+//             planetB: planetB.name,
+//             aspect: aspect,
+//             difference: adjustedDiff
+//           });
+//         }
+//       });
+//     });
+//   });
+  
+// }

@@ -1,12 +1,13 @@
 import Link from "next/link";
+import Image from "next/image";
+import logo from "@/../public/logo.jpg"
 
 const Header = () => {
   return (
     <header className="flex items-center justify-between p-4 bg-white shadow-md mb-[12px]">
-      {/* Название Академии вместо логотипа */}
-      <div className="flex flex-col items-center text-center text-[#7D58C6] font-bold text-lg leading-tight">
-        <span>Академия</span>
-        <span>астрологии</span>
+      {/* Логотип слева */}
+      <div>
+        <Image src={logo} alt="Логотип" width={50} height={50} />
       </div>
 
       {/* Кнопка входа */}
