@@ -1,4 +1,4 @@
-import { AstroData, Planet } from "./definitions";
+import { AstroData, Aspect } from "./definitions";
 
 
 export const formatPosition = (decimalDegrees: number) => {
@@ -33,9 +33,14 @@ export const findHouseForPlanet = (decimalDegrees: number, cuspsData: number[]) 
 };
 
 export const createFormedAspects = (aspectsArray : any[], astroData: AstroData) => {
+
+  console.log("aspectsArray", aspectsArray);
+  console.log("astroData", astroData)
+
   return aspectsArray.map((aspect) => {
-    const pointPosition = astroData.planets[aspect.point1Label]?.[0] || 0;
-    const toPointPosition = astroData.planets[aspect.point2Label]?.[0] || 0;
+    const pointPosition = astroData.planets[aspect.point1Label.charAt(0).toUpperCase() + aspect.point1Label.slice(1)]?.[0] || 0;
+    const toPointPosition = astroData.planets[aspect.point2Label.charAt(0).toUpperCase() + aspect.point2Label.slice(1)]?.[0] || 0;
+
 
     return {
       point: {
@@ -74,56 +79,70 @@ export const formatUtcOffset = (offset: number) => {
   return `UTC${hours >= 0 ? "+" : ""}${hours}:${minutes.toFixed(0).padStart(2, "0")}`;
 };
 
-// export const getAspectsPro = (planets : Planet) =>{
 
-//   const aspects = {
-//     conjunction: 0,    // Соединение
-//     opposition: 180,   // Оппозиция
-//     trine: 120,        // Тригон
-//     square: 90,        // Квадрат
-//     sextile: 60        // Секстиль
-//   };
+export const getAspectsForPlanet = (astroData: AstroData) => {
   
-//   // Задаём орбисы для каждой планеты
-//   const orbs = {
-//     Sun: 8,
-//     Moon: 6,
-//     Mercury: 5,
-//     Venus: 5,
-//     Mars: 6,
-//     Jupiter: 7,
-//     Saturn: 7,
-//     Uranus: 5,
-//     Neptune: 5,
-//     Pluto: 5
-//   };
-  
-//   let foundAspects = [];
-  
-//   planets.forEach((planetA, indexA) => {
-//     planets.forEach((planetB, indexB) => {
-//       if (indexA >= indexB) return; // Не сравниваем одну планету с собой
+  const aspects = {
+    conjunction: 0,
+    opposition: 180,
+    trine: 120,
+    square: 90,
+    sextile: 60,
+  };
 
-//       const degreeA = planetA.position;
-//       const degreeB = planetB.position;
-//       const diff = Math.abs(degreeA - degreeB);
-//       const adjustedDiff = Math.min(diff, 360 - diff); // Учитываем круговую систему
+  const orbs = {
+    sun: 8.5,
+    moon: 8.5,
+    mercury: 8.5,
+    venus: 8.5,
+    mars: 8.5,
+    jupiter: 8.5,
+    saturn: 9,
+    uranus: 8.5,
+    neptune: 6.5,
+    pluto: 8.5,
+    lilith: 8.5,
+    northnode: 8.5,
+  };
 
-//       Object.entries(aspects).forEach(([aspect, aspectDegree]) => {
-//         const orbA = orbs[planetA.name] || 5; // Берём орбис планеты A (по умолчанию 5)
-//         const orbB = orbs[planetB.name] || 5; // Берём орбис планеты B
+  let foundAspects: Aspect[] = [];
 
-//         const maxOrb = Math.max(orbA, orbB); // Используем более широкий орбис
-//         if (Math.abs(adjustedDiff - aspectDegree) <= maxOrb) {
-//           foundAspects.push({
-//             planetA: planetA.name,
-//             planetB: planetB.name,
-//             aspect: aspect,
-//             difference: adjustedDiff
-//           });
-//         }
-//       });
-//     });
-//   });
-  
-// }
+  // Преобразуем объект `astroData.planets` в массив объектов
+  const planetsArray = Object.entries(astroData.planets).map(([name, position]) => ({
+    name: name,
+    position: position[0], // Берём первое значение из массива
+  }));
+
+  planetsArray.forEach((planetA, indexA) => {
+    planetsArray.forEach((planetB, indexB) => {
+      if (indexA >= indexB) return;
+
+      const degreeA = (planetA.position);
+      const degreeB = (planetB.position);
+
+      const diff = Math.abs(degreeA - degreeB);
+      const adjustedDiff = Math.min(diff, 360 - diff);
+
+      Object.entries(aspects).forEach(([aspect, aspectDegree]) => {
+        const orbA = orbs[planetA.name as keyof typeof orbs] || 5;
+        const orbB = orbs[planetB.name as keyof typeof orbs] || 5;
+        const maxOrb = Math.max(orbA, orbB);
+
+        const aspectDiff = Math.abs(adjustedDiff - aspectDegree); // Насколько отклонение от точного аспекта
+        if (aspectDiff <= maxOrb) {
+          foundAspects.push({
+            point1Key: planetA.name,
+            point2Key: planetB.name,
+            aspectKey: aspect,
+            orb: aspectDiff, // Сохраняем точное отклонение
+            point1Label: planetA.name,
+            point2Label: planetB.name,
+          });
+        }
+      });
+    });
+  });
+
+  return foundAspects;
+};
+

@@ -5,9 +5,9 @@ import { Planet, Aspect } from "../lib/definitions";
 
 // Сопоставление планет с их символами
 const planetSymbols: Record<string, string> = {
-  sun: "☉", moon: "☽", mercury: "☿", venus: "♀", mars: "♂",
-  jupiter: "♃", saturn: "♄", uranus: "♅", neptune: "♆", pluto: "♇",
-  chiron: "⚷", lilith: "⚸", northnode: "☊", southnode: "☋", sirius: "★"
+  Sun: "☉", Moon: "☽", Mercury: "☿", Venus: "♀", Mars: "♂",
+  Jupiter: "♃", Saturn: "♄", Uranus: "♅", Neptune: "♆", Pluto: "♇",
+  Chiron: "⚷", Lilith: "⚸", NNode: "☊", Southnode: "☋", Sirius: "★"
 };
 
 // Сопоставление аспектов с их символами

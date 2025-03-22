@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
 import { Origin, Horoscope } from 'circular-natal-horoscope-js';
-import { NatalChartProps } from '../lib/definitions';
-import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects } from '../lib/utils';
-import { homedir } from 'os';
+import { AstroData, NatalChartProps } from '../lib/definitions';
+import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects, getAspectsForPlanet } from '../lib/utils';
+import { Planet } from '../lib/definitions';
 
 const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions, setLocalTime }) => {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -13,6 +13,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
   const [aspectsData, setAspectsData] = useState<any>(null);
   const [style, setStyle] = useState<string>('elements'); // Добавляем состояние для стиля оформления
   const houseSystem = birthData.houseSystem || 'koch'; // Берём систему домов
+  
 
   // Функция для определения цветов в зависимости от стиля
   const getStyleSettings = () => {
@@ -134,20 +135,20 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
 
     // Преобразуем данные в формат, пригодный для astrochart
-    const astroData = {
+    const astroData : AstroData = {
       planets: {
-        "Sun": [planetsData.sun?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
-        "Moon": [planetsData.moon?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
-        "Mercury": [planetsData.mercury?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
-        "Venus": [planetsData.venus?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
-        "Mars": [planetsData.mars?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
-        "Jupiter": [planetsData.jupiter?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
-        "Saturn": [planetsData.saturn?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
-        "Uranus": [planetsData.uranus?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
-        "Neptune": [planetsData.neptune?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
-        "Pluto": [planetsData.pluto?.ChartPosition?.Ecliptic?.DecimalDegrees || 0],
-        "Lilith": [horoscope.CelestialPoints.lilith?.ChartPosition.Ecliptic?.DecimalDegrees || 0],
-        "NNode": [horoscope.CelestialPoints.northnode?.ChartPosition.Ecliptic?.DecimalDegrees || 0],
+        "Sun": [planetsData.sun.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Moon": [planetsData.moon.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Mercury": [planetsData.mercury.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Venus": [planetsData.venus.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Mars": [planetsData.mars.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Jupiter": [planetsData.jupiter.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Saturn": [planetsData.saturn.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Uranus": [planetsData.uranus.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Neptune": [planetsData.neptune.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Pluto": [planetsData.pluto.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Lilith": [horoscope.CelestialPoints.lilith.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "NNode": [horoscope.CelestialPoints.northnode.ChartPosition.Ecliptic.DecimalDegrees || 0],
       },
       cusps: cuspsData,
     };
@@ -209,6 +210,8 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       }
     }
 
+    
+
     // Список значений для поля name
     const houseNames = [
       'Asc', 'II', 'III', 'IC', 'V', 'VI', 'Dsc', 'VIII', 'IX', 'MC', 'XI', 'XII'
@@ -236,14 +239,29 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     } else {
       console.error("Данные домов пустые или некорректные");
     }
-    setAspectsData(aspectsData);
+    // setAspectsData(aspectsData);
+
+    const formattedPlanetPositions: Planet[] = planetPositionsList
+    .filter((planet): planet is NonNullable<typeof planet> => planet !== null) // Убираем null-значения
+    .map((planet) => ({
+      name: String(planet.name), // Приводим к строке (если вдруг name будет `any`)
+      isRetrograde: planet.isRetrograde ? "retrograde" : "direct", // Приводим к строке
+      sign: planet.sign,
+      position: planet.position,
+      house: planet.house,
+    }));
+
+    const aspectDataPlanet = getAspectsForPlanet(astroData);
+    setAspectsData(aspectDataPlanet);
+    
 
     const data = {
       planets: planetPositionsList,
-      aspects: aspectsData,
+      aspects: aspectDataPlanet,
     };
 
     setAspectPositions(data);
+    setAspectsData(aspectDataPlanet);
 
   }, [birthData]);
 

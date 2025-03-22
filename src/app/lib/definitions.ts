@@ -20,13 +20,13 @@ export interface Planet {
 
 // Интерфейс для аспекта
 export interface Aspect {
-    point1Key: string;
-    point1Label: string;
-    point2Key: string;
-    point2Label: string;
-    aspectKey: string;
-    orb: number;
-  }
+  point1Key: string;
+  point1Label: string;
+  point2Key: string;
+  point2Label: string;
+  aspectKey: string;
+  orb: number;
+}
 
 
 // Интерфейс для натальных данных
