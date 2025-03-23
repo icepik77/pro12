@@ -43,8 +43,8 @@ interface BirthFormProps {
 export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   const [formData, setFormData] = useState({
     name: "",
-    date: "07.08.1985",
-    time: "05:26",
+    date: "",
+    time: "",
     city: "",
     latitude: "",
     longitude: "",
