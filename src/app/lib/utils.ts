@@ -131,13 +131,7 @@ export const getAspectsForPlanet = (astroData: AstroData) => {
 
         const aspectDiff = Math.abs(adjustedDiff - aspectDegree); // Насколько отклонение от точного аспекта
 
-        if (planetA.name === 'Uranus' || planetB.name === 'Uranus') {
-          console.log(`Planet A: ${planetA.name}, Degree A: ${degreeA}`);
-          console.log(`Planet B: ${planetB.name}, Degree B: ${degreeB}`);
-          console.log(`Diff: ${diff}, Adjusted Diff: ${adjustedDiff}`);
-          console.log("aspectDiff", aspectDiff);
-          console.log("maxOrb", maxOrb);
-        }
+
 
         if (aspectDiff <= maxOrb) {
           foundAspects.push({
