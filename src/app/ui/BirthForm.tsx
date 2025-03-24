@@ -43,8 +43,8 @@ interface BirthFormProps {
 export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   const [formData, setFormData] = useState({
     name: "",
-    date: "",
-    time: "",
+    date: "07.08.1985",
+    time: "12:00",
     city: "",
     latitude: "",
     longitude: "",
@@ -227,7 +227,6 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     }
   
     if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset) {
-      console.log('Передаваемые данные:', formData);  // Логируем данные перед отправкой
       setBirthData(formData);
       setSubmittedData(formData);
     }

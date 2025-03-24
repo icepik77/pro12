@@ -111,6 +111,8 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       longitude,
     });
 
+    console.log("origin", origin);
+
     const horoscope = new Horoscope({
       origin,
       houseSystem: houseSystem,
@@ -124,14 +126,14 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
     const planetsData = horoscope.CelestialBodies;
     const cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
-    const aspectsData = horoscope.Aspects.all.filter(item => 
-      !item.point1Key.toLowerCase().includes('sirius') && 
-      !item.point2Key.toLowerCase().includes('sirius') &&
-      !item.point1Key.toLowerCase().includes('southnode') && 
-      !item.point2Key.toLowerCase().includes('southnode') &&
-      !item.point1Key.toLowerCase().includes('chiron') && 
-      !item.point2Key.toLowerCase().includes('chiron')
-    );
+    // const aspectsData = horoscope.Aspects.all.filter(item => 
+    //   !item.point1Key.toLowerCase().includes('sirius') && 
+    //   !item.point2Key.toLowerCase().includes('sirius') &&
+    //   !item.point1Key.toLowerCase().includes('southnode') && 
+    //   !item.point2Key.toLowerCase().includes('southnode') &&
+    //   !item.point1Key.toLowerCase().includes('chiron') && 
+    //   !item.point2Key.toLowerCase().includes('chiron')
+    // );
 
 
     // Преобразуем данные в формат, пригодный для astrochart
@@ -153,7 +155,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       cusps: cuspsData,
     };
 
-    console.log("Данные об аспектах", astroData.planets);
+    console.log("Данные об аспектах", horoscope.Houses);
     const utcTime = origin.localTimeFormatted?.slice(-6) || ""; 
     if (setLocalTime) {
       setLocalTime(utcTime);
@@ -242,8 +244,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     
     const aspectDataPlanet = getAspectsForPlanet(astroData);
     setAspectsData(aspectDataPlanet);
-
-    console.log("planetPositionsList", planetPositionsList);
   
     const data = {
       planets: planetPositionsList,
