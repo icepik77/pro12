@@ -88,19 +88,21 @@ export const getAspectsForPlanet = (astroData: AstroData) => {
   };
 
   const orbs = {
-    sun: 8.5,
-    moon: 8.5,
-    mercury: 8.5,
-    venus: 8.5,
-    mars: 8.5,
-    jupiter: 8.5,
-    saturn: 9,
-    uranus: 8.5,
-    neptune: 6.5,
-    pluto: 8.5,
-    lilith: 8.5,
-    northnode: 8.5,
+    Sun: 8.5,
+    Moon: 8.5,
+    Mercury: 8.5,
+    Venus: 8.5,
+    Mars: 8.5,
+    Jupiter: 8.5,
+    Saturn: 9,
+    Uranus: 8.5,
+    Neptune: 6.5,
+    Pluto: 6.5,
+    Lilith: 8.5,
+    NNode: 8.5,
   };
+  
+
 
   let foundAspects: Aspect[] = [];
 
@@ -123,9 +125,20 @@ export const getAspectsForPlanet = (astroData: AstroData) => {
       Object.entries(aspects).forEach(([aspect, aspectDegree]) => {
         const orbA = orbs[planetA.name as keyof typeof orbs] || 5;
         const orbB = orbs[planetB.name as keyof typeof orbs] || 5;
-        const maxOrb = Math.max(orbA, orbB);
+        const maxOrb = Math.min(orbA, orbB);
+
+
 
         const aspectDiff = Math.abs(adjustedDiff - aspectDegree); // Насколько отклонение от точного аспекта
+
+        if (planetA.name === 'Uranus' || planetB.name === 'Uranus') {
+          console.log(`Planet A: ${planetA.name}, Degree A: ${degreeA}`);
+          console.log(`Planet B: ${planetB.name}, Degree B: ${degreeB}`);
+          console.log(`Diff: ${diff}, Adjusted Diff: ${adjustedDiff}`);
+          console.log("aspectDiff", aspectDiff);
+          console.log("maxOrb", maxOrb);
+        }
+
         if (aspectDiff <= maxOrb) {
           foundAspects.push({
             point1Key: planetA.name,

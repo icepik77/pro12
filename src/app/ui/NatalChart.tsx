@@ -105,13 +105,29 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       month: month - 1, // В JS месяцы с 0
       date: day,
       hour,
-      second,
       minute,
+      second,
       latitude,
       longitude,
     });
 
     console.log("origin", origin);
+    
+    
+
+    const customOrbs = {
+      conjunction: 10,
+      opposition: 8,
+      trine: 6,
+      square: 7,
+      sextile: 5,
+      quincunx: 5,
+      quintile: 1,
+      septile: 1,
+      "semi-square": 1,
+      "semi-sextile": 1,
+    };
+    
 
     const horoscope = new Horoscope({
       origin,
@@ -120,7 +136,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       aspectPoints: ['bodies', 'points'],
       aspectWithPoints: ['bodies', 'points'],
       aspectTypes: ['major'],
-      customOrbs: {},
+      customOrbs: customOrbs,
       language: 'en',
     });
 
