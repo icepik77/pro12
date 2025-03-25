@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react";
+import { validateDateTime} from "../lib/utils";
 
 // Функция для поиска городов с использованием Nominatim API
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -57,6 +58,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     latitude: "",
     longitude: "",
     utcOffset: "",
+    commonError:""
   });
 
   const [submittedData, setSubmittedData] = useState<any | null>(null);
@@ -73,7 +75,6 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   };
 
   // Валидация часового пояса
-
   const handleUtcOffsetInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/[^0-9+-:]/g, ""); // Оставляем только цифры, знаки +, -, и :
   
@@ -147,8 +148,6 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     setFormData((prev) => ({ ...prev, time: formattedValue }));
   };
   
-  
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [e.target.name]: value });
@@ -158,9 +157,9 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
       latitude: "",
       longitude: "",
       utcOffset: "",
+      commonError: ""
     });
   };
-
 
   const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -225,10 +224,21 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
       newErrors.latitude = "Некорректные координаты";
       newErrors.longitude = "Некорректные координаты";
     }
-  
-    if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset) {
+
+    if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset && validateDateTime(formData.date, formData.time)) {
       setBirthData(formData);
       setSubmittedData(formData);
+
+      setErrors(prevErrors => ({
+        ...prevErrors,
+        commonError: ""
+      }));
+    }
+    else {
+      setErrors(prevErrors => ({
+        ...prevErrors,
+        commonError: "Данные введены некорректно"
+      }));
     }
   };
 
@@ -237,6 +247,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
       <div className="max-w-2xl w-full">
         <h2 className="text-3xl font-medium mb-2">Рассчитать натальную карту онлайн</h2>
         <p className="text-gray-500 mb-8">Заполните данные о рождении</p>
+        {errors.commonError &&  <p className="text-red-500 text-sm mb-1">{errors.commonError}</p>}
 
         <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
           <div className="space-y-4">

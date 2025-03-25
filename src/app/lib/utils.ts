@@ -157,7 +157,48 @@ export const shouldMod180 = (prevCusp : number, currentCusp : number) => {
   }
 };
 
-export function modulo(n: number, m: number): number {
+export const modulo = (n: number, m: number): number => {
   return ((n % m) + m) % m;
 }
+
+export const validateDateTime = (handleDate: string, handleTime: string) => {
+  const [day, month, year] = handleDate.split(".").map(Number);
+  const [hours, minutes, seconds = 0] = handleTime.split(":").map(Number);
+
+  // Проверка на корректность месяца (1-12)
+  if (month < 1 || month > 12) {
+    console.log("Некорректный месяц");
+    return false;
+  }
+
+  // Проверка на корректность дня (1-31 в зависимости от месяца)
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (day < 1 || day > daysInMonth) {
+    console.log("Некорректный день");
+    return false;
+  }
+
+  // Проверка на корректность времени
+  if (hours < 0 || hours > 23) {
+    console.log("Некорректные часы");
+    return false;
+  }
+
+  if (minutes < 0 || minutes > 59) {
+    console.log("Некорректные минуты");
+    return false;
+  }
+
+  if (seconds < 0 || seconds > 59) {
+    console.log("Некорректные секунды");
+    return false;
+  }
+
+  const date = new Date(year, month - 1, day, hours, minutes, seconds);
+  console.log("date", date);
+
+  if (year >= 2100 || year <= 1800) return false;
+
+  return !isNaN(date.getTime()); // Проверяет, является ли дата валидной
+};
 
