@@ -102,8 +102,6 @@ export const getAspectsForPlanet = (astroData: AstroData) => {
     NNode: 8.5,
   };
   
-
-
   let foundAspects: Aspect[] = [];
 
   // Преобразуем объект `astroData.planets` в массив объектов
@@ -126,12 +124,7 @@ export const getAspectsForPlanet = (astroData: AstroData) => {
         const orbA = orbs[planetA.name as keyof typeof orbs] || 5;
         const orbB = orbs[planetB.name as keyof typeof orbs] || 5;
         const maxOrb = Math.min(orbA, orbB);
-
-
-
         const aspectDiff = Math.abs(adjustedDiff - aspectDegree); // Насколько отклонение от точного аспекта
-
-
 
         if (aspectDiff <= maxOrb) {
           foundAspects.push({
@@ -148,4 +141,23 @@ export const getAspectsForPlanet = (astroData: AstroData) => {
   });
   return foundAspects;
 };
+
+export const shouldMod180 = (prevCusp : number, currentCusp : number) => {
+  // ** NOTE ** the calculated houses may require a 180 degree correction
+  // used in Monk house systems (Placidus, Regiomontanus, etc)
+  // all values are mod360ed
+  if (currentCusp < prevCusp) {
+    // For instances when prev = 350 and current = 20
+    // But not when prev = 250 and current = 100 (280)
+    if (Math.abs(currentCusp - prevCusp) >= 180) return false;
+    return true;
+  } if (prevCusp < currentCusp) {
+    if (currentCusp - prevCusp < 180) return false;
+    return true;
+  }
+};
+
+export function modulo(n: number, m: number): number {
+  return ((n % m) + m) % m;
+}
 

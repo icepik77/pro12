@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
 import { Origin, Horoscope } from 'circular-natal-horoscope-js';
 import { AstroData, NatalChartProps } from '../lib/definitions';
-import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects, getAspectsForPlanet } from '../lib/utils';
+import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects, getAspectsForPlanet, shouldMod180, modulo } from '../lib/utils';
 import { Planet } from '../lib/definitions';
 
 const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions, setLocalTime }) => {
@@ -141,7 +141,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     });
 
     const planetsData = horoscope.CelestialBodies;
-    const cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
+    let cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
     // const aspectsData = horoscope.Aspects.all.filter(item => 
     //   !item.point1Key.toLowerCase().includes('sirius') && 
     //   !item.point2Key.toLowerCase().includes('sirius') &&
@@ -150,6 +150,37 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     //   !item.point1Key.toLowerCase().includes('chiron') && 
     //   !item.point2Key.toLowerCase().includes('chiron')
     // );
+
+    
+
+
+    if (horoscope._houseSystem == "koch") {
+      console.log("_ascendant", horoscope._ascendant.ChartPosition.Ecliptic.DecimalDegrees);
+      const ascendant = horoscope._ascendant.ChartPosition.Ecliptic.DecimalDegrees;
+      if (ascendant >= 180) {
+        const firstCusp = cuspsData[0];
+        const secondCusp = shouldMod180(firstCusp, cuspsData[1]) ? modulo(cuspsData[1] + 180, 360) : cuspsData[1];
+        const thirdCusp = shouldMod180(firstCusp, cuspsData[2]) ? modulo(cuspsData[2] + 180, 360) : cuspsData[2];
+        const fourthCusp = shouldMod180(firstCusp, cuspsData[3]) ? modulo(cuspsData[3] + 180, 360) : cuspsData[3];
+        const fifthCusp = shouldMod180(firstCusp, cuspsData[4]) ? modulo(cuspsData[4] + 180, 360) : cuspsData[4];
+        const sixthCusp = shouldMod180(firstCusp, cuspsData[5]) ? modulo(cuspsData[5] + 180, 360) : cuspsData[5];
+        const seventhCusp = modulo(firstCusp + 180, 360);
+        const eighthCusp = shouldMod180(seventhCusp, cuspsData[7] ) ? modulo(cuspsData[7] + 180, 360) : cuspsData[7];
+        const ninthCusp = shouldMod180(seventhCusp, cuspsData[8]) ? modulo(cuspsData[8] + 180, 360) : cuspsData[8];
+        const tenthCusp = shouldMod180(seventhCusp, cuspsData[9]) ? modulo(cuspsData[9] + 180, 360) : cuspsData[9];
+        const eleventhCusp = shouldMod180(seventhCusp, cuspsData[10]) ? modulo(cuspsData[10] + 180, 360) : cuspsData[10];
+        const twelfthCusp = shouldMod180(seventhCusp, cuspsData[11]) ? modulo(cuspsData[11] + 180, 360) : cuspsData[11];
+        
+        const arr = [
+          firstCusp.toFixed(4), secondCusp.toFixed(4), thirdCusp.toFixed(4), fourthCusp.toFixed(4), fifthCusp.toFixed(4), sixthCusp.toFixed(4),
+          seventhCusp.toFixed(4), eighthCusp.toFixed(4), ninthCusp.toFixed(4), tenthCusp.toFixed(4), eleventhCusp.toFixed(4), twelfthCusp.toFixed(4),
+        ];
+        console.log("arr +180", arr);
+
+        cuspsData = arr.map(Number);
+      }
+
+    }
 
 
     // Преобразуем данные в формат, пригодный для astrochart
