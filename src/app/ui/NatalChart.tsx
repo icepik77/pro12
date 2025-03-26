@@ -6,6 +6,7 @@ import { Origin, Horoscope } from 'circular-natal-horoscope-js';
 import { AstroData, NatalChartProps } from '../lib/definitions';
 import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects, getAspectsForPlanet, shouldMod180, modulo } from '../lib/utils';
 import { Planet } from '../lib/definitions';
+import { tree } from 'next/dist/build/templates/app-page';
 
 const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions, setLocalTime }) => {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -142,6 +143,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
     const planetsData = horoscope.CelestialBodies;
     let cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
+    const ascendant = horoscope._ascendant.ChartPosition.Ecliptic.DecimalDegrees;
     // const aspectsData = horoscope.Aspects.all.filter(item => 
     //   !item.point1Key.toLowerCase().includes('sirius') && 
     //   !item.point2Key.toLowerCase().includes('sirius') &&
@@ -156,7 +158,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
     if (horoscope._houseSystem == "koch") {
       console.log("_ascendant", horoscope._ascendant.ChartPosition.Ecliptic.DecimalDegrees);
-      const ascendant = horoscope._ascendant.ChartPosition.Ecliptic.DecimalDegrees;
+
       if (ascendant >= 180) {
         const firstCusp = cuspsData[0];
         const secondCusp = shouldMod180(firstCusp, cuspsData[1]) ? modulo(cuspsData[1] + 180, 360) : cuspsData[1];
@@ -175,6 +177,10 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
           firstCusp.toFixed(4), secondCusp.toFixed(4), thirdCusp.toFixed(4), fourthCusp.toFixed(4), fifthCusp.toFixed(4), sixthCusp.toFixed(4),
           seventhCusp.toFixed(4), eighthCusp.toFixed(4), ninthCusp.toFixed(4), tenthCusp.toFixed(4), eleventhCusp.toFixed(4), twelfthCusp.toFixed(4),
         ];
+
+
+        
+
         console.log("arr +180", arr);
 
         cuspsData = arr.map(Number);
@@ -182,22 +188,30 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
     }
 
+    let isKochAcs180 : boolean = false;
+
+    if (horoscope._houseSystem == "koch" && ascendant >= 180){
+      isKochAcs180 = true;
+    }
+
+
+
 
     // Преобразуем данные в формат, пригодный для astrochart
     const astroData : AstroData = {
       planets: {
-        "Sun": [planetsData.sun.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Moon": [planetsData.moon.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Mercury": [planetsData.mercury.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Venus": [planetsData.venus.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Mars": [planetsData.mars.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Jupiter": [planetsData.jupiter.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Saturn": [planetsData.saturn.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Uranus": [planetsData.uranus.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Neptune": [planetsData.neptune.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Pluto": [planetsData.pluto.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Lilith": [horoscope.CelestialPoints.lilith.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "NNode": [horoscope.CelestialPoints.northnode.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Sun": [isKochAcs180 ? modulo(planetsData.sun.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.sun.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Moon": [isKochAcs180 ? modulo(planetsData.moon.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.moon.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Mercury": [isKochAcs180 ? modulo(planetsData.mercury.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.mercury.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Venus": [isKochAcs180 ? modulo(planetsData.venus.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.venus.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Mars": [isKochAcs180 ? modulo(planetsData.mars.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.mars.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Jupiter": [isKochAcs180 ? modulo(planetsData.jupiter.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.jupiter.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Saturn": [isKochAcs180 ? modulo(planetsData.saturn.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.saturn.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Uranus": [isKochAcs180 ? modulo(planetsData.uranus.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.uranus.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Neptune": [isKochAcs180 ? modulo(planetsData.neptune.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.neptune.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Pluto": [isKochAcs180 ? modulo(planetsData.pluto.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.pluto.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Lilith": [isKochAcs180 ? modulo(horoscope.CelestialPoints.lilith.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : horoscope.CelestialPoints.lilith.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "NNode": [isKochAcs180 ? modulo(horoscope.CelestialPoints.northnode.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : horoscope.CelestialPoints.northnode.ChartPosition.Ecliptic.DecimalDegrees || 0],
       },
       cusps: cuspsData,
     };
