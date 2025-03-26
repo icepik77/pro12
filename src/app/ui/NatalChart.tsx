@@ -69,6 +69,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     else if (birthData.style === 'elements') {
       return {
         SYMBOL_SCALE: 0.8, 
+        SHIFT_IN_DEGREES: 180,
         COLORS_SIGNS: [
           "#FFAD99", // Мягкий красный
           "#D2A679", // Тёплый коричневый
@@ -172,14 +173,29 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
         const tenthCusp = shouldMod180(seventhCusp, cuspsData[9]) ? modulo(cuspsData[9] + 180, 360) : cuspsData[9];
         const eleventhCusp = shouldMod180(seventhCusp, cuspsData[10]) ? modulo(cuspsData[10] + 180, 360) : cuspsData[10];
         const twelfthCusp = shouldMod180(seventhCusp, cuspsData[11]) ? modulo(cuspsData[11] + 180, 360) : cuspsData[11];
+
+        const firstCusp1 =  seventhCusp;
+        const secondCusp1 = eighthCusp;
+        const thirdCusp1 = ninthCusp;
+        const fourthCusp1 = tenthCusp;
+        const fifthCusp1 = eleventhCusp;
+        const sixthCusp1 = twelfthCusp;
+        const seventhCusp1 = firstCusp;
+        const eighthCusp1 = secondCusp;
+        const ninthCusp1 = thirdCusp;
+        const tenthCusp1 = fourthCusp;
+        const eleventhCusp1 = fifthCusp;
+        const twelfthCusp1 = sixthCusp;
         
+        // const arr = [
+        //   firstCusp.toFixed(4), secondCusp.toFixed(4), thirdCusp.toFixed(4), fourthCusp.toFixed(4), fifthCusp.toFixed(4), sixthCusp.toFixed(4),
+        //   seventhCusp.toFixed(4), eighthCusp.toFixed(4), ninthCusp.toFixed(4), tenthCusp.toFixed(4), eleventhCusp.toFixed(4), twelfthCusp.toFixed(4),
+        // ];
+
         const arr = [
-          firstCusp.toFixed(4), secondCusp.toFixed(4), thirdCusp.toFixed(4), fourthCusp.toFixed(4), fifthCusp.toFixed(4), sixthCusp.toFixed(4),
-          seventhCusp.toFixed(4), eighthCusp.toFixed(4), ninthCusp.toFixed(4), tenthCusp.toFixed(4), eleventhCusp.toFixed(4), twelfthCusp.toFixed(4),
+          firstCusp1.toFixed(4), secondCusp1.toFixed(4), thirdCusp1.toFixed(4), fourthCusp1.toFixed(4), fifthCusp1.toFixed(4), sixthCusp1.toFixed(4),
+          seventhCusp1.toFixed(4), eighthCusp1.toFixed(4), ninthCusp1.toFixed(4), tenthCusp1.toFixed(4), eleventhCusp1.toFixed(4), twelfthCusp1.toFixed(4),
         ];
-
-
-        
 
         console.log("arr +180", arr);
 
@@ -189,29 +205,43 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     }
 
     let isKochAcs180 : boolean = false;
-
     if (horoscope._houseSystem == "koch" && ascendant >= 180){
       isKochAcs180 = true;
     }
 
-
-
-
     // Преобразуем данные в формат, пригодный для astrochart
+    // const astroData : AstroData = {
+    //   planets: {
+    //     "Sun": [isKochAcs180 ? modulo(planetsData.sun.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.sun.ChartPosition.Ecliptic.DecimalDegrees || 0],
+    //     "Moon": [isKochAcs180 ? modulo(planetsData.moon.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.moon.ChartPosition.Ecliptic.DecimalDegrees || 0],
+    //     "Mercury": [isKochAcs180 ? modulo(planetsData.mercury.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.mercury.ChartPosition.Ecliptic.DecimalDegrees || 0],
+    //     "Venus": [isKochAcs180 ? modulo(planetsData.venus.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.venus.ChartPosition.Ecliptic.DecimalDegrees || 0],
+    //     "Mars": [isKochAcs180 ? modulo(planetsData.mars.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.mars.ChartPosition.Ecliptic.DecimalDegrees || 0],
+    //     "Jupiter": [isKochAcs180 ? modulo(planetsData.jupiter.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.jupiter.ChartPosition.Ecliptic.DecimalDegrees || 0],
+    //     "Saturn": [isKochAcs180 ? modulo(planetsData.saturn.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.saturn.ChartPosition.Ecliptic.DecimalDegrees || 0],
+    //     "Uranus": [isKochAcs180 ? modulo(planetsData.uranus.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.uranus.ChartPosition.Ecliptic.DecimalDegrees || 0],
+    //     "Neptune": [isKochAcs180 ? modulo(planetsData.neptune.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.neptune.ChartPosition.Ecliptic.DecimalDegrees || 0],
+    //     "Pluto": [isKochAcs180 ? modulo(planetsData.pluto.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.pluto.ChartPosition.Ecliptic.DecimalDegrees || 0],
+    //     "Lilith": [isKochAcs180 ? modulo(horoscope.CelestialPoints.lilith.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : horoscope.CelestialPoints.lilith.ChartPosition.Ecliptic.DecimalDegrees || 0],
+    //     "NNode": [isKochAcs180 ? modulo(horoscope.CelestialPoints.northnode.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : horoscope.CelestialPoints.northnode.ChartPosition.Ecliptic.DecimalDegrees || 0],
+    //   },
+    //   cusps: cuspsData,
+    // };
+
     const astroData : AstroData = {
       planets: {
-        "Sun": [isKochAcs180 ? modulo(planetsData.sun.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.sun.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Moon": [isKochAcs180 ? modulo(planetsData.moon.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.moon.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Mercury": [isKochAcs180 ? modulo(planetsData.mercury.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.mercury.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Venus": [isKochAcs180 ? modulo(planetsData.venus.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.venus.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Mars": [isKochAcs180 ? modulo(planetsData.mars.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.mars.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Jupiter": [isKochAcs180 ? modulo(planetsData.jupiter.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.jupiter.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Saturn": [isKochAcs180 ? modulo(planetsData.saturn.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.saturn.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Uranus": [isKochAcs180 ? modulo(planetsData.uranus.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.uranus.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Neptune": [isKochAcs180 ? modulo(planetsData.neptune.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.neptune.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Pluto": [isKochAcs180 ? modulo(planetsData.pluto.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.pluto.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "Lilith": [isKochAcs180 ? modulo(horoscope.CelestialPoints.lilith.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : horoscope.CelestialPoints.lilith.ChartPosition.Ecliptic.DecimalDegrees || 0],
-        "NNode": [isKochAcs180 ? modulo(horoscope.CelestialPoints.northnode.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : horoscope.CelestialPoints.northnode.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Sun": [planetsData.sun.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Moon": [planetsData.moon.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Mercury": [planetsData.mercury.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Venus": [planetsData.venus.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Mars": [planetsData.mars.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Jupiter": [planetsData.jupiter.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Saturn": [planetsData.saturn.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Uranus": [planetsData.uranus.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Neptune": [planetsData.neptune.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Pluto": [planetsData.pluto.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "Lilith": [horoscope.CelestialPoints.lilith.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        "NNode": [horoscope.CelestialPoints.northnode.ChartPosition.Ecliptic.DecimalDegrees || 0],
       },
       cusps: cuspsData,
     };
@@ -272,8 +302,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
         planetPositionsList.push({ name: "northnode", isRetrograde, sign, position, house });
       }
     }
-
-    
 
     // Список значений для поля name
     const houseNames = [
