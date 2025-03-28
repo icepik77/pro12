@@ -44,15 +44,15 @@ interface BirthFormProps {
 export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   const [formData, setFormData] = useState({
     name: "",
-    date: "23.01.2009",
-    time: "13:40",
+    date: "26.03.2025",
+    time: "14:30:00",
     city: "",
     localCity: "",
-    latitude: "32",
-    longitude: "23",
-    localLatitude: "",
-    localLongitude: "",
-    utcOffset: "",
+    latitude: "55.75222",
+    longitude: "37.61556",
+    localLatitude: "43.10562",
+    localLongitude: "131.87353",
+    utcOffset: "-03:00",
     houseSystem: "koch",
     style: "elements", // Новый выбор для оформления
     isLocal: true
@@ -68,6 +68,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
 
   const [submittedData, setSubmittedData] = useState<any | null>(null);
   const [citySuggestions, setCitySuggestions] = useState<any[]>([]);
+  const [localCitySuggestions, localSetCitySuggestions] = useState<any[]>([]);
 
   // Валидация координат
   const validateCoordinates = (lat: string, lon: string) => {
@@ -186,6 +187,27 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
 
     setErrors(newErrors);
   };
+
+  const localHandleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    let newErrors = { ...errors };
+  
+    if (name === "localLatitude") {
+      const latitude = parseFloat(value);
+      newErrors.latitude = isNaN(latitude) || latitude < -90 || latitude > 90 
+        ? "Широта должна быть в пределах от -90 до 90" 
+        : "";
+    }
+  
+    if (name === "localLongitude") {
+      const longitude = parseFloat(value);
+      newErrors.longitude = isNaN(longitude) || longitude < -180 || longitude > 180 
+        ? "Долгота должна быть в пределах от -180 до 180" 
+        : "";
+    }
+
+    setErrors(newErrors);
+  };
   
   const handleCityChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const city = e.target.value;
@@ -215,9 +237,9 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
 
     if (city.length > 2) {
       const suggestions = await searchCities(city);
-      setCitySuggestions(suggestions);
+      localSetCitySuggestions(suggestions);
     } else {
-      setCitySuggestions([]);
+      localSetCitySuggestions([]);
     }
   };
 
@@ -228,7 +250,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
       localLatitude: city.lat,
       localLongitude: city.lon,
     });
-    setCitySuggestions([]);
+    localSetCitySuggestions([]);
   };
 
   const handleCityClear = () => {
@@ -258,6 +280,12 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   
     // Проверяем координаты
     if (!validateCoordinates(formData.latitude, formData.longitude)) {
+      newErrors.latitude = "Некорректные координаты";
+      newErrors.longitude = "Некорректные координаты";
+    }
+
+    // Проверяем координаты
+    if (!validateCoordinates(formData.localLatitude, formData.localLongitude)) {
       newErrors.latitude = "Некорректные координаты";
       newErrors.longitude = "Некорректные координаты";
     }
@@ -434,14 +462,14 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                   {/* Широта */}
                   <div className="flex-1 min-w-[120px]">
                     <label className="block text-gray-700 text-sm mb-1">Широта</label>
-                    <input type="text" name="localLatitude" value={formData.localLatitude} onChange={handleChange} onBlur={handleBlur} placeholder="Введите широту" className={`w-full p-3 border ${errors.latitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
+                    <input type="text" name="localLatitude" value={formData.localLatitude} onChange={handleChange} onBlur={localHandleBlur} placeholder="Введите широту" className={`w-full p-3 border ${errors.latitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
                     {errors.latitude && <p className="text-red-500 text-sm mt-1">{errors.latitude}</p>}
                   </div>
 
                   {/* Долгота */}
                   <div className="flex-1 min-w-[120px]">
                     <label className="block text-gray-700 text-sm mb-1">Долгота</label>
-                    <input type="text" name="localLongitude" value={formData.localLongitude} onChange={handleChange} onBlur={handleBlur} placeholder="Введите долготу" className={`w-full p-3 border ${errors.longitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
+                    <input type="text" name="localLongitude" value={formData.localLongitude} onChange={handleChange} onBlur={localHandleBlur} placeholder="Введите долготу" className={`w-full p-3 border ${errors.longitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
                     {errors.longitude && <p className="text-red-500 text-sm mt-1">{errors.longitude}</p>}
                   </div>
                 </div>
@@ -453,7 +481,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                     <input
                       type="text"
                       name="city"
-                      value={formData.city}
+                      value={formData.localCity}
                       onChange={handleLocalCityChange}
                       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none pr-10"
                     />
@@ -467,9 +495,9 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                       </button>
                     )}
                   </div>
-                  {citySuggestions.length > 0 && (
+                  {localCitySuggestions.length > 0 && (
                     <ul className="border border-gray-300 mt-2 max-h-48 overflow-y-auto bg-white">
-                      {citySuggestions.map((city, index) => (
+                      {localCitySuggestions.map((city, index) => (
                         <li key={index} onClick={() => handleLocalCitySelect(city)} className="p-2 cursor-pointer hover:bg-gray-200">
                           {city.display_name}
                         </li>

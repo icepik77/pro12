@@ -15,6 +15,8 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
   const [localChartData, setLocalChartData] = useState<any>(null);
   const [localAspectsData, setLocalAspectsData] = useState<any>(null);
 
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
   const houseSystem = birthData.houseSystem || 'koch'; // Берём систему домов
   const [isLocal, setIsLocal] = useState(false);
 
@@ -97,6 +99,8 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
   useEffect(() => {
     if (!birthData.date || !birthData.time || !birthData.latitude || !birthData.longitude) return;
 
+    
+
     const [day, month, year] = birthData.date.split('.').map(Number);
     const [hour, minute, second] = birthData.time.split(':').map(Number);
     const utcOffset = birthData.utcOffset;
@@ -106,7 +110,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
    
     const localLatitude = parseFloat(birthData.localLatitude);
-    const localLongitude = parseFloat(birthData.localLatitude);
+    const localLongitude = parseFloat(birthData.localLongitude);
     let isLocal = false;
     if (localLatitude && localLongitude){
       isLocal = true;
@@ -161,13 +165,15 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     if (isLocal){
       let formattedDate = birthData.date;
       let formattedTime = birthData.time;
+      let utc;
 
       if (handleUTCDate){
-        formattedDate = `${handleUTCDate.date}.${String(handleUTCDate.month).padStart(2, '0')}.${String(handleUTCDate.year).padStart(2, '0')}`;
-        formattedTime = `${String(handleUTCDate.hour).padStart(2, '0')}:${String(handleUTCDate.minute).padStart(2, '0')}:${String(handleUTCDate.second).padStart(2, '0')}`;
+        // formattedDate = `${handleUTCDate.date}.${String(handleUTCDate.month).padStart(2, '0')}.${String(handleUTCDate.year).padStart(2, '0')}`;
+        // formattedTime = `${String(handleUTCDate.hour).padStart(2, '0')}:${String(handleUTCDate.minute).padStart(2, '0')}:${String(handleUTCDate.second).padStart(2, '0')}`;
+        utc = utcOffset;
       } 
+      else utc = getUTCFromOrigin(latitude, longitude);
 
-      const utc = getUTCFromOrigin(localLatitude, localLongitude);
       const handleUTCDateLocal = convertToUTC(formattedDate, formattedTime, utc);
 
       localOrigin = new Origin({
@@ -177,8 +183,8 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
         hour,
         minute,
         second,
-        latitude,
-        longitude,
+        latitude: localLatitude,
+        longitude: localLongitude,
         handleUTCDate: handleUTCDateLocal
       });
 
@@ -198,8 +204,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     let cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
     const ascendant = horoscope._ascendant.ChartPosition.Ecliptic.DecimalDegrees;
 
-    console.log("cuspsData", cuspsData);
-
     let localPlanetsData;
     let localCuspsData: number[] | null | undefined = null;
     let localAscendant: number | null = null;
@@ -212,16 +216,12 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     
     // Правильный расчет домов для системы Коха
     if (horoscope._houseSystem == "koch") {
-      console.log("_ascendant", localAscendant);
       cuspsData = setKochCusps(ascendant, cuspsData);
 
       if (isLocal && localAscendant) {
-        console.log("_ascendant_local", localAscendant);
         localCuspsData = setKochCusps(localAscendant, localCuspsData);
       }
     }
-
-    console.log("cuspsData", cuspsData);    
 
     const astroData : AstroData = {
       planets: {
@@ -444,8 +444,12 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     }
   }, [birthData]);
 
+  
+
   useEffect(() => {
     if (!chartData || !chartRef.current) return;
+
+    
   
     const containerSize = chartRef.current.clientWidth;
     const chartSize = Math.min(containerSize, 800);
@@ -458,71 +462,63 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     const radix = chart.radix(chartData);
     const customAspects = createFormedAspects(aspectsData, chartData);
     radix.aspects(customAspects);
-
-    if (isLocal && localChartRef.current) {
-      localChartRef.current.innerHTML = '';
-      const chart1 = new Chart(localChartRef.current.id, chartSize, chartSize, settings);
-      const radix1 = chart1.radix(localChartData);
-      const localCustomAspects = createFormedAspects(localAspectsData, localChartData);
-      radix1.aspects(localCustomAspects);
-    }
   }, [chartData]);
 
   useEffect(() => {
-    if (!localChartData || !localChartRef.current) return;
+    if (!localChartData || !localChartRef.current || !containerRef.current) return;
   
-    const containerSize = localChartRef.current.clientWidth;
+    const containerSize = containerRef.current.clientWidth; // Берем размер родителя
     const chartSize = Math.min(containerSize, 800);
   
-    const settings = getStyleSettings(); // Получаем настройки в зависимости от стиля
-
+    const settings = getStyleSettings();
+  
     const chart = new Chart(localChartRef.current.id, chartSize, chartSize, settings);
     const radix = chart.radix(localChartData);
     const localCustomAspects = createFormedAspects(localAspectsData, localChartData);
     radix.aspects(localCustomAspects);
-
   }, [localChartData]);
 
+  
+
   return (
-    <div className="flex flex-col items-center w-full">
-    {/* Табы */}
-    <div className="flex space-x-4 mb-4">
-      <button
-        className={`px-4 py-2 rounded ${activeTab === "chart1" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-        onClick={() => setActiveTab("chart1")}
-      >
-        Первый контейнер
-      </button>
-      <button
-        className={`px-4 py-2 rounded ${activeTab === "chart2" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-        onClick={() => setActiveTab("chart2")}
-      >
-        Второй контейнер
-      </button>
-    </div>
-
-    {/* Контейнеры с изображениями */}
-    <div className="w-full max-w-[800px]" style={{ display: activeTab === "chart1" ? "block" : "none" }}>
-      <div
-        id="chart-container"
-        ref={chartRef}
-        className="w-full aspect-square bg-gray-100 flex items-center justify-center"
-      >
-        Контейнер 1
+    <div ref={containerRef} className="flex flex-col items-center w-full">
+      {/* Табы */}
+      <div className="flex space-x-4 mb-4">
+        <button
+          className={`px-4 py-2 rounded ${activeTab === "chart1" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+          onClick={() => setActiveTab("chart1")}
+        >
+          Первый контейнер
+        </button>
+        <button
+          className={`px-4 py-2 rounded ${activeTab === "chart2" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+          onClick={() => setActiveTab("chart2")}
+        >
+          Второй контейнер
+        </button>
+      </div>
+  
+      {/* Контейнеры с изображениями */}
+      <div className="w-full max-w-[800px]" style={{ display: activeTab === "chart1" ? "block" : "none" }}>
+        <div
+          id="chart-container"
+          ref={chartRef}
+          className="w-full aspect-square bg-gray-100 flex items-center justify-center"
+        >
+          Контейнер 1
+        </div>
+      </div>
+  
+      <div className="w-full max-w-[800px]" style={{ display: activeTab === "chart2" ? "block" : "none" }}>
+        <div
+          id="local-chart-container"
+          ref={localChartRef}
+          className="w-full aspect-square bg-gray-200 flex items-center justify-center"
+        >
+          Контейнер 2
+        </div>
       </div>
     </div>
-
-    <div className="w-full max-w-[800px]" style={{ display: activeTab === "chart2" ? "block" : "none" }}>
-      <div
-        id="local-chart-container"
-        ref={localChartRef}
-        className="w-full aspect-square bg-gray-200 flex items-center justify-center"
-      >
-        Контейнер 2
-      </div>
-    </div>
-  </div>
-
   );
 };
 
