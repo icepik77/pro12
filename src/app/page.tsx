@@ -18,16 +18,24 @@ export default function Home() {
     date: "",
     time: "",
     city: "",
+    localCity: "",
     latitude: "",
     longitude: "",
+    localLatitude: "",
+    localLongitude: "",
     utcOffset: "",
-    houseSystem: "",
-    style: "",
+    houseSystem: "koch",
+    style: "elements", 
   });
 
   const [planetPositions, setPlanetPositions] = useState<any[]>([]);
   const [housePositions, setHousePositions] = useState<any[]>([]);
   const [aspectPositions, setAspectPositions] = useState<any>();
+
+  const [localPlanetPositions, setLocalPlanetPositions] = useState<any[]>([]);
+  const [localHousePositions, setLocalHousePositions] = useState<any[]>([]);
+  const [LocalAspectPositions, setLocalAspectPositions] = useState<any>();
+
   const [localTime, setLocalTime] = useState<string | undefined>();
 
   // Отслеживаем изменение данных в planetPositions
@@ -61,7 +69,16 @@ export default function Home() {
               animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
               transition={{ duration: 1 }} // Плавное появление за 1 секунду
             >
-              <NatalChart birthData={birthData} setPlanetPositions={setPlanetPositions} setHousePositions={setHousePositions} setAspectPositions={setAspectPositions} setLocalTime={setLocalTime}/>
+              <NatalChart 
+                birthData={birthData} 
+                setPlanetPositions={setPlanetPositions} 
+                setHousePositions={setHousePositions} 
+                setAspectPositions={setAspectPositions} 
+                setLocalTime={setLocalTime}
+                setLocalPlanetPositions={setLocalPlanetPositions}
+                setLocalHousePositions={setLocalHousePositions}
+                setLocalAspectPositions={setLocalAspectPositions}  
+              />
             </motion.div>
 
             {/* Плавное появление таблицы только после загрузки данных */}

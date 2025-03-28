@@ -2,7 +2,11 @@ export interface BirthData {
     date: string;
     time: string;
     latitude: string;
+    city: string;
+    localCity: string;
     longitude: string;
+    localLatitude: string;
+    localLongitude: string;
     utcOffset: string;
     houseSystem: string;
     style: string;
@@ -40,5 +44,8 @@ export interface NatalChartProps {
     setPlanetPositions: (positions: any[]) => void;
     setHousePositions: (positions: any[]) => void;
     setAspectPositions: (positions: any) => void;
+    setLocalPlanetPositions: (localPositions: any) => void;
+    setLocalHousePositions: (localPositions: any) => void;
+    setLocalAspectPositions: (localPositions: any) => void;
     setLocalTime?: (time: string) => void;
 }

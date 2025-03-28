@@ -44,15 +44,20 @@ interface BirthFormProps {
 export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   const [formData, setFormData] = useState({
     name: "",
-    date: "",
-    time: "",
+    date: "23.01.2009",
+    time: "13:40",
     city: "",
-    latitude: "",
-    longitude: "",
+    localCity: "",
+    latitude: "32",
+    longitude: "23",
+    localLatitude: "",
+    localLongitude: "",
     utcOffset: "",
     houseSystem: "koch",
     style: "elements", // Новый выбор для оформления
+    isLocal: true
   });
+  const [isLocal, setIsLocal] = useState(false);
 
   const [errors, setErrors] = useState({
     latitude: "",
@@ -204,12 +209,44 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     setCitySuggestions([]);
   };
 
+  const handleLocalCityChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const city = e.target.value;
+    setFormData({ ...formData, localCity: city });
+
+    if (city.length > 2) {
+      const suggestions = await searchCities(city);
+      setCitySuggestions(suggestions);
+    } else {
+      setCitySuggestions([]);
+    }
+  };
+
+  const handleLocalCitySelect = (city: any) => {
+    setFormData({
+      ...formData,
+      localCity: city.display_name,
+      localLatitude: city.lat,
+      localLongitude: city.lon,
+    });
+    setCitySuggestions([]);
+  };
+
   const handleCityClear = () => {
     setFormData({
       ...formData,
       city: "",
       latitude: "",
       longitude: "",
+    });
+    setCitySuggestions([]);
+  };
+
+  const handleLocalCityClear = () => {
+    setFormData({
+      ...formData,
+      localCity: "",
+      localLatitude: "",
+      localLongitude: "",
     });
     setCitySuggestions([]);
   };
@@ -226,6 +263,16 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     }
 
     if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset && validateDateTimeUTC(formData.date, formData.time, formData.utcOffset)) {
+      if (!isLocal){
+        setFormData({
+          ...formData,
+          localCity: "",
+          localLatitude: "",
+          localLongitude: "",
+          isLocal: false
+        });
+      }
+
       setBirthData(formData);
       setSubmittedData(formData);
 
@@ -368,6 +415,70 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                 ))}
               </select>
             </div>
+
+            {/* Чекбокс */}
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isLocal}
+                onChange={() => setIsLocal(!isLocal)}
+                className="w-4 h-4"
+              />
+              <span>Локальная карта</span>
+            </label>
+
+            {isLocal && (
+              <div className="mt-4 p-4 rounded-lg">
+                {/* Широта и долгота в одну строку */}
+                <div className="flex flex-wrap gap-4 mt-4">
+                  {/* Широта */}
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-gray-700 text-sm mb-1">Широта</label>
+                    <input type="text" name="localLatitude" value={formData.localLatitude} onChange={handleChange} onBlur={handleBlur} placeholder="Введите широту" className={`w-full p-3 border ${errors.latitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
+                    {errors.latitude && <p className="text-red-500 text-sm mt-1">{errors.latitude}</p>}
+                  </div>
+
+                  {/* Долгота */}
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-gray-700 text-sm mb-1">Долгота</label>
+                    <input type="text" name="localLongitude" value={formData.localLongitude} onChange={handleChange} onBlur={handleBlur} placeholder="Введите долготу" className={`w-full p-3 border ${errors.longitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
+                    {errors.longitude && <p className="text-red-500 text-sm mt-1">{errors.longitude}</p>}
+                  </div>
+                </div>
+
+                {/* Город */}
+                <div>
+                  <label className="block text-gray-700 text-sm mb-1">Город рождения (необязательно)</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleLocalCityChange}
+                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none pr-10"
+                    />
+                    {formData.city && (
+                      <button
+                        type="button"
+                        onClick={handleLocalCityClear}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+                      >
+                        &#10005;
+                      </button>
+                    )}
+                  </div>
+                  {citySuggestions.length > 0 && (
+                    <ul className="border border-gray-300 mt-2 max-h-48 overflow-y-auto bg-white">
+                      {citySuggestions.map((city, index) => (
+                        <li key={index} onClick={() => handleLocalCitySelect(city)} className="p-2 cursor-pointer hover:bg-gray-200">
+                          {city.display_name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <button type="submit" className="mt-6 w-full p-3 bg-[#172935] text-white font-medium rounded-md hover:bg-gray-800 transition">Построить карту</button>
