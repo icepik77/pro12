@@ -44,7 +44,7 @@ export default function Home() {
       <main className="w-full items-center sm:items-start">
         <div className="w-full bg-white rounded-t-[50px]">
           <Header/>
-          <div className="flex flex-col flex-wrap items-center justify-center gap-10 w-full max-w-7xl mx-auto">
+          <div className="flex flex-col flex-wrap items-center justify-center gap-1 w-full max-w-7xl mx-auto">
             <motion.div
               className="w-full md:w-[48%] flex justify-center"
               initial={{ opacity: 0 }} // Начальная прозрачность

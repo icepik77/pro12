@@ -4,11 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
 import { Origin, Horoscope } from 'circular-natal-horoscope-js';
 import { AstroData, NatalChartProps } from '../lib/definitions';
-import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects, getAspectsForPlanet, shouldMod180, modulo } from '../lib/utils';
-import { Planet } from '../lib/definitions';
-import { tree } from 'next/dist/build/templates/app-page';
+import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects, getAspectsForPlanet, shouldMod180, modulo, convertToUTC } from '../lib/utils';
 
-const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions, setLocalTime }) => {
+const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions, setLocalTime, }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const [chartData, setChartData] = useState<any>(null);
   const [aspectsData, setAspectsData] = useState<any>(null);
@@ -94,14 +92,22 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
     const [day, month, year] = birthData.date.split('.').map(Number);
     const [hour, minute, second] = birthData.time.split(':').map(Number);
+    const utcOffset = birthData.utcOffset;
     const latitude = parseFloat(birthData.latitude);
     const longitude = parseFloat(birthData.longitude);
+    const handleUTCDate = utcOffset ? convertToUTC(birthData.date, birthData.time, utcOffset) : undefined;
+    const isLocal = true;
+    let localOrigin;
+    let localHoroscope;
+    const localLatitude = 23;
+    const localLongitude = 32; 
+
 
     if (isNaN(latitude) || isNaN(longitude)) {
       console.error("Некорректные координаты:", latitude, longitude);
       return;
     }
-  
+
     const origin = new Origin({
       year,
       month: month - 1, // В JS месяцы с 0
@@ -111,12 +117,8 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       second,
       latitude,
       longitude,
+      handleUTCDate
     });
-
-    console.log("origin", origin);
-    
-    
-
     const customOrbs = {
       conjunction: 10,
       opposition: 8,
@@ -129,8 +131,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       "semi-square": 1,
       "semi-sextile": 1,
     };
-    
-
     const horoscope = new Horoscope({
       origin,
       houseSystem: houseSystem,
@@ -142,21 +142,20 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       language: 'en',
     });
 
+    if (isLocal){
+      if (handleUTCDate){
+        const formattedDate = `${handleUTCDate.year}-${String(handleUTCDate.month).padStart(2, '0')}-${String(handleUTCDate.date).padStart(2, '0')}`;
+        const formattedTime = `${String(handleUTCDate.hour).padStart(2, '0')}:${String(handleUTCDate.minute).padStart(2, '0')}:${String(handleUTCDate.second).padStart(2, '0')}`;
+
+
+
+      }
+    }
+
     const planetsData = horoscope.CelestialBodies;
     let cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
     const ascendant = horoscope._ascendant.ChartPosition.Ecliptic.DecimalDegrees;
-    // const aspectsData = horoscope.Aspects.all.filter(item => 
-    //   !item.point1Key.toLowerCase().includes('sirius') && 
-    //   !item.point2Key.toLowerCase().includes('sirius') &&
-    //   !item.point1Key.toLowerCase().includes('southnode') && 
-    //   !item.point2Key.toLowerCase().includes('southnode') &&
-    //   !item.point1Key.toLowerCase().includes('chiron') && 
-    //   !item.point2Key.toLowerCase().includes('chiron')
-    // );
-
     
-
-
     if (horoscope._houseSystem == "koch") {
       console.log("_ascendant", horoscope._ascendant.ChartPosition.Ecliptic.DecimalDegrees);
 
@@ -187,11 +186,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
         const eleventhCusp1 = fifthCusp;
         const twelfthCusp1 = sixthCusp;
         
-        // const arr = [
-        //   firstCusp.toFixed(4), secondCusp.toFixed(4), thirdCusp.toFixed(4), fourthCusp.toFixed(4), fifthCusp.toFixed(4), sixthCusp.toFixed(4),
-        //   seventhCusp.toFixed(4), eighthCusp.toFixed(4), ninthCusp.toFixed(4), tenthCusp.toFixed(4), eleventhCusp.toFixed(4), twelfthCusp.toFixed(4),
-        // ];
-
         const arr = [
           firstCusp1.toFixed(4), secondCusp1.toFixed(4), thirdCusp1.toFixed(4), fourthCusp1.toFixed(4), fifthCusp1.toFixed(4), sixthCusp1.toFixed(4),
           seventhCusp1.toFixed(4), eighthCusp1.toFixed(4), ninthCusp1.toFixed(4), tenthCusp1.toFixed(4), eleventhCusp1.toFixed(4), twelfthCusp1.toFixed(4),
@@ -203,30 +197,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       }
 
     }
-
-    let isKochAcs180 : boolean = false;
-    if (horoscope._houseSystem == "koch" && ascendant >= 180){
-      isKochAcs180 = true;
-    }
-
-    // Преобразуем данные в формат, пригодный для astrochart
-    // const astroData : AstroData = {
-    //   planets: {
-    //     "Sun": [isKochAcs180 ? modulo(planetsData.sun.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.sun.ChartPosition.Ecliptic.DecimalDegrees || 0],
-    //     "Moon": [isKochAcs180 ? modulo(planetsData.moon.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.moon.ChartPosition.Ecliptic.DecimalDegrees || 0],
-    //     "Mercury": [isKochAcs180 ? modulo(planetsData.mercury.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.mercury.ChartPosition.Ecliptic.DecimalDegrees || 0],
-    //     "Venus": [isKochAcs180 ? modulo(planetsData.venus.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.venus.ChartPosition.Ecliptic.DecimalDegrees || 0],
-    //     "Mars": [isKochAcs180 ? modulo(planetsData.mars.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.mars.ChartPosition.Ecliptic.DecimalDegrees || 0],
-    //     "Jupiter": [isKochAcs180 ? modulo(planetsData.jupiter.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.jupiter.ChartPosition.Ecliptic.DecimalDegrees || 0],
-    //     "Saturn": [isKochAcs180 ? modulo(planetsData.saturn.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.saturn.ChartPosition.Ecliptic.DecimalDegrees || 0],
-    //     "Uranus": [isKochAcs180 ? modulo(planetsData.uranus.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.uranus.ChartPosition.Ecliptic.DecimalDegrees || 0],
-    //     "Neptune": [isKochAcs180 ? modulo(planetsData.neptune.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.neptune.ChartPosition.Ecliptic.DecimalDegrees || 0],
-    //     "Pluto": [isKochAcs180 ? modulo(planetsData.pluto.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : planetsData.pluto.ChartPosition.Ecliptic.DecimalDegrees || 0],
-    //     "Lilith": [isKochAcs180 ? modulo(horoscope.CelestialPoints.lilith.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : horoscope.CelestialPoints.lilith.ChartPosition.Ecliptic.DecimalDegrees || 0],
-    //     "NNode": [isKochAcs180 ? modulo(horoscope.CelestialPoints.northnode.ChartPosition.Ecliptic.DecimalDegrees + 180, 360) : horoscope.CelestialPoints.northnode.ChartPosition.Ecliptic.DecimalDegrees || 0],
-    //   },
-    //   cusps: cuspsData,
-    // };
 
     const astroData : AstroData = {
       planets: {
@@ -246,7 +216,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       cusps: cuspsData,
     };
 
-    console.log("Данные об аспектах", horoscope.Houses);
     const utcTime = origin.localTimeFormatted?.slice(-6) || ""; 
     if (setLocalTime) {
       setLocalTime(utcTime);

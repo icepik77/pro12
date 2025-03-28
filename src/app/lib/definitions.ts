@@ -3,6 +3,7 @@ export interface BirthData {
     time: string;
     latitude: string;
     longitude: string;
+    utcOffset: string;
     houseSystem: string;
     style: string;
 }

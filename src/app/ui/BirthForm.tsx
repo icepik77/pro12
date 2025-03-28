@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import { validateDateTime} from "../lib/utils";
+import { validateDateTimeUTC} from "../lib/utils";
 
 // Функция для поиска городов с использованием Nominatim API
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -225,7 +225,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
       newErrors.longitude = "Некорректные координаты";
     }
 
-    if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset && validateDateTime(formData.date, formData.time)) {
+    if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset && validateDateTimeUTC(formData.date, formData.time, formData.utcOffset)) {
       setBirthData(formData);
       setSubmittedData(formData);
 

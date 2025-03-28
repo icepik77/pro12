@@ -1,6 +1,5 @@
 import { AstroData, Aspect } from "./definitions";
 
-
 export const formatPosition = (decimalDegrees: number) => {
   const degreesInSign = decimalDegrees % 30; // Ограничиваем до 30 градусов
   const degrees = Math.floor(degreesInSign);
@@ -69,13 +68,11 @@ export const getColorForAspect = (aspectKey: string): string => {
   return "#FFFFFF"; // Если аспект неизвестен, используем белый
 };
 
-// Функция для форматирования UTC смещения в "±HH:MM"
 export const formatUtcOffset = (offset: number) => {
   const hours = Math.floor(offset);
   const minutes = Math.abs((offset % 1) * 60);
   return `UTC${hours >= 0 ? "+" : ""}${hours}:${minutes.toFixed(0).padStart(2, "0")}`;
 };
-
 
 export const getAspectsForPlanet = (astroData: AstroData) => {
   
@@ -161,9 +158,16 @@ export const modulo = (n: number, m: number): number => {
   return ((n % m) + m) % m;
 }
 
-export const validateDateTime = (handleDate: string, handleTime: string) => {
+export const validateDateTimeUTC = (handleDate: string, handleTime: string, utc: string) => {
   const [day, month, year] = handleDate.split(".").map(Number);
   const [hours, minutes, seconds = 0] = handleTime.split(":").map(Number);
+  const [hoursUTC, minutesUTC] = utc.slice(1).split(":").map(Number);
+
+  if (hoursUTC > 12 || minutesUTC > 59) {
+    console.log("Ошибка ввода часового пояса");
+    return false;
+  }
+
 
   // Проверка на корректность месяца (1-12)
   if (month < 1 || month > 12) {
@@ -195,10 +199,44 @@ export const validateDateTime = (handleDate: string, handleTime: string) => {
   }
 
   const date = new Date(year, month - 1, day, hours, minutes, seconds);
-  console.log("date", date);
 
   if (year >= 2100 || year <= 1800) return false;
 
   return !isNaN(date.getTime()); // Проверяет, является ли дата валидной
 };
+
+export const convertToUTC = (dateString: string, localTime: string, timezoneOffsetStr: string) => {
+
+  // Разбираем строку часового пояса (чч:мм)
+  let sign = timezoneOffsetStr.startsWith('-') ? -1 : 1;
+  let [hoursUTC, minutesUTC] = timezoneOffsetStr.slice(1).split(':').map(Number);
+  let [hours, minutes, seconds = 0] = localTime.split(':').map(Number);
+  let [day, month, year] = dateString.split('.').map(Number);
+  let timezoneOffset = sign * (hoursUTC * 60 + minutesUTC); // Переводим в минуты
+
+  let formattedDateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+  // Создаем объект локальной даты
+  let localDate = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
+
+  // Переводим в UTC
+  let utcDate = new Date(localDate.getTime() - timezoneOffset * 60 * 1000);
+
+  // Возвращаем объект с годом, месяцем и т.д.
+  return {
+      year: utcDate.getUTCFullYear(),
+      month: utcDate.getUTCMonth() + 1, // В JS месяцы с 0 (январь) до 11 (декабрь)
+      date: utcDate.getUTCDate(),
+      hour: utcDate.getUTCHours(),
+      minute: utcDate.getUTCMinutes(),
+      second: utcDate.getUTCSeconds(),
+  };
+}
+
+export const getUTCFromOrigin = () =>{
+  
+}
+
+
+
 
