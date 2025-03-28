@@ -6,7 +6,7 @@ import { Origin, Horoscope } from 'circular-natal-horoscope-js';
 import { AstroData, NatalChartProps } from '../lib/definitions';
 import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects, getAspectsForPlanet, shouldMod180, modulo, convertToUTC, getUTCFromOrigin, setKochCusps } from '../lib/utils';
 
-const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions, setLocalTime, setLocalPlanetPositions, setLocalHousePositions, setLocalAspectPositions }) => {
+const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions, setLocalTime, setLocalPlanetPositions, setLocalHousePositions, setLocalAspectPositions, activeTab, setActiveTab }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const [chartData, setChartData] = useState<any>(null);
   const [aspectsData, setAspectsData] = useState<any>(null);
@@ -20,8 +20,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
   const houseSystem = birthData.houseSystem || 'koch'; // Берём систему домов
   const [isLocal, setIsLocal] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"chart1" | "chart2">("chart1");
-  
 
   // Функция для определения цветов в зависимости от стиля
   const getStyleSettings = () => {
@@ -447,16 +445,15 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
   
 
   useEffect(() => {
-    if (!chartData || !chartRef.current) return;
+    if (!chartData || !chartRef.current || !containerRef.current) return;
 
-    
-  
-    const containerSize = chartRef.current.clientWidth;
+    const containerSize = containerRef.current.clientWidth; // Размер родительского контейнера
     const chartSize = Math.min(containerSize, 800);
-  
-    chartRef.current.innerHTML = '';
 
-    const settings = getStyleSettings(); // Получаем настройки в зависимости от стиля
+    // Очищаем контейнер перед новым рендерингом
+    chartRef.current.innerHTML = "";
+
+    const settings = getStyleSettings();
 
     const chart = new Chart(chartRef.current.id, chartSize, chartSize, settings);
     const radix = chart.radix(chartData);
@@ -466,12 +463,15 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
   useEffect(() => {
     if (!localChartData || !localChartRef.current || !containerRef.current) return;
-  
-    const containerSize = containerRef.current.clientWidth; // Берем размер родителя
+
+    const containerSize = containerRef.current.clientWidth;
     const chartSize = Math.min(containerSize, 800);
-  
+
+    // Очищаем контейнер перед рендерингом
+    localChartRef.current.innerHTML = "";
+
     const settings = getStyleSettings();
-  
+
     const chart = new Chart(localChartRef.current.id, chartSize, chartSize, settings);
     const radix = chart.radix(localChartData);
     const localCustomAspects = createFormedAspects(localAspectsData, localChartData);
@@ -483,41 +483,38 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
   return (
     <div ref={containerRef} className="flex flex-col items-center w-full">
       {/* Табы */}
-      <div className="flex space-x-4 mb-4">
+      {isLocal && <div className="flex space-x-4 mb-4">
         <button
-          className={`px-4 py-2 rounded ${activeTab === "chart1" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+          className={`px-4 py-2 rounded ${activeTab === "chart1" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
           onClick={() => setActiveTab("chart1")}
         >
-          Первый контейнер
+          Натал
         </button>
         <button
-          className={`px-4 py-2 rounded ${activeTab === "chart2" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+          className={`px-4 py-2 rounded ${activeTab === "chart2" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
           onClick={() => setActiveTab("chart2")}
         >
-          Второй контейнер
+          Локал
         </button>
-      </div>
-  
+      </div>}
+
+      
       {/* Контейнеры с изображениями */}
       <div className="w-full max-w-[800px]" style={{ display: activeTab === "chart1" ? "block" : "none" }}>
         <div
           id="chart-container"
           ref={chartRef}
-          className="w-full aspect-square bg-gray-100 flex items-center justify-center"
-        >
-          Контейнер 1
-        </div>
+          className="w-full aspect-square flex items-center justify-center"
+        />
       </div>
-  
-      <div className="w-full max-w-[800px]" style={{ display: activeTab === "chart2" ? "block" : "none" }}>
+
+      {isLocal &&<div className="w-full max-w-[800px]" style={{ display: activeTab === "chart2" ? "block" : "none" }}>
         <div
           id="local-chart-container"
           ref={localChartRef}
-          className="w-full aspect-square bg-gray-200 flex items-center justify-center"
-        >
-          Контейнер 2
-        </div>
-      </div>
+          className="w-full aspect-square flex items-center justify-center"
+        />
+      </div>}
     </div>
   );
 };

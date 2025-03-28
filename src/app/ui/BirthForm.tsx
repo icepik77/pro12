@@ -50,8 +50,8 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     localCity: "",
     latitude: "55.75222",
     longitude: "37.61556",
-    localLatitude: "43.10562",
-    localLongitude: "131.87353",
+    localLatitude: "",
+    localLongitude: "",
     utcOffset: "-03:00",
     houseSystem: "koch",
     style: "elements", // Новый выбор для оформления
@@ -285,7 +285,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     }
 
     // Проверяем координаты
-    if (!validateCoordinates(formData.localLatitude, formData.localLongitude)) {
+    if (formData.localLatitude && formData.localLongitude  && !validateCoordinates(formData.localLatitude, formData.localLongitude)) {
       newErrors.latitude = "Некорректные координаты";
       newErrors.longitude = "Некорректные координаты";
     }
@@ -512,7 +512,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
           <button type="submit" className="mt-6 w-full p-3 bg-[#172935] text-white font-medium rounded-md hover:bg-gray-800 transition">Построить карту</button>
         </form>
 
-        {submittedData && (
+        {/* {submittedData && (
           <div className="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700">
             <h3 className="text-lg font-medium">Введенные данные:</h3>
             <p><strong>Имя:</strong> {submittedData.name}</p>
@@ -523,7 +523,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             <p><strong>Система домов:</strong> {houseSystemNames[submittedData.houseSystem]}</p>
             <p><strong>Оформление:</strong> {styleOptions.find(option => option.value === submittedData.style)?.label}</p>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

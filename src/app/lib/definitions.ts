@@ -48,4 +48,6 @@ export interface NatalChartProps {
     setLocalHousePositions: (localPositions: any) => void;
     setLocalAspectPositions: (localPositions: any) => void;
     setLocalTime?: (time: string) => void;
+    activeTab: "chart1" | "chart2"; 
+    setActiveTab: (tab: "chart1" | "chart2") => void;
 }
