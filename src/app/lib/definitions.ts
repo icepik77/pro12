@@ -10,6 +10,7 @@ export interface BirthData {
     utcOffset: string;
     houseSystem: string;
     style: string;
+    isLocal: boolean
 }
   // Интерфейс для координат планет
 export interface PlanetPositions {

@@ -4,18 +4,29 @@ import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
 import { Origin, Horoscope } from 'circular-natal-horoscope-js';
 import { AstroData, NatalChartProps } from '../lib/definitions';
-import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects, getAspectsForPlanet, shouldMod180, modulo, convertToUTC, getUTCFromOrigin, setKochCusps } from '../lib/utils';
+import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects, getAspectsForPlanet, convertToUTC, getUTCFromOrigin, setKochCusps } from '../lib/utils';
+import { div } from 'framer-motion/client';
 
 const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions, setLocalTime, setLocalPlanetPositions, setLocalHousePositions, setLocalAspectPositions, activeTab, setActiveTab }) => {
-  const chartRef = useRef<HTMLDivElement>(null);
+  
   const [chartData, setChartData] = useState<any>(null);
   const [aspectsData, setAspectsData] = useState<any>(null);
 
-  const localChartRef = useRef<HTMLDivElement>(null);
+  const chartRefMain = useRef<HTMLDivElement>(null);
+  const chartRefLeft = useRef<HTMLDivElement>(null);
+  const localChartRefRight = useRef<HTMLDivElement>(null);
+  const localChartRefMobile = useRef<HTMLDivElement>(null);
+  const chartRefMobile = useRef<HTMLDivElement>(null);
+  
+  
+
   const [localChartData, setLocalChartData] = useState<any>(null);
   const [localAspectsData, setLocalAspectsData] = useState<any>(null);
 
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const containerRefMain = useRef<HTMLDivElement | null>(null);
+  const containerRefMobile = useRef<HTMLDivElement | null>(null);
+  const containerRefDesk = useRef<HTMLDivElement | null>(null);
+  
 
   const houseSystem = birthData.houseSystem || 'koch'; // Берём систему домов
   const [isLocal, setIsLocal] = useState(false);
@@ -96,7 +107,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
   useEffect(() => {
     if (!birthData.date || !birthData.time || !birthData.latitude || !birthData.longitude) return;
-
     
 
     const [day, month, year] = birthData.date.split('.').map(Number);
@@ -109,13 +119,14 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
    
     const localLatitude = parseFloat(birthData.localLatitude);
     const localLongitude = parseFloat(birthData.localLongitude);
+
     let isLocal = false;
-    if (localLatitude && localLongitude){
+    setIsLocal(false);
+    if (localLatitude && localLongitude && birthData.isLocal){
+      
       isLocal = true;
       setIsLocal(true);
     } 
-
-
 
     if (isNaN(latitude) || isNaN(longitude)) {
       console.error("Некорректные координаты:", latitude, longitude);
@@ -264,8 +275,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     if (setLocalTime) {
       setLocalTime(utcTime);
     }
-
-    
 
     // Формируем данные для таблицы планет
     const planetPositionsList = Object.entries(planetsData)
@@ -442,79 +451,184 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     }
   }, [birthData]);
 
-  
-
   useEffect(() => {
-    if (!chartData || !chartRef.current || !containerRef.current) return;
+    console.log("Ini_Refs:", {
+      chartData,
+      chartRefMain: chartRefMain.current,
+      containerRefMain: containerRefMain.current,
+      isLocal
+    });
 
-    const containerSize = containerRef.current.clientWidth; // Размер родительского контейнера
-    const chartSize = Math.min(containerSize, 800);
+    if (isLocal || !chartData || !chartRefMain.current || !containerRefMain.current) return;
 
-    // Очищаем контейнер перед новым рендерингом
-    chartRef.current.innerHTML = "";
+    console.log("Refs:", {
+      chartData,
+      chartRefMain: chartRefMain.current,
+      containerRefMain: containerRefMain.current,
+      containerRefDesk: containerRefDesk.current,
+      chartRefLeft: chartRefLeft.current,
+      containerRefMobile: containerRefMobile.current,
+      chartRefMobile: chartRefMobile.current
+    });
 
     const settings = getStyleSettings();
-
-    const chart = new Chart(chartRef.current.id, chartSize, chartSize, settings);
-    const radix = chart.radix(chartData);
     const customAspects = createFormedAspects(aspectsData, chartData);
-    radix.aspects(customAspects);
+
+    // //Рисуем радикс натала по дефолту
+    const containerSizeMain = containerRefMain.current.clientWidth; // Размер родительского контейнера
+    const chartSizeMain = Math.min(containerSizeMain, 800);
+    chartRefMain.current.innerHTML = "";
+    const chartMain = new Chart(chartRefMain.current.id, chartSizeMain, chartSizeMain, settings);
+    const radixMain = chartMain.radix(chartData);
+    radixMain.aspects(customAspects);
+
   }, [chartData]);
 
   useEffect(() => {
-    if (!localChartData || !localChartRef.current || !containerRef.current) return;
-
-    const containerSize = containerRef.current.clientWidth;
-    const chartSize = Math.min(containerSize, 800);
-
-    // Очищаем контейнер перед рендерингом
-    localChartRef.current.innerHTML = "";
+    if (!isLocal || !chartData || !containerRefMobile.current || !chartRefMobile.current) return;
 
     const settings = getStyleSettings();
+    const customAspects = createFormedAspects(aspectsData, chartData);
 
-    const chart = new Chart(localChartRef.current.id, chartSize, chartSize, settings);
-    const radix = chart.radix(localChartData);
-    const localCustomAspects = createFormedAspects(localAspectsData, localChartData);
-    radix.aspects(localCustomAspects);
-  }, [localChartData]);
+    //Рисуем радикс натала для мобильной версии
+    const containerSizeMobile = containerRefMobile.current.clientWidth; // Размер родительского контейнера
+    const chartSizeMobile = Math.min(containerSizeMobile, 800);
+    chartRefMobile.current.innerHTML = "";
+    const chartMobile = new Chart(chartRefMobile.current.id, chartSizeMobile, chartSizeMobile, settings);
+    const radixMobile = chartMobile.radix(chartData);
+    radixMobile.aspects(customAspects);
 
+  }, [chartData]);
+
+  useEffect(() => {
+    if (!isLocal || !chartData || !containerRefDesk.current || !chartRefLeft.current) return;
+
+    const settings = getStyleSettings();
+    const customAspects = createFormedAspects(aspectsData, chartData);
+
+    //Рисуем радикс натала для большого экрана
+    const containerSizeDesk = containerRefDesk.current.clientWidth || 700; // Размер родительского контейнера
+    const chartSizeDesk = Math.min(containerSizeDesk, 800);
+    chartRefLeft.current.innerHTML = "";
+    const chartLeft = new Chart(chartRefLeft.current.id, chartSizeDesk, chartSizeDesk, settings);
+    const radixLeft = chartLeft.radix(chartData);
+    radixLeft.aspects(customAspects);
+
+  }, [chartData]);
   
 
+  useEffect(() => {
+    if (!localChartData || !localChartRefMobile.current || !containerRefMobile.current) return;
+    const settings = getStyleSettings();
+    const localCustomAspects = createFormedAspects(localAspectsData, localChartData);
+
+    //Рисуем радикс для мобильной версии локальной карты
+    const containerSizeMobile = containerRefMobile.current.clientWidth || 700;
+    const chartSizeModile = Math.min(containerSizeMobile, 800);
+
+    // Очищаем контейнер перед рендерингом
+    localChartRefMobile.current.innerHTML = "";
+    const chartModile = new Chart(localChartRefMobile.current.id, chartSizeModile, chartSizeModile, settings);
+    const radixModile = chartModile.radix(localChartData);
+    radixModile.aspects(localCustomAspects);
+
+  }, [localChartData]);
+
+  useEffect(() => {
+    if (!localChartData || !containerRefDesk.current || !localChartRefRight.current) return;
+    const settings = getStyleSettings();
+    const localCustomAspects = createFormedAspects(localAspectsData, localChartData);
+
+    //Рисуем радикс для настольной версии локальной карты
+    const containerSize = containerRefDesk.current.clientWidth * 2 || 700;
+    const chartSize = Math.min(containerSize, 800);
+    localChartRefRight.current.innerHTML = "";
+    const chart = new Chart(localChartRefRight.current.id, chartSize, chartSize, settings);
+    const radix = chart.radix(localChartData);
+    radix.aspects(localCustomAspects);
+
+  }, [localChartData]);
+
   return (
-    <div ref={containerRef} className="flex flex-col items-center w-full">
-      {/* Табы */}
-      {isLocal && <div className="flex space-x-4 mb-4">
-        <button
-          className={`px-4 py-2 rounded ${activeTab === "chart1" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
-          onClick={() => setActiveTab("chart1")}
-        >
-          Натал
-        </button>
-        <button
-          className={`px-4 py-2 rounded ${activeTab === "chart2" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
-          onClick={() => setActiveTab("chart2")}
-        >
-          Локал
-        </button>
-      </div>}
+    <div className="flex flex-col items-center w-full" ref={containerRefMobile}>
+      {/* Локальная карта для больших экранов */}
+      {isLocal && 
+        <div className='hidden 2xl:flex'>
+          <div ref={containerRefDesk} className="w-1/2 max-w-[800px]">
+            <div
+              id="chart-container-left"
+              ref={chartRefLeft}
+              className="w-full aspect-square flex items-center justify-center"
+            />
+          </div>
+          <div ref={containerRefDesk} className="w-1/2 max-w-[800px]">
+            <div
+              id="local-chart-container"
+              ref={localChartRefRight}
+              className="w-full aspect-square flex items-center justify-center"
+            />
+          </div>
+        </div>
+      }
+
+      {/* Локальная карта для небольших экранов */}
+      {isLocal &&
+        <div className='2xl:hidden'>
+          {/* Табы */}
+          {isLocal && 
+            <div className="flex space-x-4 justify-center">
+              <button
+                className={`px-4 py-2 rounded ${activeTab === "chart1" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
+                onClick={() => setActiveTab("chart1")}
+              >
+                Натал
+              </button>
+              <button
+                className={`px-4 py-2 rounded ${activeTab === "chart2" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
+                onClick={() => setActiveTab("chart2")}
+              >
+                Локал
+              </button>
+            </div>
+          }
+          {/* Контейнеры с изображениями */}
+          <div className="w-full max-w-[800px]" style={{ display: activeTab === "chart1" ? "block" : "none" }}>
+            <div
+              id="chart-container-mobile"
+              ref={chartRefMobile}
+              className="w-full aspect-square flex items-center justify-center"
+            />
+          </div>
+          {isLocal &&
+            <div className="w-full max-w-[800px]" style={{ display: activeTab === "chart2" ? "block" : "none" }}>
+              <div
+                id="local-chart-container-mobile"
+                ref={localChartRefMobile}
+                className="w-full aspect-square flex items-center justify-center"
+              />
+            </div>
+          }
+
+        </div> 
+      }
+
+      {/* Натальная карта без локальной */}
+      {!isLocal && 
+        <div ref={containerRefMain} className="w-full max-w-[800px]">
+          <div
+            id="chart-container-main"
+            ref={chartRefMain}
+            className="w-full aspect-square flex items-center justify-center"
+          />
+        </div>
+      }
 
       
-      {/* Контейнеры с изображениями */}
-      <div className="w-full max-w-[800px]" style={{ display: activeTab === "chart1" ? "block" : "none" }}>
-        <div
-          id="chart-container"
-          ref={chartRef}
-          className="w-full aspect-square flex items-center justify-center"
-        />
-      </div>
 
-      {isLocal &&<div className="w-full max-w-[800px]" style={{ display: activeTab === "chart2" ? "block" : "none" }}>
-        <div
-          id="local-chart-container"
-          ref={localChartRef}
-          className="w-full aspect-square flex items-center justify-center"
-        />
-      </div>}
+      
+      
+
+      
     </div>
   );
 };

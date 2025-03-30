@@ -263,6 +263,16 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     setCitySuggestions([]);
   };
 
+  const localHandleCityClear = () => {
+    setFormData({
+      ...formData,
+      localCity: "",
+      localLatitude: "",
+      localLongitude: "",
+    });
+    setCitySuggestions([]);
+  };
+
   const handleLocalCityClear = () => {
     setFormData({
       ...formData,
@@ -291,17 +301,16 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     }
 
     if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset && validateDateTimeUTC(formData.date, formData.time, formData.utcOffset)) {
-      if (!isLocal){
-        setFormData({
+      if (!isLocal || !formData.localLatitude || !formData.localLongitude){
+        setBirthData({
           ...formData,
           localCity: "",
           localLatitude: "",
           localLongitude: "",
           isLocal: false
         });
-      }
+      } else setBirthData(formData);
 
-      setBirthData(formData);
       setSubmittedData(formData);
 
       setErrors(prevErrors => ({
@@ -324,12 +333,12 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
         <p className="text-gray-500 mb-8">Заполните данные о рождении</p>
         {errors.commonError &&  <p className="text-red-500 text-sm mb-1">{errors.commonError}</p>}
 
-        <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
+        <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg p-4 border border-gray-200 max-w-xl">
           <div className="space-y-4">
             {/* Имя */}
             <div>
               <label className="block text-gray-700 text-sm mb-1">Имя</label>
-              <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
+              <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
             </div>
 
             {/* Дата, время и UTC в одну строку */}
@@ -343,7 +352,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                   value={formData.date} 
                   onChange={handleDateInput} 
                   placeholder="ДД.ММ.ГГГГ" 
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
+                  className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
                 />
               </div>
 
@@ -356,7 +365,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                   value={formData.time} 
                   onChange={handleTimeInput} 
                   placeholder="ЧЧ:ММ" 
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
+                  className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
                 />
               </div>
 
@@ -370,7 +379,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                   value={formData.utcOffset}
                   onChange={handleUtcOffsetInput}
                   placeholder={localTime || "+00:00"}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
+                  className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
                 />
               </div>
             </div>
@@ -380,14 +389,14 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
               {/* Широта */}
               <div className="flex-1 min-w-[120px]">
                 <label className="block text-gray-700 text-sm mb-1">Широта</label>
-                <input type="text" name="latitude" value={formData.latitude} onChange={handleChange} onBlur={handleBlur} placeholder="Введите широту" className={`w-full p-3 border ${errors.latitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
+                <input type="text" name="latitude" value={formData.latitude} onChange={handleChange} onBlur={handleBlur} placeholder="Введите широту" className={`w-full p-1 border ${errors.latitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
                 {errors.latitude && <p className="text-red-500 text-sm mt-1">{errors.latitude}</p>}
               </div>
 
               {/* Долгота */}
               <div className="flex-1 min-w-[120px]">
                 <label className="block text-gray-700 text-sm mb-1">Долгота</label>
-                <input type="text" name="longitude" value={formData.longitude} onChange={handleChange} onBlur={handleBlur} placeholder="Введите долготу" className={`w-full p-3 border ${errors.longitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
+                <input type="text" name="longitude" value={formData.longitude} onChange={handleChange} onBlur={handleBlur} placeholder="Введите долготу" className={`w-full p-1 border ${errors.longitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
                 {errors.longitude && <p className="text-red-500 text-sm mt-1">{errors.longitude}</p>}
               </div>
             </div>
@@ -401,7 +410,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                   name="city"
                   value={formData.city}
                   onChange={handleCityChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none pr-10"
+                  className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none pr-10"
                 />
                 {formData.city && (
                   <button
@@ -427,7 +436,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             {/* Система домов */}
             <div>
               <label className="block text-gray-700 text-sm mb-1">Система домов</label>
-              <select name="houseSystem" value={formData.houseSystem} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none">
+              <select name="houseSystem" value={formData.houseSystem} onChange={handleChange} className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none">
                 {Object.entries(houseSystemNames).map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
                 ))}
@@ -437,7 +446,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             {/* Выбор оформления */}
             <div>
               <label className="block text-gray-700 text-sm mb-1">Выбор оформления</label>
-              <select name="style" value={formData.style} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none">
+              <select name="style" value={formData.style} onChange={handleChange} className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none">
                 {styleOptions.map((option) => (
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
@@ -445,7 +454,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             </div>
 
             {/* Чекбокс */}
-            <label className="flex items-center space-x-2 cursor-pointer">
+            <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
                 checked={isLocal}
@@ -456,20 +465,20 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             </label>
 
             {isLocal && (
-              <div className="mt-4 p-4 rounded-lg">
+              <div className=" px-4 py-0 rounded-lg">
                 {/* Широта и долгота в одну строку */}
-                <div className="flex flex-wrap gap-4 mt-4">
+                <div className="flex flex-wrap gap-4">
                   {/* Широта */}
                   <div className="flex-1 min-w-[120px]">
                     <label className="block text-gray-700 text-sm mb-1">Широта</label>
-                    <input type="text" name="localLatitude" value={formData.localLatitude} onChange={handleChange} onBlur={localHandleBlur} placeholder="Введите широту" className={`w-full p-3 border ${errors.latitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
+                    <input type="text" name="localLatitude" value={formData.localLatitude} onChange={handleChange} onBlur={localHandleBlur} placeholder="Введите широту" className={`w-full p-1 border ${errors.latitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
                     {errors.latitude && <p className="text-red-500 text-sm mt-1">{errors.latitude}</p>}
                   </div>
 
                   {/* Долгота */}
                   <div className="flex-1 min-w-[120px]">
                     <label className="block text-gray-700 text-sm mb-1">Долгота</label>
-                    <input type="text" name="localLongitude" value={formData.localLongitude} onChange={handleChange} onBlur={localHandleBlur} placeholder="Введите долготу" className={`w-full p-3 border ${errors.longitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
+                    <input type="text" name="localLongitude" value={formData.localLongitude} onChange={handleChange} onBlur={localHandleBlur} placeholder="Введите долготу" className={`w-full p-1 border ${errors.longitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
                     {errors.longitude && <p className="text-red-500 text-sm mt-1">{errors.longitude}</p>}
                   </div>
                 </div>
@@ -483,9 +492,9 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                       name="city"
                       value={formData.localCity}
                       onChange={handleLocalCityChange}
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none pr-10"
+                      className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none pr-10"
                     />
-                    {formData.city && (
+                    {formData.localCity && (
                       <button
                         type="button"
                         onClick={handleLocalCityClear}

@@ -36,8 +36,8 @@ const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions, planets }) 
   
 
   return (
-    <div className="w-full max-w-5xl p-4 flex flex-col items-center text-[14px]">
-      <h3 className="text-xl font-medium mb-4 text-center">Аспекты</h3>
+    <div className="w-full max-w-5xl px-4 py-1 lg:p-4 flex flex-col items-center text-[14px]">
+      <h3 className="text-xl font-medium mb-1 lg:mb-4 text-center">Аспекты</h3>
       <table className="table-auto w-full max-w-[400px] border-collapse">
         <tbody>
           {aspectsPositions.map((aspect, index) => {
