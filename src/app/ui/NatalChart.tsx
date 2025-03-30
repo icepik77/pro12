@@ -452,29 +452,17 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
   }, [birthData]);
 
   useEffect(() => {
-    console.log("Ini_Refs:", {
-      chartData,
-      chartRefMain: chartRefMain.current,
-      containerRefMain: containerRefMain.current,
-      isLocal
-    });
+    console.log("localChartDataSimple", localChartData);
+  });
 
+  // Рисуем радикс натала по дефолту
+  useEffect(() => {
     if (isLocal || !chartData || !chartRefMain.current || !containerRefMain.current) return;
-
-    console.log("Refs:", {
-      chartData,
-      chartRefMain: chartRefMain.current,
-      containerRefMain: containerRefMain.current,
-      containerRefDesk: containerRefDesk.current,
-      chartRefLeft: chartRefLeft.current,
-      containerRefMobile: containerRefMobile.current,
-      chartRefMobile: chartRefMobile.current
-    });
 
     const settings = getStyleSettings();
     const customAspects = createFormedAspects(aspectsData, chartData);
 
-    // //Рисуем радикс натала по дефолту
+    
     const containerSizeMain = containerRefMain.current.clientWidth; // Размер родительского контейнера
     const chartSizeMain = Math.min(containerSizeMain, 800);
     chartRefMain.current.innerHTML = "";
@@ -484,13 +472,14 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
   }, [chartData]);
 
+  //Рисуем радикс натала для мобильной версии
   useEffect(() => {
     if (!isLocal || !chartData || !containerRefMobile.current || !chartRefMobile.current) return;
 
     const settings = getStyleSettings();
     const customAspects = createFormedAspects(aspectsData, chartData);
 
-    //Рисуем радикс натала для мобильной версии
+    
     const containerSizeMobile = containerRefMobile.current.clientWidth; // Размер родительского контейнера
     const chartSizeMobile = Math.min(containerSizeMobile, 800);
     chartRefMobile.current.innerHTML = "";
@@ -500,13 +489,14 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
   }, [chartData]);
 
+  //Рисуем радикс натала для большого экрана
   useEffect(() => {
     if (!isLocal || !chartData || !containerRefDesk.current || !chartRefLeft.current) return;
 
     const settings = getStyleSettings();
     const customAspects = createFormedAspects(aspectsData, chartData);
 
-    //Рисуем радикс натала для большого экрана
+    
     const containerSizeDesk = containerRefDesk.current.clientWidth || 700; // Размер родительского контейнера
     const chartSizeDesk = Math.min(containerSizeDesk, 800);
     chartRefLeft.current.innerHTML = "";
@@ -516,17 +506,19 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
   }, [chartData]);
   
-
+  //Рисуем радикс для мобильной версии локальной карты
   useEffect(() => {
     if (!localChartData || !localChartRefMobile.current || !containerRefMobile.current) return;
-    const settings = getStyleSettings();
-    const localCustomAspects = createFormedAspects(localAspectsData, localChartData);
 
-    //Рисуем радикс для мобильной версии локальной карты
+    console.log("localChartData", localChartData);
+
+    const settings = getStyleSettings();
+    const localCustomAspects = createFormedAspects(aspectsData, localChartData);
+
+    
     const containerSizeMobile = containerRefMobile.current.clientWidth || 700;
     const chartSizeModile = Math.min(containerSizeMobile, 800);
 
-    // Очищаем контейнер перед рендерингом
     localChartRefMobile.current.innerHTML = "";
     const chartModile = new Chart(localChartRefMobile.current.id, chartSizeModile, chartSizeModile, settings);
     const radixModile = chartModile.radix(localChartData);
@@ -534,12 +526,13 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
   }, [localChartData]);
 
+  //Рисуем радикс для настольной версии локальной карты
   useEffect(() => {
     if (!localChartData || !containerRefDesk.current || !localChartRefRight.current) return;
     const settings = getStyleSettings();
-    const localCustomAspects = createFormedAspects(localAspectsData, localChartData);
+    const localCustomAspects = createFormedAspects(aspectsData, localChartData);
 
-    //Рисуем радикс для настольной версии локальной карты
+    
     const containerSize = containerRefDesk.current.clientWidth * 2 || 700;
     const chartSize = Math.min(containerSize, 800);
     localChartRefRight.current.innerHTML = "";

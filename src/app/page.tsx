@@ -268,7 +268,7 @@ export default function Home() {
                       animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
                       transition={{ duration: 1 }} // Плавное появление за 1 секунду
                     >
-                      <PlanetTable planetPositions={localPlanetPositions} />
+                      <PlanetTable planetPositions={planetPositions} localPlanetPositions={localPlanetPositions} />
                     </motion.div>
 
                     {/* Плавное появление таблицы домов только после загрузки данных */}
@@ -289,8 +289,8 @@ export default function Home() {
                       transition={{ duration: 1 }} // Плавное появление за 1 секунду
                     >
                       <AspectTable
-                        aspectsPositions={LocalAspectPositions ? LocalAspectPositions.aspects : []}
-                        planets={LocalAspectPositions ? LocalAspectPositions.planets : []}
+                        aspectsPositions={aspectPositions ? aspectPositions.aspects : []}
+                        planets={aspectPositions ? aspectPositions.planets : []}
                       />
                     </motion.div>
                   </div>
@@ -346,7 +346,7 @@ export default function Home() {
                       animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
                       transition={{ duration: 1 }} // Плавное появление за 1 секунду
                     >
-                      <PlanetTable planetPositions={localPlanetPositions} />
+                      <PlanetTable planetPositions={planetPositions} localPlanetPositions={localPlanetPositions}/>
                     </motion.div>
 
                     {/* Плавное появление таблицы домов только после загрузки данных */}
@@ -367,8 +367,8 @@ export default function Home() {
                       transition={{ duration: 1 }} // Плавное появление за 1 секунду
                     >
                     <AspectTable
-                      aspectsPositions={LocalAspectPositions ? LocalAspectPositions.aspects : []}
-                      planets={LocalAspectPositions ? LocalAspectPositions.planets : []}
+                      aspectsPositions={aspectPositions ? aspectPositions.aspects : []}
+                      planets={aspectPositions ? aspectPositions.planets : []}
                     />
                     </motion.div>
                   </div>
