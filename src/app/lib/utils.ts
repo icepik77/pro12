@@ -258,8 +258,6 @@ export const getUTCFromOrigin = (latitude : number, longitude : number) =>{
     handleUTCDate
   });
 
-  console.log("origin.localTimeFormatted?.slice(-6)", origin.localTimeFormatted?.slice(-6))
-  
   return origin.localTimeFormatted?.slice(-6); 
 }
 

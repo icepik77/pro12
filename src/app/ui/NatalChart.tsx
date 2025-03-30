@@ -197,6 +197,8 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
         handleUTCDate: handleUTCDateLocal
       });
 
+      console.log("localOrigin", localOrigin)
+
       localHoroscope = new Horoscope({
         origin: localOrigin,
         houseSystem: houseSystem,
