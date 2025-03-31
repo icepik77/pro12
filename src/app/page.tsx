@@ -8,6 +8,7 @@ import AspectTable from "./ui/AspectTable";
 import { motion } from "framer-motion"; // Импортируем framer-motion
 import Header from "./ui/Header";
 import dynamic from 'next/dynamic';
+import Script from "next/script";
 
 const NatalChart = dynamic(() => import('./ui/NatalChart'), { ssr: false });
 
@@ -385,9 +386,36 @@ export default function Home() {
             <p>© 2025 ORION. Все права защищены.</p>
           </div>
         </footer>
-      </main>
+        {/* Код Яндекс.Метрики */}
+        <Script
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+              m[i].l=1*new Date();
+              for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+              k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+              (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
 
-      
+              ym(100663878, "init", {
+                  clickmap:true,
+                  trackLinks:true,
+                  accurateTrackBounce:true,
+                  webvisor:true
+              });
+            `,
+          }}
+        />
+        <noscript>
+          <div>
+            <img
+              src="https://mc.yandex.ru/watch/100663878"
+              style={{ position: "absolute", left: "-9999px" }}
+              alt=""
+            />
+          </div>
+        </noscript>
+      </main>
     </div>
 
   );
