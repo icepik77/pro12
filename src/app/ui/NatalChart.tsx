@@ -30,6 +30,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
   const houseSystem = birthData.houseSystem || 'koch'; // Берём систему домов
   const [isLocal, setIsLocal] = useState(false);
+  const [twoMaps, setTwoMaps] = useState(false);
 
 
   // Функция для определения цветов в зависимости от стиля
@@ -546,29 +547,11 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
   return (
     <div className="flex flex-col items-center w-full" ref={containerRefMobile}>
-      {/* Локальная карта для больших экранов */}
-      {isLocal && 
-        <div className='hidden 2xl:flex'>
-          <div ref={containerRefDesk} className="w-1/2 max-w-[800px]">
-            <div
-              id="chart-container-left"
-              ref={chartRefLeft}
-              className="w-full aspect-square flex items-center justify-center"
-            />
-          </div>
-          <div ref={containerRefDesk} className="w-1/2 max-w-[800px]">
-            <div
-              id="local-chart-container"
-              ref={localChartRefRight}
-              className="w-full aspect-square flex items-center justify-center"
-            />
-          </div>
-        </div>
-      }
+      
 
       {/* Локальная карта для небольших экранов */}
       {isLocal &&
-        <div className='2xl:hidden'>
+        <div>
           {/* Табы */}
           {isLocal && 
             <div className="flex space-x-4 justify-center">
@@ -584,27 +567,56 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
               >
                 Локал
               </button>
+              <button
+                className={`px-4 py-2 hidden 2xl:flex  ${twoMaps ? "bg-[#172935] text-white rounded" : "rounded bg-gray-200"}`}
+                onClick={()=>{setTwoMaps(!twoMaps)}}
+              >
+                2 карты
+              </button>
             </div>
           }
           {/* Контейнеры с изображениями */}
-          <div className="w-full max-w-[800px]" style={{ display: activeTab === "chart1" ? "block" : "none" }}>
+          <div className={`${twoMaps ? "hidden" : ""}`}>
+            <div className={`w-full max-w-[800px]}`} style={{ display: activeTab === "chart1" ? "block" : "none" }}>
             <div
               id="chart-container-mobile"
               ref={chartRefMobile}
               className="w-full aspect-square flex items-center justify-center"
             />
-          </div>
-          {isLocal &&
-            <div className="w-full max-w-[800px]" style={{ display: activeTab === "chart2" ? "block" : "none" }}>
-              <div
-                id="local-chart-container-mobile"
-                ref={localChartRefMobile}
-                className="w-full aspect-square flex items-center justify-center"
-              />
             </div>
-          }
+            {isLocal &&
+              <div className={`w-full max-w-[800px] ${twoMaps ? "hidden" : ""}`} style={{ display: activeTab === "chart2" ? "block" : "none" }}>
+                <div
+                  id="local-chart-container-mobile"
+                  ref={localChartRefMobile}
+                  className="w-full aspect-square flex items-center justify-center"
+                />
+              </div>
+            }
+          </div>
+          
 
         </div> 
+      }
+
+      {/* Локальная карта для больших экранов */}
+      {isLocal && 
+        <div className={`hidden ${twoMaps ? "2xl:flex" : ""} `}>
+          <div ref={containerRefDesk} className="w-1/2 max-w-[800px]">
+            <div
+              id="chart-container-left"
+              ref={chartRefLeft}
+              className="w-full aspect-square flex items-center justify-center"
+            />
+          </div>
+          <div ref={containerRefDesk} className="w-1/2 max-w-[800px]">
+            <div
+              id="local-chart-container"
+              ref={localChartRefRight}
+              className="w-full aspect-square flex items-center justify-center"
+            />
+          </div>
+        </div>
       }
 
       {/* Натальная карта без локальной */}
