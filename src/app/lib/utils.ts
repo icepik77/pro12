@@ -305,6 +305,75 @@ export const setKochCusps = (ascendant: number, cuspsData : any) =>{
   return cuspsData;
 }
 
+export const getAspectsBetweenCharts = (astroData1: AstroData, astroData2: AstroData) => { 
+  const aspects = {
+    conjunction: 0,
+    opposition: 180,
+    trine: 120,
+    square: 90,
+    sextile: 60,
+  };
+
+  const orbs = {
+    Sun: 8.5,
+    Moon: 8.5,
+    Mercury: 8.5,
+    Venus: 8.5,
+    Mars: 8.5,
+    Jupiter: 8.5,
+    Saturn: 9,
+    Uranus: 8.5,
+    Neptune: 6.5,
+    Pluto: 6.5,
+    Lilith: 8.5,
+    NNode: 8.5,
+  };
+
+  let foundAspects: Aspect[] = [];
+
+  // Преобразуем объекты планет в массивы
+  const planetsArray1 = Object.entries(astroData1.planets).map(([name, position]) => ({
+    name,
+    position: position[0],
+  }));
+
+  const planetsArray2 = Object.entries(astroData2.planets).map(([name, position]) => ({
+    name,
+    position: position[0],
+  }));
+
+  planetsArray1.forEach((planetA) => {
+    planetsArray2.forEach((planetB) => {
+      const degreeA = planetA.position;
+      const degreeB = planetB.position;
+
+      const diff = Math.abs(degreeA - degreeB);
+      const adjustedDiff = Math.min(diff, 360 - diff);
+
+      Object.entries(aspects).forEach(([aspect, aspectDegree]) => {
+        const orbA = orbs[planetA.name as keyof typeof orbs] || 5;
+        const orbB = orbs[planetB.name as keyof typeof orbs] || 5;
+        const maxOrb = Math.min(orbA, orbB);
+        const aspectDiff = Math.abs(adjustedDiff - aspectDegree);
+
+        if (aspectDiff <= maxOrb) {
+          foundAspects.push({
+            point1Key: planetA.name,
+            point2Key: planetB.name,
+            aspectKey: aspect,
+            orb: aspectDiff,
+            point1Label: planetA.name,
+            point2Label: planetB.name,
+          });
+        }
+      });
+    });
+  });
+
+  return foundAspects;
+};
+
+
 
 
 
