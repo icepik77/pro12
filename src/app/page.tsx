@@ -45,7 +45,8 @@ export default function Home() {
     utcOffset: "",
     houseSystem: "koch",
     style: "elements", 
-    isLocal: false
+    isLocal: false, 
+    isCompatibility: false
   });
 
   const [planetPositions, setPlanetPositions] = useState<any[]>([]);
@@ -54,7 +55,11 @@ export default function Home() {
 
   const [localPlanetPositions, setLocalPlanetPositions] = useState<any[]>([]);
   const [localHousePositions, setLocalHousePositions] = useState<any[]>([]);
-  const [LocalAspectPositions, setLocalAspectPositions] = useState<any>();
+  const [localAspectPositions, setLocalAspectPositions] = useState<any>();
+
+  const [compPlanetPositions, setCompPlanetPositions] = useState<any[]>([]);
+  const [compHousePositions, setCompHousePositions] = useState<any[]>([]);
+  const [compAspectPositions, setCompAspectPositions] = useState<any>();
 
   const [activeTab, setActiveTab] = useState<"chart1" | "chart2">("chart1");
 
@@ -100,7 +105,10 @@ export default function Home() {
                 setLocalTime={setLocalTime}
                 setLocalPlanetPositions={setLocalPlanetPositions}
                 setLocalHousePositions={setLocalHousePositions}
-                setLocalAspectPositions={setLocalAspectPositions}  
+                setLocalAspectPositions={setLocalAspectPositions}
+                setCompPlanetPositions={setCompPlanetPositions}
+                setCompHousePositions={setCompHousePositions}
+                setCompAspectPositions={setCompAspectPositions}  
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
               />

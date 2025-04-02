@@ -44,18 +44,19 @@ interface BirthFormProps {
 export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   const [formData, setFormData] = useState({
     name: "",
-    date: "",
-    time: "",
+    date: "25.03.2025",
+    time: "11:30",
     city: "",
     localCity: "",
-    latitude: "",
-    longitude: "",
-    localLatitude: "",
-    localLongitude: "",
+    latitude: "33",
+    longitude: "44",
+    localLatitude: "11",
+    localLongitude: "22",
     utcOffset: "",
     houseSystem: "koch",
     style: "elements", // Новый выбор для оформления
-    isLocal: true
+    isLocal: true,
+    isCompatibility: true,
   });
   const [isLocal, setIsLocal] = useState(false);
 

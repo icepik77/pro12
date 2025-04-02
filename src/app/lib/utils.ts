@@ -486,7 +486,7 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean) => {
   const utcTime = origin.localTimeFormatted?.slice(-6) || ""; 
 
   // Формируем данные для таблицы планет
-  const planetPositionsList : PlanetPositionList = Object.entries(planetsData)
+  const planetPositionsList = Object.entries(planetsData)
   .map(([key, planet]: any) => {
     if (!planet?.ChartPosition?.Ecliptic?.DecimalDegrees) return null;
 
