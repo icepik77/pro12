@@ -178,8 +178,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       let utc;
 
       if (handleUTCDate){
-        // formattedDate = `${handleUTCDate.date}.${String(handleUTCDate.month).padStart(2, '0')}.${String(handleUTCDate.year).padStart(2, '0')}`;
-        // formattedTime = `${String(handleUTCDate.hour).padStart(2, '0')}:${String(handleUTCDate.minute).padStart(2, '0')}:${String(handleUTCDate.second).padStart(2, '0')}`;
         utc = utcOffset;
       } 
       else utc = getUTCFromOrigin(latitude, longitude);
@@ -197,8 +195,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
         longitude: localLongitude,
         handleUTCDate: handleUTCDateLocal
       });
-
-      console.log("localOrigin", localOrigin)
 
       localHoroscope = new Horoscope({
         origin: localOrigin,
@@ -453,10 +449,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
     }
   }, [birthData]);
-
-  useEffect(() => {
-    console.log("localChartDataSimple", localChartData);
-  });
 
   // Рисуем радикс натала по дефолту
   useEffect(() => {
