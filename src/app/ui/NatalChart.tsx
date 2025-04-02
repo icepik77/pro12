@@ -8,7 +8,6 @@ import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects,
 import { div } from 'framer-motion/client';
 
 const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions, setLocalTime, setLocalPlanetPositions, setLocalHousePositions, setLocalAspectPositions, activeTab, setActiveTab }) => {
-  
   const [chartData, setChartData] = useState<any>(null);
   const [aspectsData, setAspectsData] = useState<any>(null);
 
@@ -18,8 +17,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
   const localChartRefMobile = useRef<HTMLDivElement>(null);
   const chartRefMobile = useRef<HTMLDivElement>(null);
   
-  
-
   const [localChartData, setLocalChartData] = useState<any>(null);
   const [localAspectsData, setLocalAspectsData] = useState<any>(null);
 
@@ -27,11 +24,9 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
   const containerRefMobile = useRef<HTMLDivElement | null>(null);
   const containerRefDesk = useRef<HTMLDivElement | null>(null);
   
-
   const houseSystem = birthData.houseSystem || 'koch'; // Берём систему домов
   const [isLocal, setIsLocal] = useState(false);
   const [twoMaps, setTwoMaps] = useState(false);
-
 
   // Функция для определения цветов в зависимости от стиля
   const getStyleSettings = () => {
@@ -109,7 +104,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
   useEffect(() => {
     if (!birthData.date || !birthData.time || !birthData.latitude || !birthData.longitude) return;
     
-
     const [day, month, year] = birthData.date.split('.').map(Number);
     const [hour, minute, second] = birthData.time.split(':').map(Number);
     const utcOffset = birthData.utcOffset;
@@ -117,7 +111,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     const longitude = parseFloat(birthData.longitude);
     const handleUTCDate = utcOffset ? convertToUTC(birthData.date, birthData.time, utcOffset) : undefined;
 
-   
     const localLatitude = parseFloat(birthData.localLatitude);
     const localLongitude = parseFloat(birthData.localLongitude);
 
@@ -539,8 +532,6 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
   return (
     <div className="flex flex-col items-center w-full" ref={containerRefMobile}>
-      
-
       {/* Локальная карта для небольших экранов */}
       {isLocal &&
         <div>
@@ -611,7 +602,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
         </div>
       }
 
-      {/* Натальная карта без локальной */}
+      {/* Натальная карта по умолчанию */}
       {!isLocal && 
         <div ref={containerRefMain} className="w-full max-w-[800px]">
           <div
@@ -621,6 +612,8 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
           />
         </div>
       }
+
+
 
       
 
