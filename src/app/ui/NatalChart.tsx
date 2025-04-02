@@ -4,15 +4,34 @@ import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
 import { Origin, Horoscope } from 'circular-natal-horoscope-js';
 import { AstroData, NatalChartProps } from '../lib/definitions';
-import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects, getAspectsForPlanet, shouldMod180, modulo, convertToUTC } from '../lib/utils';
+import { formatPosition, getZodiacSign, findHouseForPlanet, createFormedAspects, getAspectsForPlanet, convertToUTC, getUTCFromOrigin, setKochCusps } from '../lib/utils';
+import { div } from 'framer-motion/client';
 
-const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions, setLocalTime, }) => {
-  const chartRef = useRef<HTMLDivElement>(null);
+const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, setHousePositions, setAspectPositions, setLocalTime, setLocalPlanetPositions, setLocalHousePositions, setLocalAspectPositions, activeTab, setActiveTab }) => {
+  
   const [chartData, setChartData] = useState<any>(null);
   const [aspectsData, setAspectsData] = useState<any>(null);
-  const [style, setStyle] = useState<string>('elements'); // Добавляем состояние для стиля оформления
-  const houseSystem = birthData.houseSystem || 'koch'; // Берём систему домов
+
+  const chartRefMain = useRef<HTMLDivElement>(null);
+  const chartRefLeft = useRef<HTMLDivElement>(null);
+  const localChartRefRight = useRef<HTMLDivElement>(null);
+  const localChartRefMobile = useRef<HTMLDivElement>(null);
+  const chartRefMobile = useRef<HTMLDivElement>(null);
   
+  
+
+  const [localChartData, setLocalChartData] = useState<any>(null);
+  const [localAspectsData, setLocalAspectsData] = useState<any>(null);
+
+  const containerRefMain = useRef<HTMLDivElement | null>(null);
+  const containerRefMobile = useRef<HTMLDivElement | null>(null);
+  const containerRefDesk = useRef<HTMLDivElement | null>(null);
+  
+
+  const houseSystem = birthData.houseSystem || 'koch'; // Берём систему домов
+  const [isLocal, setIsLocal] = useState(false);
+  const [twoMaps, setTwoMaps] = useState(false);
+
 
   // Функция для определения цветов в зависимости от стиля
   const getStyleSettings = () => {
@@ -89,6 +108,7 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
 
   useEffect(() => {
     if (!birthData.date || !birthData.time || !birthData.latitude || !birthData.longitude) return;
+    
 
     const [day, month, year] = birthData.date.split('.').map(Number);
     const [hour, minute, second] = birthData.time.split(':').map(Number);
@@ -96,29 +116,24 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     const latitude = parseFloat(birthData.latitude);
     const longitude = parseFloat(birthData.longitude);
     const handleUTCDate = utcOffset ? convertToUTC(birthData.date, birthData.time, utcOffset) : undefined;
-    const isLocal = true;
-    let localOrigin;
-    let localHoroscope;
-    const localLatitude = 23;
-    const localLongitude = 32; 
 
+   
+    const localLatitude = parseFloat(birthData.localLatitude);
+    const localLongitude = parseFloat(birthData.localLongitude);
+
+    let isLocal = false;
+    setIsLocal(false);
+    if (localLatitude && localLongitude && birthData.isLocal){
+      
+      isLocal = true;
+      setIsLocal(true);
+    } 
 
     if (isNaN(latitude) || isNaN(longitude)) {
       console.error("Некорректные координаты:", latitude, longitude);
       return;
     }
 
-    const origin = new Origin({
-      year,
-      month: month - 1, // В JS месяцы с 0
-      date: day,
-      hour,
-      minute,
-      second,
-      latitude,
-      longitude,
-      handleUTCDate
-    });
     const customOrbs = {
       conjunction: 10,
       opposition: 8,
@@ -131,6 +146,18 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       "semi-square": 1,
       "semi-sextile": 1,
     };
+
+    const origin = new Origin({
+      year,
+      month: month - 1, // В JS месяцы с 0
+      date: day,
+      hour,
+      minute,
+      second,
+      latitude,
+      longitude,
+      handleUTCDate
+    });
     const horoscope = new Horoscope({
       origin,
       houseSystem: houseSystem,
@@ -142,60 +169,66 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       language: 'en',
     });
 
+    // Определяем локальный гороскоп
+    let localOrigin;
+    let localHoroscope;
     if (isLocal){
+      let formattedDate = birthData.date;
+      let formattedTime = birthData.time;
+      let utc;
+
       if (handleUTCDate){
-        const formattedDate = `${handleUTCDate.year}-${String(handleUTCDate.month).padStart(2, '0')}-${String(handleUTCDate.date).padStart(2, '0')}`;
-        const formattedTime = `${String(handleUTCDate.hour).padStart(2, '0')}:${String(handleUTCDate.minute).padStart(2, '0')}:${String(handleUTCDate.second).padStart(2, '0')}`;
+        utc = utcOffset;
+      } 
+      else utc = getUTCFromOrigin(latitude, longitude);
 
+      const handleUTCDateLocal = convertToUTC(formattedDate, formattedTime, utc);
 
+      localOrigin = new Origin({
+        year,
+        month: month - 1, // В JS месяцы с 0
+        date: day,
+        hour,
+        minute,
+        second,
+        latitude: localLatitude,
+        longitude: localLongitude,
+        handleUTCDate: handleUTCDateLocal
+      });
 
-      }
+      localHoroscope = new Horoscope({
+        origin: localOrigin,
+        houseSystem: houseSystem,
+        zodiac: 'tropical',
+        aspectPoints: ['bodies', 'points'],
+        aspectWithPoints: ['bodies', 'points'],
+        aspectTypes: ['major'],
+        customOrbs: customOrbs,
+        language: 'en',
+      });
     }
 
     const planetsData = horoscope.CelestialBodies;
     let cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
     const ascendant = horoscope._ascendant.ChartPosition.Ecliptic.DecimalDegrees;
+
+    let localPlanetsData;
+    let localCuspsData: number[] | null | undefined = null;
+    let localAscendant: number | null = null;
+    // Определяем небесные тела для локальной карты
+    if (isLocal && localHoroscope){
+      localPlanetsData = localHoroscope.CelestialBodies;
+      localCuspsData = localHoroscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
+      localAscendant = localHoroscope._ascendant.ChartPosition.Ecliptic.DecimalDegrees
+    }
     
+    // Правильный расчет домов для системы Коха
     if (horoscope._houseSystem == "koch") {
-      console.log("_ascendant", horoscope._ascendant.ChartPosition.Ecliptic.DecimalDegrees);
+      cuspsData = setKochCusps(ascendant, cuspsData);
 
-      if (ascendant >= 180) {
-        const firstCusp = cuspsData[0];
-        const secondCusp = shouldMod180(firstCusp, cuspsData[1]) ? modulo(cuspsData[1] + 180, 360) : cuspsData[1];
-        const thirdCusp = shouldMod180(firstCusp, cuspsData[2]) ? modulo(cuspsData[2] + 180, 360) : cuspsData[2];
-        const fourthCusp = shouldMod180(firstCusp, cuspsData[3]) ? modulo(cuspsData[3] + 180, 360) : cuspsData[3];
-        const fifthCusp = shouldMod180(firstCusp, cuspsData[4]) ? modulo(cuspsData[4] + 180, 360) : cuspsData[4];
-        const sixthCusp = shouldMod180(firstCusp, cuspsData[5]) ? modulo(cuspsData[5] + 180, 360) : cuspsData[5];
-        const seventhCusp = modulo(firstCusp + 180, 360);
-        const eighthCusp = shouldMod180(seventhCusp, cuspsData[7] ) ? modulo(cuspsData[7] + 180, 360) : cuspsData[7];
-        const ninthCusp = shouldMod180(seventhCusp, cuspsData[8]) ? modulo(cuspsData[8] + 180, 360) : cuspsData[8];
-        const tenthCusp = shouldMod180(seventhCusp, cuspsData[9]) ? modulo(cuspsData[9] + 180, 360) : cuspsData[9];
-        const eleventhCusp = shouldMod180(seventhCusp, cuspsData[10]) ? modulo(cuspsData[10] + 180, 360) : cuspsData[10];
-        const twelfthCusp = shouldMod180(seventhCusp, cuspsData[11]) ? modulo(cuspsData[11] + 180, 360) : cuspsData[11];
-
-        const firstCusp1 =  seventhCusp;
-        const secondCusp1 = eighthCusp;
-        const thirdCusp1 = ninthCusp;
-        const fourthCusp1 = tenthCusp;
-        const fifthCusp1 = eleventhCusp;
-        const sixthCusp1 = twelfthCusp;
-        const seventhCusp1 = firstCusp;
-        const eighthCusp1 = secondCusp;
-        const ninthCusp1 = thirdCusp;
-        const tenthCusp1 = fourthCusp;
-        const eleventhCusp1 = fifthCusp;
-        const twelfthCusp1 = sixthCusp;
-        
-        const arr = [
-          firstCusp1.toFixed(4), secondCusp1.toFixed(4), thirdCusp1.toFixed(4), fourthCusp1.toFixed(4), fifthCusp1.toFixed(4), sixthCusp1.toFixed(4),
-          seventhCusp1.toFixed(4), eighthCusp1.toFixed(4), ninthCusp1.toFixed(4), tenthCusp1.toFixed(4), eleventhCusp1.toFixed(4), twelfthCusp1.toFixed(4),
-        ];
-
-        console.log("arr +180", arr);
-
-        cuspsData = arr.map(Number);
+      if (isLocal && localAscendant) {
+        localCuspsData = setKochCusps(localAscendant, localCuspsData);
       }
-
     }
 
     const astroData : AstroData = {
@@ -216,12 +249,33 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       cusps: cuspsData,
     };
 
+    let localAstroData: AstroData | null = null; 
+    if (isLocal && localCuspsData) {
+      localAstroData = { // Убираем `: AstroData =`, т.к. тип уже указан
+        planets: {
+          "Sun": [localPlanetsData.sun.ChartPosition.Ecliptic.DecimalDegrees || 0],
+          "Moon": [localPlanetsData.moon.ChartPosition.Ecliptic.DecimalDegrees || 0],
+          "Mercury": [localPlanetsData.mercury.ChartPosition.Ecliptic.DecimalDegrees || 0],
+          "Venus": [localPlanetsData.venus.ChartPosition.Ecliptic.DecimalDegrees || 0],
+          "Mars": [localPlanetsData.mars.ChartPosition.Ecliptic.DecimalDegrees || 0],
+          "Jupiter": [localPlanetsData.jupiter.ChartPosition.Ecliptic.DecimalDegrees || 0],
+          "Saturn": [localPlanetsData.saturn.ChartPosition.Ecliptic.DecimalDegrees || 0],
+          "Uranus": [localPlanetsData.uranus.ChartPosition.Ecliptic.DecimalDegrees || 0],
+          "Neptune": [localPlanetsData.neptune.ChartPosition.Ecliptic.DecimalDegrees || 0],
+          "Pluto": [localPlanetsData.pluto.ChartPosition.Ecliptic.DecimalDegrees || 0],
+          "Lilith": [localHoroscope?.CelestialPoints.lilith.ChartPosition.Ecliptic.DecimalDegrees || 0],
+          "NNode": [localHoroscope?.CelestialPoints.northnode.ChartPosition.Ecliptic.DecimalDegrees || 0],
+        },
+        cusps: localCuspsData,
+      };
+    }
+
     const utcTime = origin.localTimeFormatted?.slice(-6) || ""; 
     if (setLocalTime) {
       setLocalTime(utcTime);
     }
 
-    // Формируем данные для таблицы
+    // Формируем данные для таблицы планет
     const planetPositionsList = Object.entries(planetsData)
     .map(([key, planet]: any) => {
       if (!planet?.ChartPosition?.Ecliptic?.DecimalDegrees) return null;
@@ -235,10 +289,8 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
       return { name: key, isRetrograde, sign, position, house };
     })
     .filter(Boolean); // Убираем null-значения
-
     // Данные о Лилит
     const lilithData = horoscope.CelestialPoints.lilith?.ChartPosition?.Ecliptic?.DecimalDegrees;
-
     if (lilithData) {
       const sign = getZodiacSign(lilithData);
       const isRetrograde = lilithData.isRetrograde;
@@ -253,10 +305,8 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
         planetPositionsList.push({ name: "lilith", isRetrograde, sign, position, house });
       }
     }
-
     // Данные о Северном узле
     const nNode = horoscope.CelestialPoints.northnode?.ChartPosition?.Ecliptic?.DecimalDegrees;
-
     if (nNode) {
       const sign = getZodiacSign(nNode);
       const position = formatPosition(nNode);
@@ -271,12 +321,10 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
         planetPositionsList.push({ name: "northnode", isRetrograde, sign, position, house });
       }
     }
-
     // Список значений для поля name
     const houseNames = [
       'Asc', 'II', 'III', 'IC', 'V', 'VI', 'Dsc', 'VIII', 'IX', 'MC', 'XI', 'XII'
     ];
-
     // Формируем данные для таблицы домов
     const housePositionsList = cuspsData
     .map((ecliptic: number, index: number) => {
@@ -299,41 +347,287 @@ const NatalChart: React.FC<NatalChartProps> = ({ birthData, setPlanetPositions, 
     } else {
       console.error("Данные домов пустые или некорректные");
     }
-    
     const aspectDataPlanet = getAspectsForPlanet(astroData);
     setAspectsData(aspectDataPlanet);
-  
     const data = {
       planets: planetPositionsList,
       aspects: aspectDataPlanet,
     };
-
     setAspectPositions(data);
     setAspectsData(aspectDataPlanet);
 
+    //Создаем таблицы для локальной карты
+    let localPlanetPositionsList;
+    let localLilithData;
+    let localNNode;
+    let localHousePositionsList;
+    if (isLocal && localCuspsData && localHoroscope){
+      // Формируем данные для таблицы планет, локальная
+      localPlanetPositionsList = Object.entries(localPlanetsData)
+      .map(([key, planet]: any) => {
+        if (!planet?.ChartPosition?.Ecliptic?.DecimalDegrees) return null;
+
+        const ecliptic = planet.ChartPosition.Ecliptic.DecimalDegrees;
+        const isRetrograde = planet.isRetrograde;
+        const sign = getZodiacSign(ecliptic);
+        const position = formatPosition(ecliptic);
+        const house = findHouseForPlanet(ecliptic, localCuspsData);
+
+        return { name: key, isRetrograde, sign, position, house };
+      })
+      .filter(Boolean); // Убираем null-значения
+      // Данные о Лилит
+      localLilithData = localHoroscope.CelestialPoints.lilith?.ChartPosition?.Ecliptic?.DecimalDegrees;
+      if (localLilithData) {
+        const sign = getZodiacSign(localLilithData);
+        const isRetrograde = localLilithData.isRetrograde;
+        const position = formatPosition(localLilithData);
+        const house = findHouseForPlanet(localLilithData, localCuspsData);
+        
+        // Заменяем последний элемент в списке на Лилит
+        if (localPlanetPositionsList.length > 0) {
+          localPlanetPositionsList[localPlanetPositionsList.length - 1] = { name: "lilith", isRetrograde, sign, position, house };
+        } else {
+          // Если список пуст, просто добавляем Лилит
+          localPlanetPositionsList.push({ name: "lilith", isRetrograde, sign, position, house });
+        }
+      }
+      // Данные о Северном узле
+      localNNode = localHoroscope.CelestialPoints.northnode?.ChartPosition?.Ecliptic?.DecimalDegrees;
+      if (localNNode) {
+        const sign = getZodiacSign(localNNode);
+        const position = formatPosition(localNNode);
+        const house = findHouseForPlanet(localNNode, localCuspsData);
+        const isRetrograde = localNNode.isRetrograde;
+
+        // Заменяем последний элемент в списке на NN
+        if (localPlanetPositionsList.length > 0) {
+          localPlanetPositionsList[localPlanetPositionsList.length - 2] = { name: "northnode", isRetrograde, sign, position, house };
+        } else {
+          // Если список пуст, просто добавляем NN
+          localPlanetPositionsList.push({ name: "northnode", isRetrograde, sign, position, house });
+        }
+      }
+
+      // Список значений для поля name
+      const houseNames = [
+        'Asc', 'II', 'III', 'IC', 'V', 'VI', 'Dsc', 'VIII', 'IX', 'MC', 'XI', 'XII'
+      ];
+      // Формируем данные для таблицы домов
+      localHousePositionsList = localCuspsData
+      .map((ecliptic: number, index: number) => {
+        if (ecliptic == null) return null; // Проверка на null или undefined
+
+        const sign = getZodiacSign(ecliptic);
+        const position = formatPosition(ecliptic);
+
+        // Сопоставляем значения для поля name с соответствующими значениями из houseNames
+        const name = houseNames[index];
+
+        return { name, position, sign };
+      })
+      .filter(Boolean); // Убираем null-значения
+
+      setLocalChartData(localAstroData);
+      setLocalPlanetPositions(localPlanetPositionsList);
+      if (localHousePositionsList.length > 0) {
+        setLocalHousePositions(localHousePositionsList);
+      } else {
+        console.error("Данные домов локальной карты пустые или некорректные");
+      }
+
+      const localAspectDataPlanet = localAstroData ? getAspectsForPlanet(localAstroData) : null;
+      if (localAspectDataPlanet) setLocalAspectsData(localAspectDataPlanet);
+
+      const data = {
+        planets: localPlanetPositionsList,
+        aspects: localAspectDataPlanet,
+      };
+
+      setLocalAspectPositions(data);
+      setLocalAspectsData(localAspectDataPlanet);
+
+    }
   }, [birthData]);
 
+  // Рисуем радикс натала по дефолту
   useEffect(() => {
-    if (!chartData || !chartRef.current) return;
-  
-    const containerSize = chartRef.current.clientWidth;
-    const chartSize = Math.min(containerSize, 800);
-  
-    chartRef.current.innerHTML = '';
+    if (isLocal || !chartData || !chartRefMain.current || !containerRefMain.current) return;
 
-    const settings = getStyleSettings(); // Получаем настройки в зависимости от стиля
-
-    const chart = new Chart(chartRef.current.id, chartSize, chartSize, settings);
-    const radix = chart.radix(chartData);
+    const settings = getStyleSettings();
     const customAspects = createFormedAspects(aspectsData, chartData);
-    radix.aspects(customAspects);
+
+    
+    const containerSizeMain = containerRefMain.current.clientWidth; // Размер родительского контейнера
+    const chartSizeMain = Math.min(containerSizeMain, 800);
+    chartRefMain.current.innerHTML = "";
+    const chartMain = new Chart(chartRefMain.current.id, chartSizeMain, chartSizeMain, settings);
+    const radixMain = chartMain.radix(chartData);
+    radixMain.aspects(customAspects);
+
   }, [chartData]);
 
+  //Рисуем радикс натала для мобильной версии
+  useEffect(() => {
+    if (!isLocal || !chartData || !containerRefMobile.current || !chartRefMobile.current) return;
+
+    const settings = getStyleSettings();
+    const customAspects = createFormedAspects(aspectsData, chartData);
+
+    
+    const containerSizeMobile = containerRefMobile.current.clientWidth; // Размер родительского контейнера
+    const chartSizeMobile = Math.min(containerSizeMobile, 800);
+    chartRefMobile.current.innerHTML = "";
+    const chartMobile = new Chart(chartRefMobile.current.id, chartSizeMobile, chartSizeMobile, settings);
+    const radixMobile = chartMobile.radix(chartData);
+    radixMobile.aspects(customAspects);
+
+  }, [chartData]);
+
+  //Рисуем радикс натала для большого экрана
+  useEffect(() => {
+    if (!isLocal || !chartData || !containerRefDesk.current || !chartRefLeft.current) return;
+
+    const settings = getStyleSettings();
+    const customAspects = createFormedAspects(aspectsData, chartData);
+
+    
+    const containerSizeDesk = containerRefDesk.current.clientWidth || 700; // Размер родительского контейнера
+    const chartSizeDesk = Math.min(containerSizeDesk, 800);
+    chartRefLeft.current.innerHTML = "";
+    const chartLeft = new Chart(chartRefLeft.current.id, chartSizeDesk, chartSizeDesk, settings);
+    const radixLeft = chartLeft.radix(chartData);
+    radixLeft.aspects(customAspects);
+
+  }, [chartData]);
+  
+  //Рисуем радикс для мобильной версии локальной карты
+  useEffect(() => {
+    if (!localChartData || !localChartRefMobile.current || !containerRefMobile.current) return;
+
+    console.log("localChartData", localChartData);
+
+    const settings = getStyleSettings();
+    const localCustomAspects = createFormedAspects(aspectsData, localChartData);
+
+    
+    const containerSizeMobile = containerRefMobile.current.clientWidth || 700;
+    const chartSizeModile = Math.min(containerSizeMobile, 800);
+
+    localChartRefMobile.current.innerHTML = "";
+    const chartModile = new Chart(localChartRefMobile.current.id, chartSizeModile, chartSizeModile, settings);
+    const radixModile = chartModile.radix(localChartData);
+    radixModile.aspects(localCustomAspects);
+
+  }, [localChartData]);
+
+  //Рисуем радикс для настольной версии локальной карты
+  useEffect(() => {
+    if (!localChartData || !containerRefDesk.current || !localChartRefRight.current) return;
+    const settings = getStyleSettings();
+    const localCustomAspects = createFormedAspects(aspectsData, localChartData);
+
+    
+    const containerSize = containerRefDesk.current.clientWidth * 2 || 700;
+    const chartSize = Math.min(containerSize, 800);
+    localChartRefRight.current.innerHTML = "";
+    const chart = new Chart(localChartRefRight.current.id, chartSize, chartSize, settings);
+    const radix = chart.radix(localChartData);
+    radix.aspects(localCustomAspects);
+
+  }, [localChartData]);
+
   return (
-    <div className="flex flex-col items-center w-full">
-      <div className="w-full max-w-[800px]">
-        <div id="chart-container" ref={chartRef} className="w-full aspect-square mb-6"></div>
-      </div>
+    <div className="flex flex-col items-center w-full" ref={containerRefMobile}>
+      
+
+      {/* Локальная карта для небольших экранов */}
+      {isLocal &&
+        <div>
+          {/* Табы */}
+          {isLocal && 
+            <div className="flex space-x-4 justify-center">
+              <button
+                className={`px-4 py-2 rounded ${activeTab === "chart1" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
+                onClick={() => setActiveTab("chart1")}
+              >
+                Натал
+              </button>
+              <button
+                className={`px-4 py-2 rounded ${activeTab === "chart2" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
+                onClick={() => setActiveTab("chart2")}
+              >
+                Локал
+              </button>
+              <button
+                className={`px-4 py-2 hidden 2xl:flex  ${twoMaps ? "bg-[#172935] text-white rounded" : "rounded bg-gray-200"}`}
+                onClick={()=>{setTwoMaps(!twoMaps)}}
+              >
+                2 карты
+              </button>
+            </div>
+          }
+          {/* Контейнеры с изображениями */}
+          <div className={`${twoMaps ? "hidden" : ""}`}>
+            <div className={`w-full max-w-[800px]}`} style={{ display: activeTab === "chart1" ? "block" : "none" }}>
+            <div
+              id="chart-container-mobile"
+              ref={chartRefMobile}
+              className="w-full aspect-square flex items-center justify-center"
+            />
+            </div>
+            {isLocal &&
+              <div className={`w-full max-w-[800px] ${twoMaps ? "hidden" : ""}`} style={{ display: activeTab === "chart2" ? "block" : "none" }}>
+                <div
+                  id="local-chart-container-mobile"
+                  ref={localChartRefMobile}
+                  className="w-full aspect-square flex items-center justify-center"
+                />
+              </div>
+            }
+          </div>
+          
+
+        </div> 
+      }
+
+      {/* Локальная карта для больших экранов */}
+      {isLocal && 
+        <div className={`hidden ${twoMaps ? "2xl:flex" : ""} `}>
+          <div ref={containerRefDesk} className="w-1/2 max-w-[800px]">
+            <div
+              id="chart-container-left"
+              ref={chartRefLeft}
+              className="w-full aspect-square flex items-center justify-center"
+            />
+          </div>
+          <div ref={containerRefDesk} className="w-1/2 max-w-[800px]">
+            <div
+              id="local-chart-container"
+              ref={localChartRefRight}
+              className="w-full aspect-square flex items-center justify-center"
+            />
+          </div>
+        </div>
+      }
+
+      {/* Натальная карта без локальной */}
+      {!isLocal && 
+        <div ref={containerRefMain} className="w-full max-w-[800px]">
+          <div
+            id="chart-container-main"
+            ref={chartRefMain}
+            className="w-full aspect-square flex items-center justify-center"
+          />
+        </div>
+      }
+
+      
+
+      
+      
+
+      
     </div>
   );
 };

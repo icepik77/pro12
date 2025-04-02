@@ -1,4 +1,5 @@
 import { AstroData, Aspect } from "./definitions";
+import { Origin } from "circular-natal-horoscope-js";
 
 export const formatPosition = (decimalDegrees: number) => {
   const degreesInSign = decimalDegrees % 30; // Ограничиваем до 30 градусов
@@ -16,7 +17,7 @@ export const getZodiacSign = (decimalDegrees: number) => {
   return zodiacSigns[index];
 };
 
-export const findHouseForPlanet = (decimalDegrees: number, cuspsData: number[]) => {
+export const findHouseForPlanet = (decimalDegrees: number, cuspsData: any) => {
   for (let i = 0; i < cuspsData.length; i++) {
     const nextIndex = (i + 1) % cuspsData.length;
     const start = cuspsData[i];
@@ -233,8 +234,75 @@ export const convertToUTC = (dateString: string, localTime: string, timezoneOffs
   };
 }
 
-export const getUTCFromOrigin = () =>{
+export const getUTCFromOrigin = (latitude : number, longitude : number) =>{
+
+  const now = new Date(); // Получаем текущую дату и время в UTC
+
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth() + 1; // Исправляем индексацию месяца (1-12)
+  const date = now.getUTCDate();
+  const hour = now.getUTCHours();
+  const minute = now.getUTCMinutes();
+  const second = now.getUTCSeconds();
+  const handleUTCDate = undefined;
+
+  const origin = new Origin({
+    year,
+    month: month - 1, // В JS месяцы с 0
+    date,
+    hour,
+    minute,
+    second,
+    latitude,
+    longitude,
+    handleUTCDate
+  });
+
+  return origin.localTimeFormatted?.slice(-6); 
+}
+
+export const setKochCusps = (ascendant: number, cuspsData : any) =>{
   
+  if (!Array.isArray(cuspsData) || cuspsData.length < 12) {
+    throw new Error("Invalid cuspsData: expected an array with at least 12 elements.");
+  }
+
+  if (ascendant >= 180) {
+    const firstCusp = cuspsData[0];
+    const secondCusp = shouldMod180(firstCusp, cuspsData[1]) ? modulo(cuspsData[1] + 180, 360) : cuspsData[1];
+    const thirdCusp = shouldMod180(firstCusp, cuspsData[2]) ? modulo(cuspsData[2] + 180, 360) : cuspsData[2];
+    const fourthCusp = shouldMod180(firstCusp, cuspsData[3]) ? modulo(cuspsData[3] + 180, 360) : cuspsData[3];
+    const fifthCusp = shouldMod180(firstCusp, cuspsData[4]) ? modulo(cuspsData[4] + 180, 360) : cuspsData[4];
+    const sixthCusp = shouldMod180(firstCusp, cuspsData[5]) ? modulo(cuspsData[5] + 180, 360) : cuspsData[5];
+    const seventhCusp = modulo(firstCusp + 180, 360);
+    const eighthCusp = shouldMod180(seventhCusp, cuspsData[7] ) ? modulo(cuspsData[7] + 180, 360) : cuspsData[7];
+    const ninthCusp = shouldMod180(seventhCusp, cuspsData[8]) ? modulo(cuspsData[8] + 180, 360) : cuspsData[8];
+    const tenthCusp = shouldMod180(seventhCusp, cuspsData[9]) ? modulo(cuspsData[9] + 180, 360) : cuspsData[9];
+    const eleventhCusp = shouldMod180(seventhCusp, cuspsData[10]) ? modulo(cuspsData[10] + 180, 360) : cuspsData[10];
+    const twelfthCusp = shouldMod180(seventhCusp, cuspsData[11]) ? modulo(cuspsData[11] + 180, 360) : cuspsData[11];
+
+    const firstCusp1 =  seventhCusp;
+    const secondCusp1 = eighthCusp;
+    const thirdCusp1 = ninthCusp;
+    const fourthCusp1 = tenthCusp;
+    const fifthCusp1 = eleventhCusp;
+    const sixthCusp1 = twelfthCusp;
+    const seventhCusp1 = firstCusp;
+    const eighthCusp1 = secondCusp;
+    const ninthCusp1 = thirdCusp;
+    const tenthCusp1 = fourthCusp;
+    const eleventhCusp1 = fifthCusp;
+    const twelfthCusp1 = sixthCusp;
+    
+    const arr = [
+      firstCusp1.toFixed(4), secondCusp1.toFixed(4), thirdCusp1.toFixed(4), fourthCusp1.toFixed(4), fifthCusp1.toFixed(4), sixthCusp1.toFixed(4),
+      seventhCusp1.toFixed(4), eighthCusp1.toFixed(4), ninthCusp1.toFixed(4), tenthCusp1.toFixed(4), eleventhCusp1.toFixed(4), twelfthCusp1.toFixed(4),
+    ];
+
+    return arr.map(Number);
+  }
+
+  return cuspsData;
 }
 
 

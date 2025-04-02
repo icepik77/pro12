@@ -2,10 +2,15 @@ export interface BirthData {
     date: string;
     time: string;
     latitude: string;
+    city: string;
+    localCity: string;
     longitude: string;
+    localLatitude: string;
+    localLongitude: string;
     utcOffset: string;
     houseSystem: string;
     style: string;
+    isLocal: boolean
 }
   // Интерфейс для координат планет
 export interface PlanetPositions {
@@ -40,5 +45,10 @@ export interface NatalChartProps {
     setPlanetPositions: (positions: any[]) => void;
     setHousePositions: (positions: any[]) => void;
     setAspectPositions: (positions: any) => void;
+    setLocalPlanetPositions: (localPositions: any) => void;
+    setLocalHousePositions: (localPositions: any) => void;
+    setLocalAspectPositions: (localPositions: any) => void;
     setLocalTime?: (time: string) => void;
+    activeTab: "chart1" | "chart2"; 
+    setActiveTab: (tab: "chart1" | "chart2") => void;
 }
