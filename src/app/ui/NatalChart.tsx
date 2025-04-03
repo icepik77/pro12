@@ -2,10 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
-import { Origin, Horoscope } from 'circular-natal-horoscope-js';
-import { AstroData, NatalChartProps, NatalData } from '../lib/definitions';
-import { createFormedAspects, getNatalChart } from '../lib/utils';
-import { div } from 'framer-motion/client';
+import {NatalChartProps } from '../lib/definitions';
+import { createFormedAspects, getNatalChart, getAspectsBetweenCharts } from '../lib/utils';
 
 const NatalChart: React.FC<NatalChartProps> = ({ 
   birthData, 
@@ -20,7 +18,10 @@ const NatalChart: React.FC<NatalChartProps> = ({
   setActiveTab,
   setCompPlanetPositions,
   setCompHousePositions,
-  setCompAspectPositions 
+  setCompAspectPositions, 
+  setCompPairPositions,
+  showPairPositions, 
+  setShowPairPositions
 }) => {
   const chartRefMain = useRef<HTMLDivElement>(null);
   const chartRefLeft = useRef<HTMLDivElement>(null);
@@ -40,7 +41,6 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
   const [compChartData, setCompChartData] = useState<any>(null);
   const [compAspectsData, setCompAspectsData] = useState<any>(null);
-
 
   const houseSystem = birthData.houseSystem || 'koch'; // Берём систему домов
 
@@ -142,7 +142,20 @@ const NatalChart: React.FC<NatalChartProps> = ({
       isLocal = false;
     }
 
-    const natalData = getNatalChart(birthData, false);
+    if (birthData.isCompatibility){
+      isCompatibility = true;
+      setIsCompatibility(true);
+    } else{
+      isCompatibility = false;
+      setIsCompatibility(false);
+    }
+
+    console.log("dataIntro", {
+      "isLocal": isLocal,
+      "isCompatibility": isCompatibility
+    })
+
+    const natalData = getNatalChart(birthData, false, false);
     if (natalData){
       setChartData(natalData.astroData);
       setPlanetPositions(natalData.planets);
@@ -170,7 +183,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
     let localData;
     if (isLocal){
-      localData = getNatalChart(birthData, true); 
+      localData = getNatalChart(birthData, true, false); 
 
       if (localData){
         setLocalChartData(localData.astroData);
@@ -194,9 +207,9 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
     let compNatalData;
     if (isCompatibility){
-      compNatalData = getNatalChart(birthData, false); 
+      compNatalData = getNatalChart(birthData, false, true); 
 
-      if (compNatalData){
+      if (compNatalData && natalData){
         setCompChartData(compNatalData.astroData);
         setCompPlanetPositions(compNatalData.planets);
 
@@ -206,13 +219,20 @@ const NatalChart: React.FC<NatalChartProps> = ({
           console.error("Данные домов локальной карты пустые или некорректные");
         }
   
-        const data = {
+        let data = {
           planets: compNatalData.planets,
           aspects: compNatalData.aspects,
         };
   
         setCompAspectPositions(data);
         setCompAspectsData(compNatalData.aspects);
+
+        const pairData = getAspectsBetweenCharts(natalData.astroData, compNatalData.astroData);
+        data = {
+          planets: compNatalData.planets,
+          aspects: pairData,
+        };
+        setCompPairPositions(data);
       } 
     }
   }, [birthData]);
@@ -251,7 +271,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
   //Рисуем радикс натала для мобильной версии
   useEffect(() => {
-    if (!isLocal || !chartData || !containerRefMobile.current || !chartRefMobile.current) return;
+    if (!isLocal && !isCompatibility || !chartData || !containerRefMobile.current || !chartRefMobile.current) return;
 
     const settings = getStyleSettings();
     const customAspects = createFormedAspects(aspectsData, chartData);
@@ -268,7 +288,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
   //Рисуем радикс натала для большого экрана
   useEffect(() => {
-    if (!isLocal || !chartData || !containerRefDesk.current || !chartRefLeft.current) return;
+    if (!isLocal && !isCompatibility || !chartData || !containerRefDesk.current || !chartRefLeft.current) return;
 
     const settings = getStyleSettings();
     const customAspects = createFormedAspects(aspectsData, chartData);
@@ -363,13 +383,13 @@ const NatalChart: React.FC<NatalChartProps> = ({
                 className={`px-4 py-2 rounded ${activeTab === "chart1" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
                 onClick={() => setActiveTab("chart1")}
               >
-                Натал
+                {isCompatibility? "1 карта": "Натал"}
               </button>
               <button
                 className={`px-4 py-2 rounded ${activeTab === "chart2" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
                 onClick={() => setActiveTab("chart2")}
               >
-                Локал
+                {isCompatibility? "2 карта": "Локал"}
               </button>
               <button
                 className={`px-4 py-2 hidden 2xl:flex  ${twoMaps ? "bg-[#172935] text-white rounded" : "rounded bg-gray-200"}`}
@@ -377,6 +397,15 @@ const NatalChart: React.FC<NatalChartProps> = ({
               >
                 2 карты
               </button>
+              {isCompatibility &&
+                <button
+                  className={`px-4 py-2 ${showPairPositions ? "bg-[#172935] text-white rounded" : "rounded bg-gray-200"}`}
+                  onClick={()=>{setShowPairPositions(!showPairPositions)}}
+                >
+                  Аспекты
+                </button>
+              }
+              
             </div>
           }
           {/* Контейнеры с изображениями */}
@@ -424,7 +453,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
       }
 
       {/* Натальная карта по умолчанию */}
-      {!isLocal && 
+      {!isLocal && !isCompatibility &&  
         <div ref={containerRefMain} className="w-full max-w-[800px]">
           <div
             id="chart-container-main"
@@ -433,6 +462,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
           />
         </div>
       }
+
     </div>
   );
 };

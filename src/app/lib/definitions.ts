@@ -8,6 +8,13 @@ export interface BirthData {
     localLatitude: string;
     localLongitude: string;
     utcOffset: string;
+    nameComp: string;
+    dateComp: string;
+    timeComp: string;
+    cityComp: string;
+    latitudeComp: string;
+    longitudeComp: string;
+    utcOffsetComp: string;
     houseSystem: string;
     style: string;
     isLocal: boolean;
@@ -74,7 +81,10 @@ export interface NatalChartProps {
     setCompPlanetPositions: (compPositions: any) => void;
     setCompHousePositions: (compPositions: any) => void;
     setCompAspectPositions: (compPositions: any) => void;
+    setCompPairPositions: (compPositions: any) => void;
     setLocalTime?: (time: string) => void;
     activeTab: "chart1" | "chart2"; 
     setActiveTab: (tab: "chart1" | "chart2") => void;
+    showPairPositions: boolean;
+    setShowPairPositions: (value: boolean) => void;
 }

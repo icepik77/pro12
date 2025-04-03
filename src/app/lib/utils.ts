@@ -373,7 +373,7 @@ export const getAspectsBetweenCharts = (astroData1: AstroData, astroData2: Astro
   return foundAspects;
 };
 
-export const getNatalChart = (birthData: BirthData, isLocal: boolean) => {
+export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatibility: boolean) => {
   const [day, month, year] = birthData.date.split('.').map(Number);
   const [hour, minute, second] = birthData.time.split(':').map(Number);
   const utcOffset = birthData.utcOffset;
@@ -383,6 +383,13 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean) => {
 
   const localLatitude = parseFloat(birthData.localLatitude);
   const localLongitude = parseFloat(birthData.localLongitude);
+
+  const [dayComp, monthComp, yearComp] = birthData.dateComp.split('.').map(Number);
+  const [hourComp, minuteComp, secondComp] = birthData.timeComp.split(':').map(Number);
+  const utcOffsetComp = birthData.utcOffsetComp;
+  const latitudeComp = parseFloat(birthData.latitudeComp);
+  const longitudeComp = parseFloat(birthData.longitudeComp);
+  const handleUTCDateComp = utcOffsetComp ? convertToUTC(birthData.dateComp, birthData.timeComp, utcOffsetComp) : undefined;
 
   let origin;
   let horoscope;
@@ -408,7 +415,7 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean) => {
     return;
   }
 
-  if (!isLocal){
+  if (!isLocal && !isCompatibility){
     origin = new Origin({
       year,
       month: month - 1, // В JS месяцы с 0
@@ -422,6 +429,19 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean) => {
     });
   
     
+  }
+  else if (isCompatibility){
+    origin = new Origin({
+      year: yearComp,
+      month: monthComp - 1, // В JS месяцы с 0
+      date: dayComp,
+      hour: hourComp,
+      minute: minuteComp,
+      second: secondComp,
+      latitude: latitudeComp,
+      longitude: longitudeComp,
+      handleUTCDate: handleUTCDateComp
+    });
   }
   else{
     if (handleUTCDate){
