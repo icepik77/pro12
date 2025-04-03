@@ -374,10 +374,10 @@ const NatalChart: React.FC<NatalChartProps> = ({
   return (
     <div className="flex flex-col items-center w-full" ref={containerRefMobile}>
       {/* Локальная карта для небольших экранов */}
-      {isLocal || isCompatibility &&
+      {(isLocal || isCompatibility) &&
         <div>
           {/* Табы */}
-          {isLocal || isCompatibility && 
+          {(isLocal || isCompatibility) && 
             <div className="flex space-x-4 justify-center">
               <button
                 className={`px-4 py-2 rounded ${activeTab === "chart1" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
@@ -409,15 +409,15 @@ const NatalChart: React.FC<NatalChartProps> = ({
             </div>
           }
           {/* Контейнеры с изображениями */}
-          <div className={`${twoMaps ? "hidden" : ""}`}>
+          <div className={`${twoMaps || showPairPositions ? "hidden" : ""}`}>
             <div className={`w-full max-w-[800px]}`} style={{ display: activeTab === "chart1" ? "block" : "none" }}>
-            <div
-              id="chart-container-mobile"
-              ref={chartRefMobile}
-              className="w-full aspect-square flex items-center justify-center"
-            />
+              <div
+                id="chart-container-mobile"
+                ref={chartRefMobile}
+                className="w-full aspect-square flex items-center justify-center"
+              />
             </div>
-            {isLocal || isCompatibility &&
+            {(isLocal || isCompatibility) &&
               <div className={`w-full max-w-[800px] ${twoMaps ? "hidden" : ""}`} style={{ display: activeTab === "chart2" ? "block" : "none" }}>
                 <div
                   id="local-chart-container-mobile"
@@ -428,13 +428,13 @@ const NatalChart: React.FC<NatalChartProps> = ({
             }
           </div>
           
-
+          
         </div> 
       }
 
       {/* Локальная карта для больших экранов */}
-      {isLocal || isCompatibility && 
-        <div className={`hidden ${twoMaps ? "2xl:flex" : ""} `}>
+      {(isLocal || isCompatibility) &&
+        <div className={`hidden ${twoMaps && !showPairPositions ? "2xl:flex" : ""} `}>
           <div ref={containerRefDesk} className="w-1/2 max-w-[800px]">
             <div
               id="chart-container-left"

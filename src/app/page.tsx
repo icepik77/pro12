@@ -78,11 +78,16 @@ export default function Home() {
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   useEffect(() => {
-    if (planetPositions.length > 0 && housePositions.length > 0) {
+    if ((planetPositions && localAspectPositions && birthData.isLocal) || 
+      (planetPositions && compPlanetPositions && birthData.isCompatibility) || 
+      (planetPositions && !birthData.isCompatibility && !birthData.isLocal)) {
       setIsDataLoaded(true); // Когда данные загружены, запускаем анимацию
     }
+    else{
+      setIsDataLoaded(false);
+    }
     setActiveTab("chart1");
-  }, [planetPositions, housePositions, aspectPositions]); // useEffect срабатывает, когда planetPositions обновляются
+  }, [planetPositions]); // useEffect срабатывает, когда planetPositions обновляются
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] pt-3">
@@ -186,7 +191,7 @@ export default function Home() {
             }
 
             {/* Карточка описания для мобильной версии */}
-            {birthData.isCompatibility && 
+            {birthData.isCompatibility && !showPairPositions && 
               <div className="2xl:hidden">
                 {birthData.longitude && activeTab == "chart1" && (
                   <div className="mt-2 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700">
@@ -218,7 +223,7 @@ export default function Home() {
             }
 
             {/* Карточка описания для десктопной версии c картой совместимости*/}
-            {birthData.isCompatibility && 
+            {birthData.isCompatibility && !showPairPositions && 
               <div className="hidden 2xl:flex">
                 <div className="mt-2 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700 mr-3 max-w-[446px]">
                     <h3 className="text-lg font-medium">Введенные данные:</h3>
@@ -262,7 +267,7 @@ export default function Home() {
     
 
             {/* Данные без локальной карты */}
-            {!birthData.isLocal && !birthData.isCompatibility &&
+            {!birthData.isLocal && !birthData.isCompatibility && planetPositions.length > 0 &&
               <div>
                 {/* Плавное появление таблицы только после загрузки данных */}
                 <motion.div
@@ -300,7 +305,7 @@ export default function Home() {
             }
 
             {/* Для локальной карты мобильная версия */}
-            {birthData.isLocal && 
+            {birthData.isLocal && localPlanetPositions.length > 0 &&
               <div className="2xl:hidden">
                 {activeTab == "chart1" && 
                   <div>
@@ -378,7 +383,7 @@ export default function Home() {
             }
             
             {/* Для локальной карты, десктопа больше 1536px */}
-            {birthData.isLocal && 
+            {birthData.isLocal && localPlanetPositions.length > 0 && 
               <div className="hidden 2xl:flex max-w-[1600px]">
                 <div className="w-[50%] flex">
                   <div>
@@ -456,7 +461,7 @@ export default function Home() {
             }
 
             {/* Для карты совместимости мобильная версия */}
-            {birthData.isCompatibility && !showPairPositions &&
+            {birthData.isCompatibility && !showPairPositions && compPlanetPositions.length > 0 && 
               <div className="2xl:hidden">
                 {activeTab == "chart1" && 
                   <div>
@@ -534,7 +539,7 @@ export default function Home() {
             }
             
             {/* Для карты совместимости, десктопа больше 1536px */}
-            {birthData.isCompatibility && !showPairPositions &&
+            {birthData.isCompatibility && !showPairPositions && compPlanetPositions.length > 0 &&
               <div className="hidden 2xl:flex max-w-[1600px]">
                 <div className="w-[50%] flex">
                   <div>
