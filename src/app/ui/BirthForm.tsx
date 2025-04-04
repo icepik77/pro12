@@ -222,6 +222,10 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   
   const handleCityChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const city = e.target.value;
+
+    // Если город не изменился, не выполняем поиск
+    if (city === formData.city) return;
+
     setFormData({ ...formData, [e.target.name]: city });
 
     if (city.length > 2) {
@@ -234,6 +238,10 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
 
   const handleCityChangeComp = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const city = e.target.value;
+
+    // Если город не изменился, не выполняем поиск
+    if (city === formData.cityComp) return;
+
     setFormData({ ...formData, [e.target.name]: city });
 
     if (city.length > 2) {
@@ -261,11 +269,15 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
       latitudeComp: city.lat,
       longitudeComp: city.lon,
     });
-    setCitySuggestions([]);
+    setCitySuggestionsComp([]);
   };
 
   const handleLocalCityChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const city = e.target.value;
+
+    // Если город не изменился, не выполняем поиск
+    if (city === formData.localCity) return;
+
     setFormData({ ...formData, localCity: city });
 
     if (city.length > 2) {
