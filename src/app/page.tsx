@@ -50,6 +50,11 @@ export default function Home() {
     longitudeComp:"",
     utcOffset: "",
     utcOffsetComp: "",
+
+    timeFore:"",
+    dateFore:"",
+    utcOffsetFore:"",
+
     houseSystem: "koch",
     style: "elements", 
     isLocal: false, 

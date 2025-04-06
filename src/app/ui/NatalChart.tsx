@@ -132,6 +132,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
     let isLocal;
     let isCompatibility;
+    let isFore; 
 
     if (localLatitude && localLongitude && birthData.isLocal){
       isLocal = true;
@@ -150,7 +151,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
       setIsCompatibility(false);
     }
 
-    const natalData = getNatalChart(birthData, false, false);
+    const natalData = getNatalChart(birthData, false, false, false);
     if (natalData){
       setChartData(natalData.astroData);
       setPlanetPositions(natalData.planets);
@@ -178,7 +179,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
     let localData;
     if (isLocal){
-      localData = getNatalChart(birthData, true, false); 
+      localData = getNatalChart(birthData, true, false, false); 
 
       if (localData){
         setLocalChartData(localData.astroData);
@@ -202,7 +203,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
     let compNatalData;
     if (isCompatibility){
-      compNatalData = getNatalChart(birthData, false, true); 
+      compNatalData = getNatalChart(birthData, false, true, false); 
 
       if (compNatalData && natalData){
         setCompChartData(compNatalData.astroData);
@@ -222,13 +223,44 @@ const NatalChart: React.FC<NatalChartProps> = ({
         setCompAspectPositions(data);
         setCompAspectsData(compNatalData.aspects);
 
-        const pairData = getAspectsBetweenCharts(natalData.astroData, compNatalData.astroData);
+        const pairData = getAspectsBetweenCharts(natalData.astroData, compNatalData.astroData, false);
         data = {
           planets: compNatalData.planets,
           aspects: pairData,
         };
         setCompPairPositions(data);
       } 
+    }
+
+    let natalDataFore;
+    if (isFore){
+      natalDataFore = getNatalChart(birthData, false, false, true); 
+
+      if (natalDataFore && natalData){
+        setCompChartData(natalDataFore.astroData);
+        setCompPlanetPositions(natalDataFore.planets);
+
+        if (natalDataFore.houses.length > 0) {
+          setCompHousePositions(natalDataFore.houses);
+        } else {
+          console.error("Данные домов локальной карты пустые или некорректные");
+        }
+  
+        let data = {
+          planets: natalDataFore.planets,
+          aspects: natalDataFore.aspects,
+        };
+  
+        setCompAspectPositions(data);
+        setCompAspectsData(natalDataFore.aspects);
+
+        const pairData = getAspectsBetweenCharts(natalData.astroData, natalDataFore.astroData, false);
+        data = {
+          planets: natalDataFore.planets,
+          aspects: pairData,
+        };
+        setCompPairPositions(data);
+      }  
     }
   }, [birthData]);
 

@@ -305,7 +305,7 @@ export const setKochCusps = (ascendant: number, cuspsData : any) =>{
   return cuspsData;
 }
 
-export const getAspectsBetweenCharts = (astroData1: AstroData, astroData2: AstroData) => { 
+export const getAspectsBetweenCharts = (astroData1: AstroData, astroData2: AstroData, orbisNUll: boolean) => { 
   const aspects = {
     conjunction: 0,
     opposition: 180,
@@ -314,21 +314,39 @@ export const getAspectsBetweenCharts = (astroData1: AstroData, astroData2: Astro
     sextile: 60,
   };
 
-  const orbs = {
-    Sun: 8.5,
-    Moon: 8.5,
-    Mercury: 8.5,
-    Venus: 8.5,
-    Mars: 8.5,
-    Jupiter: 8.5,
-    Saturn: 9,
-    Uranus: 8.5,
-    Neptune: 6.5,
-    Pluto: 6.5,
-    Lilith: 8.5,
-    NNode: 8.5,
-  };
-
+  let orbs;
+  if (!orbisNUll){
+    orbs = {
+      Sun: 8.5,
+      Moon: 8.5,
+      Mercury: 8.5,
+      Venus: 8.5,
+      Mars: 8.5,
+      Jupiter: 8.5,
+      Saturn: 9,
+      Uranus: 8.5,
+      Neptune: 6.5,
+      Pluto: 6.5,
+      Lilith: 8.5,
+      NNode: 8.5,
+    };
+  } else{
+    orbs = {
+      Sun: 0,
+      Moon: 0,
+      Mercury: 0,
+      Venus: 0,
+      Mars: 0,
+      Jupiter: 0,
+      Saturn: 0,
+      Uranus: 0,
+      Neptune: 0,
+      Pluto: 0,
+      Lilith: 0,
+      NNode: 0,
+    };
+  }
+  
   let foundAspects: Aspect[] = [];
 
   // Преобразуем объекты планет в массивы
@@ -373,7 +391,7 @@ export const getAspectsBetweenCharts = (astroData1: AstroData, astroData2: Astro
   return foundAspects;
 };
 
-export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatibility: boolean) => {
+export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatibility: boolean, isForecast: boolean) => {
   const [day, month, year] = birthData.date.split('.').map(Number);
   const [hour, minute, second] = birthData.time.split(':').map(Number);
   const utcOffset = birthData.utcOffset;
@@ -390,6 +408,11 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
   const latitudeComp = parseFloat(birthData.latitudeComp);
   const longitudeComp = parseFloat(birthData.longitudeComp);
   const handleUTCDateComp = utcOffsetComp ? convertToUTC(birthData.dateComp, birthData.timeComp, utcOffsetComp) : undefined;
+
+  const [dayFore, monthFore, yearFore] = birthData.dateFore.split('.').map(Number);
+  const [hourFore, minuteFore, secondFore] = birthData.timeFore.split(':').map(Number); 
+  const utcOffsetFore = birthData.utcOffsetFore;
+  const handleUTCDateFore = utcOffsetFore ? convertToUTC(birthData.dateFore, birthData.timeFore, utcOffsetFore) : undefined;
 
   let origin;
   let horoscope;
@@ -441,6 +464,19 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
       latitude: latitudeComp,
       longitude: longitudeComp,
       handleUTCDate: handleUTCDateComp
+    });
+  }
+  else if (isForecast){
+    origin = new Origin({
+      year: yearFore,
+      month: monthFore - 1, // В JS месяцы с 0
+      date: dayFore,
+      hour: hourFore,
+      minute: minuteFore,
+      second: secondFore,
+      latitude: latitude,
+      longitude: longitude,
+      handleUTCDate: handleUTCDateFore
     });
   }
   else{
@@ -580,6 +616,78 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
     utcTime: origin.localTimeFormatted
   };
 }
+
+const getCalendarData = (birthData: BirthData) => {
+  const natalData = getNatalChart(birthData, false, false, false);
+  let calandarData = [];
+
+  if (natalData){
+    const [day, month, year] = birthData.dateFore.split('.').map(Number);
+  const [hour, minute, second] = birthData.timeFore.split(':').map(Number);
+
+  const startDate = new Date(year, month - 1, day, hour, minute, second);
+  const endDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  let current = new Date(startDate);
+
+  while (current <= endDate) {
+    // Форматируем дату и время для BirthData (dd.mm.yyyy / hh:mm:ss)
+    const dateStr = current.toLocaleDateString('ru-RU').split('/').map((part: string) => part.padStart(2, '0')).join('.');
+    const timeStr = current.toTimeString().split(' ')[0]; // формат hh:mm:ss
+
+    const birthDataCurrent: BirthData = {
+      date: dateStr,
+      time: timeStr,
+      latitude: birthData.latitude,
+      city: birthData.city,
+      localCity: birthData.localCity || "",
+      longitude: birthData.longitude,
+      localLatitude: birthData.localLatitude || "",
+      localLongitude: birthData.localLongitude || "",
+      utcOffset: birthData.utcOffsetFore || birthData.utcOffset,
+      nameComp: "",
+      dateComp: "",
+      timeComp: "",
+      cityComp: "",
+      latitudeComp: "",
+      longitudeComp: "",
+      timeFore: timeStr,
+      dateFore: dateStr,
+      utcOffsetFore: birthData.utcOffsetFore || birthData.utcOffset,
+      utcOffsetComp: "",
+      houseSystem: birthData.houseSystem || "Placidus",
+      style: birthData.style || "default",
+      isLocal: false,
+      isCompatibility: false,
+    };
+
+    const natalCurrentData = getNatalChart(birthDataCurrent, false, false, false);
+    let calendarDataCurrent;
+
+    if (natalCurrentData)calendarDataCurrent = getAspectsBetweenCharts(natalData?.astroData, natalCurrentData?.astroData, true)
+    else console.log("Ошибка расчетов текущего момента");
+
+    if (calendarDataCurrent) calandarData.push(calendarDataCurrent);
+
+
+
+
+    
+
+
+
+    // здесь можешь, например, сохранять результат в массив
+
+    current = new Date(current.getTime() + 60 * 1000);
+  }
+  }else{
+    console.log("Нет натальной карты для прогноза")
+    return []
+  }
+
+  
+}
+
 
 
 

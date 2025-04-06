@@ -47,21 +47,29 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     date: "",
     time: "",
     city: "",
-    localCity: "",
     latitude: "",
     longitude: "",
+    utcOffset: "",
+
+    localCity: "",
     localLatitude: "",
     localLongitude: "",
+
     nameComp:"",
     dateComp:"",
     timeComp:"",
     cityComp:"",
     latitudeComp:"",
     longitudeComp:"",
-    utcOffset: "",
     utcOffsetComp: "",
+
+    timeFore:"",
+    dateFore:"",
+    utcOffsetFore:"",
+
     houseSystem: "koch",
     style: "elements", // Новый выбор для оформления
+
     isLocal: true,
     isCompatibility: true,
   });

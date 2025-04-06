@@ -1,24 +1,27 @@
 export interface BirthData {
-    date: string;
-    time: string;
-    latitude: string;
-    city: string;
-    localCity: string;
-    longitude: string;
-    localLatitude: string;
-    localLongitude: string;
-    utcOffset: string;
-    nameComp: string;
-    dateComp: string;
-    timeComp: string;
-    cityComp: string;
-    latitudeComp: string;
-    longitudeComp: string;
-    utcOffsetComp: string;
-    houseSystem: string;
-    style: string;
-    isLocal: boolean;
-    isCompatibility: boolean;
+  date: string;
+  time: string;
+  latitude: string;
+  city: string;
+  localCity: string;
+  longitude: string;
+  localLatitude: string;
+  localLongitude: string;
+  utcOffset: string;
+  nameComp: string;
+  dateComp: string;
+  timeComp: string;
+  cityComp: string;
+  latitudeComp: string;
+  longitudeComp: string;
+  timeFore: string;
+  dateFore: string;
+  utcOffsetFore: string;
+  utcOffsetComp: string;
+  houseSystem: string;
+  style: string;
+  isLocal: boolean;
+  isCompatibility: boolean;
 }
   // Интерфейс для координат планет
 export interface PlanetPositions {
