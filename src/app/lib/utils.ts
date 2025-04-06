@@ -586,3 +586,5 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
 
 
 
+
+

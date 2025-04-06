@@ -150,11 +150,6 @@ const NatalChart: React.FC<NatalChartProps> = ({
       setIsCompatibility(false);
     }
 
-    console.log("dataIntro", {
-      "isLocal": isLocal,
-      "isCompatibility": isCompatibility
-    })
-
     const natalData = getNatalChart(birthData, false, false);
     if (natalData){
       setChartData(natalData.astroData);
