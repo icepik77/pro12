@@ -52,12 +52,22 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     longitude: "",
     localLatitude: "",
     localLongitude: "",
+    nameComp:"",
+    dateComp:"",
+    timeComp:"",
+    cityComp:"",
+    latitudeComp:"",
+    longitudeComp:"",
     utcOffset: "",
+    utcOffsetComp: "",
     houseSystem: "koch",
     style: "elements", // Новый выбор для оформления
-    isLocal: true
+    isLocal: true,
+    isCompatibility: true,
   });
+
   const [isLocal, setIsLocal] = useState(false);
+  const [isCompatibility, setIsCompatibility] = useState(false);
 
   const [errors, setErrors] = useState({
     latitude: "",
@@ -69,6 +79,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   const [submittedData, setSubmittedData] = useState<any | null>(null);
   const [citySuggestions, setCitySuggestions] = useState<any[]>([]);
   const [localCitySuggestions, localSetCitySuggestions] = useState<any[]>([]);
+  const [citySuggestionsComp, setCitySuggestionsComp] = useState<any[]>([]);
 
   // Валидация координат
   const validateCoordinates = (lat: string, lon: string) => {
@@ -105,7 +116,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     // Ограничиваем длину ввода до 6 символов (например, +00:00 или -05:30)
     if (value.length > 6) return;
   
-    setFormData((prev) => ({ ...prev, utcOffset: value }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: value }));
   };
 
   const handleDateInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,9 +139,9 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
       formattedValue = `${formattedValue.slice(0, 5)}.${formattedValue.slice(5)}`;
     }
   
-    setFormData((prev) => ({ ...prev, date: formattedValue }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: formattedValue }));
   };
-  
+
   const handleTimeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/[^0-9]/g, ""); // Оставляем только цифры
   
@@ -151,7 +162,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
       formattedValue = `${formattedValue.slice(0, 5)}:${formattedValue.slice(5)}`;
     }
   
-    setFormData((prev) => ({ ...prev, time: formattedValue }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: formattedValue }));
   };
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -171,14 +182,14 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     const { name, value } = e.target;
     let newErrors = { ...errors };
   
-    if (name === "latitude") {
+    if (name === "latitude" || name === "latitudeComp") {
       const latitude = parseFloat(value);
       newErrors.latitude = isNaN(latitude) || latitude < -90 || latitude > 90 
         ? "Широта должна быть в пределах от -90 до 90" 
         : "";
     }
   
-    if (name === "longitude") {
+    if (name === "longitude" || name === "longitudeComp") {
       const longitude = parseFloat(value);
       newErrors.longitude = isNaN(longitude) || longitude < -180 || longitude > 180 
         ? "Долгота должна быть в пределах от -180 до 180" 
@@ -211,13 +222,33 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   
   const handleCityChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const city = e.target.value;
-    setFormData({ ...formData, city });
+
+    // Если город не изменился, не выполняем поиск
+    if (city === formData.city) return;
+
+    setFormData({ ...formData, [e.target.name]: city });
 
     if (city.length > 2) {
       const suggestions = await searchCities(city);
       setCitySuggestions(suggestions);
     } else {
       setCitySuggestions([]);
+    }
+  };
+
+  const handleCityChangeComp = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const city = e.target.value;
+
+    // Если город не изменился, не выполняем поиск
+    if (city === formData.cityComp) return;
+
+    setFormData({ ...formData, [e.target.name]: city });
+
+    if (city.length > 2) {
+      const suggestions = await searchCities(city);
+      setCitySuggestionsComp(suggestions);
+    } else {
+      setCitySuggestionsComp([]);
     }
   };
 
@@ -231,8 +262,22 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     setCitySuggestions([]);
   };
 
+  const handleCitySelectComp = (city: any) => {
+    setFormData({
+      ...formData,
+      cityComp: city.display_name,
+      latitudeComp: city.lat,
+      longitudeComp: city.lon,
+    });
+    setCitySuggestionsComp([]);
+  };
+
   const handleLocalCityChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const city = e.target.value;
+
+    // Если город не изменился, не выполняем поиск
+    if (city === formData.localCity) return;
+
     setFormData({ ...formData, localCity: city });
 
     if (city.length > 2) {
@@ -263,12 +308,12 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     setCitySuggestions([]);
   };
 
-  const localHandleCityClear = () => {
+  const handleCityClearComp = () => {
     setFormData({
       ...formData,
-      localCity: "",
-      localLatitude: "",
-      localLongitude: "",
+      cityComp: "",
+      latitudeComp: "",
+      longitudeComp: "",
     });
     setCitySuggestions([]);
   };
@@ -309,7 +354,17 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
           localLongitude: "",
           isLocal: false
         });
+      } else if(!isCompatibility){
+        setBirthData({
+          ...formData,
+          cityComp: "",
+          latitudeComp: "",
+          longitudeComp: "",
+          isCompatibility: false
+        });
+
       } else setBirthData(formData);
+      
 
       setSubmittedData(formData);
 
@@ -335,103 +390,106 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
 
         <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg p-4 border border-gray-200 max-w-xl">
           <div className="space-y-4">
-            {/* Имя */}
             <div>
-              <label className="block text-gray-700 text-sm mb-1">Имя</label>
-              <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
-            </div>
-
-            {/* Дата, время и UTC в одну строку */}
-            <div className="flex flex-wrap gap-4">
-              {/* Дата */}
-              <div className="flex-1 min-w-[120px]">
-                <label className="block text-gray-700 text-sm mb-1">Дата рождения</label>
-                <input 
-                  type="text" 
-                  name="date" 
-                  value={formData.date} 
-                  onChange={handleDateInput} 
-                  placeholder="ДД.ММ.ГГГГ" 
-                  className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
-                />
+              {/* Имя */}
+              <div>
+                <label className="block text-gray-700 text-sm mb-1">Имя</label>
+                <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
               </div>
 
-              {/* Время */}
-              <div className="flex-1 min-w-[120px]">
-                <label className="block text-gray-700 text-sm mb-1">Время рождения</label>
-                <input 
-                  type="text" 
-                  name="time" 
-                  value={formData.time} 
-                  onChange={handleTimeInput} 
-                  placeholder="ЧЧ:ММ" 
-                  className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
-                />
+              {/* Дата, время и UTC в одну строку */}
+              <div className="flex flex-wrap gap-4">
+                {/* Дата */}
+                <div className="flex-1 min-w-[120px]">
+                  <label className="block text-gray-700 text-sm mb-1">Дата рождения</label>
+                  <input 
+                    type="text" 
+                    name="date" 
+                    value={formData.date} 
+                    onChange={handleDateInput} 
+                    placeholder="ДД.ММ.ГГГГ" 
+                    className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
+                  />
+                </div>
+
+                {/* Время */}
+                <div className="flex-1 min-w-[120px]">
+                  <label className="block text-gray-700 text-sm mb-1">Время рождения</label>
+                  <input 
+                    type="text" 
+                    name="time" 
+                    value={formData.time} 
+                    onChange={handleTimeInput} 
+                    placeholder="ЧЧ:ММ" 
+                    className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
+                  />
+                </div>
+
+
+                {/* UTC */}
+                <div className="flex-1 min-w-[120px]">
+                  <label className="block text-gray-700 text-sm mb-1">UTC</label>
+                  <input
+                    type="text"
+                    name="utcOffset"
+                    value={formData.utcOffset}
+                    onChange={handleUtcOffsetInput}
+                    placeholder={localTime || "+00:00"}
+                    className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
+                  />
+                </div>
               </div>
 
+              {/* Широта и долгота в одну строку */}
+              <div className="flex flex-wrap gap-4 mt-4">
+                {/* Широта */}
+                <div className="flex-1 min-w-[120px]">
+                  <label className="block text-gray-700 text-sm mb-1">Широта</label>
+                  <input type="text" name="latitude" value={formData.latitude} onChange={handleChange} onBlur={handleBlur} placeholder="Введите широту" className={`w-full p-1 border ${errors.latitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
+                  {errors.latitude && <p className="text-red-500 text-sm mt-1">{errors.latitude}</p>}
+                </div>
 
-              {/* UTC */}
-              <div className="flex-1 min-w-[120px]">
-                <label className="block text-gray-700 text-sm mb-1">UTC</label>
-                <input
-                  type="text"
-                  name="utcOffset"
-                  value={formData.utcOffset}
-                  onChange={handleUtcOffsetInput}
-                  placeholder={localTime || "+00:00"}
-                  className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
-                />
-              </div>
-            </div>
-
-            {/* Широта и долгота в одну строку */}
-            <div className="flex flex-wrap gap-4 mt-4">
-              {/* Широта */}
-              <div className="flex-1 min-w-[120px]">
-                <label className="block text-gray-700 text-sm mb-1">Широта</label>
-                <input type="text" name="latitude" value={formData.latitude} onChange={handleChange} onBlur={handleBlur} placeholder="Введите широту" className={`w-full p-1 border ${errors.latitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
-                {errors.latitude && <p className="text-red-500 text-sm mt-1">{errors.latitude}</p>}
+                {/* Долгота */}
+                <div className="flex-1 min-w-[120px]">
+                  <label className="block text-gray-700 text-sm mb-1">Долгота</label>
+                  <input type="text" name="longitude" value={formData.longitude} onChange={handleChange} onBlur={handleBlur} placeholder="Введите долготу" className={`w-full p-1 border ${errors.longitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
+                  {errors.longitude && <p className="text-red-500 text-sm mt-1">{errors.longitude}</p>}
+                </div>
               </div>
 
-              {/* Долгота */}
-              <div className="flex-1 min-w-[120px]">
-                <label className="block text-gray-700 text-sm mb-1">Долгота</label>
-                <input type="text" name="longitude" value={formData.longitude} onChange={handleChange} onBlur={handleBlur} placeholder="Введите долготу" className={`w-full p-1 border ${errors.longitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
-                {errors.longitude && <p className="text-red-500 text-sm mt-1">{errors.longitude}</p>}
-              </div>
-            </div>
-
-            {/* Город */}
-            <div>
-              <label className="block text-gray-700 text-sm mb-1">Город рождения (необязательно)</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleCityChange}
-                  className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none pr-10"
-                />
-                {formData.city && (
-                  <button
-                    type="button"
-                    onClick={handleCityClear}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
-                  >
-                    &#10005;
-                  </button>
+              {/* Город */}
+              <div>
+                <label className="block text-gray-700 text-sm mb-1">Город рождения (необязательно)</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleCityChange}
+                    className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none pr-10"
+                  />
+                  {formData.city && (
+                    <button
+                      type="button"
+                      onClick={handleCityClear}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    >
+                      &#10005;
+                    </button>
+                  )}
+                </div>
+                {citySuggestions.length > 0 && (
+                  <ul className="border border-gray-300 mt-2 max-h-48 overflow-y-auto bg-white">
+                    {citySuggestions.map((city, index) => (
+                      <li key={index} onClick={() => handleCitySelect(city)} className="p-2 cursor-pointer hover:bg-gray-200">
+                        {city.display_name}
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </div>
-              {citySuggestions.length > 0 && (
-                <ul className="border border-gray-300 mt-2 max-h-48 overflow-y-auto bg-white">
-                  {citySuggestions.map((city, index) => (
-                    <li key={index} onClick={() => handleCitySelect(city)} className="p-2 cursor-pointer hover:bg-gray-200">
-                      {city.display_name}
-                    </li>
-                  ))}
-                </ul>
-              )}
             </div>
+            
 
             {/* Система домов */}
             <div>
@@ -454,15 +512,36 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             </div>
 
             {/* Чекбокс */}
-            <label className="flex items-center space-x-2 cursor-pointer ">
+            {!isCompatibility && 
+              <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
                 checked={isLocal}
-                onChange={() => setIsLocal(!isLocal)}
+                onChange={() => {
+                  setIsLocal(!isLocal)
+                  if (isCompatibility) setIsCompatibility(!isCompatibility);
+                }}
                 className="w-4 h-4"
               />
               <span>Локальная карта</span>
-            </label>
+              </label>
+            }
+
+            {/* Чекбокс */}
+            {!isLocal && 
+              <label className="flex items-center space-x-2 cursor-pointer ">
+              <input
+                type="checkbox"
+                checked={isCompatibility}
+                onChange={() => {
+                  setIsCompatibility(!isCompatibility)
+                  if (isLocal) setIsLocal(!isLocal);
+                }}
+                className="w-4 h-4"
+              />
+              <span>Совместимость</span>
+              </label>
+            }
 
             {isLocal && (
               <div className=" px-4 py-0 rounded-lg">
@@ -516,23 +595,112 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                 </div>
               </div>
             )}
+
+            {isCompatibility && (
+              <div className=" px-4 py-0 rounded-lg">
+                {/* Имя */}
+                <div>
+                  <label className="block text-gray-700 text-sm mb-1">Имя</label>
+                  <input type="text" name="nameComp" value={formData.nameComp} onChange={handleChange} className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" />
+                </div>
+
+                {/* Дата, время и UTC в одну строку */}
+                <div className="flex flex-wrap gap-4">
+                  {/* Дата */}
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-gray-700 text-sm mb-1">Дата рождения</label>
+                    <input 
+                      type="text" 
+                      name="dateComp" 
+                      value={formData.dateComp} 
+                      onChange={handleDateInput} 
+                      placeholder="ДД.ММ.ГГГГ" 
+                      className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
+                    />
+                  </div>
+
+                  {/* Время */}
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-gray-700 text-sm mb-1">Время рождения</label>
+                    <input 
+                      type="text" 
+                      name="timeComp" 
+                      value={formData.timeComp} 
+                      onChange={handleTimeInput} 
+                      placeholder="ЧЧ:ММ" 
+                      className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
+                    />
+                  </div>
+
+
+                  {/* UTC */}
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-gray-700 text-sm mb-1">UTC</label>
+                    <input
+                      type="text"
+                      name="utcOffsetComp"
+                      value={formData.utcOffsetComp}
+                      onChange={handleUtcOffsetInput}
+                      placeholder={localTime || "+00:00"}
+                      className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Широта и долгота в одну строку */}
+                <div className="flex flex-wrap gap-4 mt-4">
+                  {/* Широта */}
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-gray-700 text-sm mb-1">Широта</label>
+                    <input type="text" name="latitudeComp" value={formData.latitudeComp} onChange={handleChange} onBlur={handleBlur} placeholder="Введите широту" className={`w-full p-1 border ${errors.latitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
+                    {errors.latitude && <p className="text-red-500 text-sm mt-1">{errors.latitude}</p>}
+                  </div>
+
+                  {/* Долгота */}
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-gray-700 text-sm mb-1">Долгота</label>
+                    <input type="text" name="longitudeComp" value={formData.longitudeComp} onChange={handleChange} onBlur={handleBlur} placeholder="Введите долготу" className={`w-full p-1 border ${errors.longitude ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-black focus:outline-none`} />
+                    {errors.longitude && <p className="text-red-500 text-sm mt-1">{errors.longitude}</p>}
+                  </div>
+                </div>
+
+                {/* Город */}
+                <div>
+                  <label className="block text-gray-700 text-sm mb-1">Город рождения (необязательно)</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="cityComp"
+                      value={formData.cityComp}
+                      onChange={handleCityChangeComp}
+                      className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none pr-10"
+                    />
+                    {formData.city && (
+                      <button
+                        type="button"
+                        onClick={handleCityClearComp}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+                      >
+                        &#10005;
+                      </button>
+                    )}
+                  </div>
+                  {citySuggestionsComp.length > 0 && (
+                    <ul className="border border-gray-300 mt-2 max-h-48 overflow-y-auto bg-white">
+                      {citySuggestionsComp.map((city, index) => (
+                        <li key={index} onClick={() => handleCitySelectComp(city)} className="p-2 cursor-pointer hover:bg-gray-200">
+                          {city.display_name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <button type="submit" className="mt-6 w-full p-3 bg-[#172935] text-white font-medium rounded-md hover:bg-gray-800 transition">Построить карту</button>
         </form>
-
-        {/* {submittedData && (
-          <div className="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700">
-            <h3 className="text-lg font-medium">Введенные данные:</h3>
-            <p><strong>Имя:</strong> {submittedData.name}</p>
-            <p><strong>Дата, время (часовой пояс):</strong> {submittedData.date}, {submittedData.time} ({submittedData.utcOffset || localTime})</p>
-            <p><strong>Город:</strong> {submittedData.city}</p>
-            <p><strong>Широта:</strong> {submittedData.latitude}</p>
-            <p><strong>Долгота:</strong> {submittedData.longitude}</p>
-            <p><strong>Система домов:</strong> {houseSystemNames[submittedData.houseSystem]}</p>
-            <p><strong>Оформление:</strong> {styleOptions.find(option => option.value === submittedData.style)?.label}</p>
-          </div>
-        )} */}
       </div>
     </div>
   );

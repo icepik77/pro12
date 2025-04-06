@@ -1,5 +1,5 @@
-import { AstroData, Aspect } from "./definitions";
-import { Origin } from "circular-natal-horoscope-js";
+import { AstroData, Aspect, BirthData, PlanetPositionList } from "./definitions";
+import { Origin, Horoscope } from "circular-natal-horoscope-js";
 
 export const formatPosition = (decimalDegrees: number) => {
   const degreesInSign = decimalDegrees % 30; // Ограничиваем до 30 градусов
@@ -304,6 +304,286 @@ export const setKochCusps = (ascendant: number, cuspsData : any) =>{
 
   return cuspsData;
 }
+
+export const getAspectsBetweenCharts = (astroData1: AstroData, astroData2: AstroData) => { 
+  const aspects = {
+    conjunction: 0,
+    opposition: 180,
+    trine: 120,
+    square: 90,
+    sextile: 60,
+  };
+
+  const orbs = {
+    Sun: 8.5,
+    Moon: 8.5,
+    Mercury: 8.5,
+    Venus: 8.5,
+    Mars: 8.5,
+    Jupiter: 8.5,
+    Saturn: 9,
+    Uranus: 8.5,
+    Neptune: 6.5,
+    Pluto: 6.5,
+    Lilith: 8.5,
+    NNode: 8.5,
+  };
+
+  let foundAspects: Aspect[] = [];
+
+  // Преобразуем объекты планет в массивы
+  const planetsArray1 = Object.entries(astroData1.planets).map(([name, position]) => ({
+    name,
+    position: position[0],
+  }));
+
+  const planetsArray2 = Object.entries(astroData2.planets).map(([name, position]) => ({
+    name,
+    position: position[0],
+  }));
+
+  planetsArray1.forEach((planetA) => {
+    planetsArray2.forEach((planetB) => {
+      const degreeA = planetA.position;
+      const degreeB = planetB.position;
+
+      const diff = Math.abs(degreeA - degreeB);
+      const adjustedDiff = Math.min(diff, 360 - diff);
+
+      Object.entries(aspects).forEach(([aspect, aspectDegree]) => {
+        const orbA = orbs[planetA.name as keyof typeof orbs] || 5;
+        const orbB = orbs[planetB.name as keyof typeof orbs] || 5;
+        const maxOrb = Math.min(orbA, orbB);
+        const aspectDiff = Math.abs(adjustedDiff - aspectDegree);
+
+        if (aspectDiff <= maxOrb) {
+          foundAspects.push({
+            point1Key: planetA.name,
+            point2Key: planetB.name,
+            aspectKey: aspect,
+            orb: aspectDiff,
+            point1Label: planetA.name,
+            point2Label: planetB.name,
+          });
+        }
+      });
+    });
+  });
+
+  return foundAspects;
+};
+
+export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatibility: boolean) => {
+  const [day, month, year] = birthData.date.split('.').map(Number);
+  const [hour, minute, second] = birthData.time.split(':').map(Number);
+  const utcOffset = birthData.utcOffset;
+  const latitude = parseFloat(birthData.latitude);
+  const longitude = parseFloat(birthData.longitude);
+  const handleUTCDate = utcOffset ? convertToUTC(birthData.date, birthData.time, utcOffset) : undefined;
+
+  const localLatitude = parseFloat(birthData.localLatitude);
+  const localLongitude = parseFloat(birthData.localLongitude);
+
+  const [dayComp, monthComp, yearComp] = birthData.dateComp.split('.').map(Number);
+  const [hourComp, minuteComp, secondComp] = birthData.timeComp.split(':').map(Number);
+  const utcOffsetComp = birthData.utcOffsetComp;
+  const latitudeComp = parseFloat(birthData.latitudeComp);
+  const longitudeComp = parseFloat(birthData.longitudeComp);
+  const handleUTCDateComp = utcOffsetComp ? convertToUTC(birthData.dateComp, birthData.timeComp, utcOffsetComp) : undefined;
+
+  let origin;
+  let horoscope;
+  let utc;
+
+  const houseSystem = birthData.houseSystem || 'koch'; // Берём систему домов
+
+  const customOrbs = {
+    conjunction: 10,
+    opposition: 8,
+    trine: 6,
+    square: 7,
+    sextile: 5,
+    quincunx: 5,
+    quintile: 1,
+    septile: 1,
+    "semi-square": 1,
+    "semi-sextile": 1,
+  };
+
+  if (isNaN(latitude) || isNaN(longitude)) {
+    console.error("Некорректные координаты:", latitude, longitude);
+    return;
+  }
+
+  if (!isLocal && !isCompatibility){
+    origin = new Origin({
+      year,
+      month: month - 1, // В JS месяцы с 0
+      date: day,
+      hour,
+      minute,
+      second,
+      latitude,
+      longitude,
+      handleUTCDate
+    });
+  
+    
+  }
+  else if (isCompatibility){
+    origin = new Origin({
+      year: yearComp,
+      month: monthComp - 1, // В JS месяцы с 0
+      date: dayComp,
+      hour: hourComp,
+      minute: minuteComp,
+      second: secondComp,
+      latitude: latitudeComp,
+      longitude: longitudeComp,
+      handleUTCDate: handleUTCDateComp
+    });
+  }
+  else{
+    if (handleUTCDate){
+      utc = utcOffset;
+    } 
+    else utc = getUTCFromOrigin(latitude, longitude);
+  
+    const handleUTCDateLocal = convertToUTC(birthData.date, birthData.time, utc);
+  
+    origin = new Origin({
+      year,
+      month: month - 1, // В JS месяцы с 0
+      date: day,
+      hour,
+      minute,
+      second,
+      latitude: localLatitude,
+      longitude: localLongitude,
+      handleUTCDate: handleUTCDateLocal
+    });
+  }
+  
+  horoscope = new Horoscope({
+    origin,
+    houseSystem: houseSystem,
+    zodiac: 'tropical',
+    aspectPoints: ['bodies', 'points'],
+    aspectWithPoints: ['bodies', 'points'],
+    aspectTypes: ['major'],
+    customOrbs: customOrbs,
+    language: 'en',
+  });
+  
+
+  const planetsData = horoscope.CelestialBodies;
+  let cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
+  const ascendant = horoscope._ascendant.ChartPosition.Ecliptic.DecimalDegrees;
+
+  // Правильный расчет домов для системы Коха
+  if (horoscope._houseSystem == "koch") {
+    cuspsData = setKochCusps(ascendant, cuspsData);
+  }
+
+  const astroData : AstroData = {
+    planets: {
+      "Sun": [planetsData.sun.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Moon": [planetsData.moon.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Mercury": [planetsData.mercury.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Venus": [planetsData.venus.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Mars": [planetsData.mars.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Jupiter": [planetsData.jupiter.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Saturn": [planetsData.saturn.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Uranus": [planetsData.uranus.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Neptune": [planetsData.neptune.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Pluto": [planetsData.pluto.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Lilith": [horoscope.CelestialPoints.lilith.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "NNode": [horoscope.CelestialPoints.northnode.ChartPosition.Ecliptic.DecimalDegrees || 0],
+    },
+    cusps: cuspsData,
+  };
+
+  const utcTime = origin.localTimeFormatted?.slice(-6) || ""; 
+
+  // Формируем данные для таблицы планет
+  const planetPositionsList = Object.entries(planetsData)
+  .map(([key, planet]: any) => {
+    if (!planet?.ChartPosition?.Ecliptic?.DecimalDegrees) return null;
+
+    const ecliptic = planet.ChartPosition.Ecliptic.DecimalDegrees;
+    const isRetrograde = planet.isRetrograde;
+    const sign = getZodiacSign(ecliptic);
+    const position = formatPosition(ecliptic);
+    const house = findHouseForPlanet(ecliptic, cuspsData);
+
+    return { name: key, isRetrograde, sign, position, house };
+  })
+  .filter(Boolean); // Убираем null-значения
+  // Данные о Лилит
+  const lilithData = horoscope.CelestialPoints.lilith?.ChartPosition?.Ecliptic?.DecimalDegrees;
+  if (lilithData) {
+    const sign = getZodiacSign(lilithData);
+    const isRetrograde = lilithData.isRetrograde;
+    const position = formatPosition(lilithData);
+    const house = findHouseForPlanet(lilithData, cuspsData);
+    
+    // Заменяем последний элемент в списке на Лилит
+    if (planetPositionsList.length > 0) {
+      planetPositionsList[planetPositionsList.length - 1] = { name: "lilith", isRetrograde, sign, position, house };
+    } else {
+      // Если список пуст, просто добавляем Лилит
+      planetPositionsList.push({ name: "lilith", isRetrograde, sign, position, house });
+    }
+  }
+  // Данные о Северном узле
+  const nNode = horoscope.CelestialPoints.northnode?.ChartPosition?.Ecliptic?.DecimalDegrees;
+  if (nNode) {
+    const sign = getZodiacSign(nNode);
+    const position = formatPosition(nNode);
+    const house = findHouseForPlanet(nNode, cuspsData);
+    const isRetrograde = nNode.isRetrograde;
+
+    // Заменяем последний элемент в списке на NN
+    if (planetPositionsList.length > 0) {
+      planetPositionsList[planetPositionsList.length - 2] = { name: "northnode", isRetrograde, sign, position, house };
+    } else {
+      // Если список пуст, просто добавляем NN
+      planetPositionsList.push({ name: "northnode", isRetrograde, sign, position, house });
+    }
+  }
+  // Список значений для поля name
+  const houseNames = [
+    'Asc', 'II', 'III', 'IC', 'V', 'VI', 'Dsc', 'VIII', 'IX', 'MC', 'XI', 'XII'
+  ];
+  // Формируем данные для таблицы домов
+  const housePositionsList = cuspsData
+  .map((ecliptic: number, index: number) => {
+    if (ecliptic == null) return null; // Проверка на null или undefined
+
+    const sign = getZodiacSign(ecliptic);
+    const position = formatPosition(ecliptic);
+
+    // Сопоставляем значения для поля name с соответствующими значениями из houseNames
+    const name = houseNames[index];
+
+    return { name, position, sign };
+  })
+  .filter(Boolean); // Убираем null-значения
+
+  const aspectDataPlanet = getAspectsForPlanet(astroData);
+
+  return {
+    astroData: astroData,
+    planets: planetPositionsList,
+    houses: housePositionsList,
+    aspects: aspectDataPlanet,
+    utcTime: origin.localTimeFormatted
+  };
+}
+
+
+
+
 
 
 
