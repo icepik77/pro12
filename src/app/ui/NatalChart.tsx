@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
 import {NatalChartProps } from '../lib/definitions';
-import { createFormedAspects, getNatalChart, getAspectsBetweenCharts } from '../lib/utils';
+import { createFormedAspects, getNatalChart, getAspectsBetweenCharts, getCalendarData } from '../lib/utils';
 
 const NatalChart: React.FC<NatalChartProps> = ({ 
   birthData, 
@@ -132,7 +132,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
     let isLocal;
     let isCompatibility;
-    let isFore; 
+    let isFore = true; 
 
     if (localLatitude && localLongitude && birthData.isLocal){
       isLocal = true;
@@ -260,6 +260,10 @@ const NatalChart: React.FC<NatalChartProps> = ({
           aspects: pairData,
         };
         setCompPairPositions(data);
+
+        getCalendarData(birthData).then(calendarData => {
+          console.log("calendarData", calendarData);
+        });
       }  
     }
   }, [birthData]);
@@ -276,13 +280,8 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
     if (isLocal || !chartData || !chartRefMain.current || !containerRefMain.current) return;
 
-    
-
-
     const settings = getStyleSettings();
     const customAspects = createFormedAspects(aspectsData, chartData);
-
-    
 
     const containerSizeMain = containerRefMain.current.clientWidth; // Размер родительского контейнера
     const chartSizeMain = Math.min(containerSizeMain, 800);
