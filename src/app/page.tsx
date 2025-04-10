@@ -9,6 +9,7 @@ import { motion } from "framer-motion"; // Импортируем framer-motion
 import Header from "./ui/Header";
 import dynamic from 'next/dynamic';
 import Script from "next/script";
+import Calendar from "./ui/Calendar";
 
 const NatalChart = dynamic(() => import('./ui/NatalChart'), { ssr: false });
 
@@ -75,6 +76,8 @@ export default function Home() {
   const [compPairPositions, setCompPairPositions] = useState<any>();
   const [showPairPositions, setShowPairPositions] = useState<any>();
 
+  const [calendarPositions, setCalendarPositions] = useState<any>();
+
   const [activeTab, setActiveTab] = useState<"chart1" | "chart2">("chart1");
 
   const [localTime, setLocalTime] = useState<string | undefined>();
@@ -133,6 +136,7 @@ export default function Home() {
                 setActiveTab={setActiveTab}
                 showPairPositions={showPairPositions}
                 setShowPairPositions={setShowPairPositions}
+                setCalendarPositions={setCalendarPositions}
               />
             </motion.div>
 
@@ -269,7 +273,6 @@ export default function Home() {
             }
             
             
-    
 
             {/* Данные без локальной карты */}
             {!birthData.isLocal && !birthData.isCompatibility && planetPositions.length > 0 &&
@@ -632,6 +635,22 @@ export default function Home() {
               <AspectTable
                 aspectsPositions={compPairPositions ? compPairPositions.aspects : []}
                 planets={compPairPositions ? compPairPositions.planets : []}
+              />
+              </motion.div>
+            }
+
+            {/* Календарь */}
+            {showPairPositions && 
+              <motion.div
+              className="w-full flex justify-center"
+              initial={{ opacity: 0 }} // Начальная прозрачность
+              animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+              transition={{ duration: 1 }} // Плавное появление за 1 секунду
+              >
+              <Calendar
+                calendar={calendarPositions}
+                planets={compPairPositions ? compPairPositions.planets : []}
+                
               />
               </motion.div>
             }

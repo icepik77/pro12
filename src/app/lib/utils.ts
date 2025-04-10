@@ -628,10 +628,9 @@ export  const getCalendarData = async (birthData: BirthData) => {
 
   if (natalData){
     const [day, month, year] = birthData.dateFore.split('.').map(Number);
-    const [hour = 0, minute = 0, second = 0] = birthData.timeFore.split(':').map(Number);
 
     const startDate = new Date(year, month - 1, day, 0, 0, 0);
-    const endDate = new Date(startDate.getTime() + 1 * 24 * 60 * 60 * 1000);
+    const endDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     let current = new Date(startDate);
 
@@ -687,6 +686,8 @@ export  const getCalendarData = async (birthData: BirthData) => {
     return []
   }
 
+  
+
   const dailyAspectMap = new Map<string, Map<string, any>>();
 
   for (const entry of calendarData) {
@@ -721,16 +722,39 @@ export  const getCalendarData = async (birthData: BirthData) => {
     };
   });
 
+  const filteredResult = result
+  .map(({ date, aspects }) => {
+    return {
+      date,
+      aspects: aspects.filter(aspect => {
+        if (!aspect.time) return false; // Без time — сразу отбрасываем
+
+
+        console.log("aspectDateNot", aspect.time.toString());
+        let aspectDate = aspect.time.toString();
+        aspectDate = aspectDate.split(' ')[2];
+        const day = date.slice(-2);
+
+        console.log("aspectDate", aspectDate);
+        console.log("day", day);
+        return aspectDate === day;
+      })
+    };
+  })
+  .filter(day => day.aspects.length > 0); // убираем дни без аспектов
+
+
   let exactTime = [];
-  for (const item of result) {
-    console.log(`Дата: ${item.date}`);
+  for (const item of filteredResult) {
     for (const aspect of item.aspects) {
       const data = await findExactAspectTime(natalData, birthData, aspect);
       exactTime.push(data);
     }
   }
 
-  return {result, exactTime};
+  console.log(filteredResult)
+
+  return {filteredResult, exactTime};
 }
 
 export const findExactAspectTime = async (natalData: any, birthData: any, {
@@ -756,6 +780,9 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
 
   let startTime = new Date(time.getTime() - halfHour);
   let endTime = new Date(time.getTime() + halfHour);
+
+  console.log("startTime", startTime);
+  console.log("endTime", endTime);
 
   let bestTime = time;
   let bestOrb = Infinity;
@@ -882,7 +909,7 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
 
       let matchStart;
       if (astroDataStart){
-        const aspectsStart = getAspectsBetweenCharts(natalData.astroData, astroDataStart.astroData, true);
+        const aspectsStart = getAspectsBetweenCharts(astroDataStart.astroData, natalData.astroData , true); 
         matchStart = aspectsStart.find(a =>
           (a.point1Key === point1Key && a.point2Key === point2Key ||
           a.point1Key === point2Key && a.point2Key === point1Key) &&
@@ -892,7 +919,7 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
 
       let matchEnd;
       if (astroDataEnd){
-        const aspectsEnd = getAspectsBetweenCharts(natalData.astroData, astroDataEnd.astroData, true);
+        const aspectsEnd = getAspectsBetweenCharts(astroDataEnd.astroData, natalData.astroData, true); 
         matchEnd = aspectsEnd.find(a =>
           (a.point1Key === point1Key && a.point2Key === point2Key ||
           a.point1Key === point2Key && a.point2Key === point1Key) &&
@@ -914,191 +941,4 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
 
   return { time: bestTime, orb: bestOrb };
 };
-
-
-// export const getCalendarData = (birthData: BirthData) => {
-//   const natalData = getNatalChart(birthData, false, false, false);
-//   let calendarData = [];
-
-//   if (natalData) {
-//     const [day, month, year] = birthData.dateFore.split('.').map(Number);
-//     // const [hour = 0, minute = 0, second = 0] = birthData.timeFore.split(':').map(Number);
-
-//     const startDate = new Date(year, month - 1, day, 0, 0, 0);
-
-//     for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
-//       const aspectsForDay: any[] = [];
-//       const currentDayStart = new Date(startDate.getTime() + dayOffset * 24 * 60 * 60 * 1000);
-
-//       for (let hourOffset = 0; hourOffset < 24; hourOffset++) {
-//         const current = new Date(currentDayStart.getTime() + hourOffset * 60 * 60 * 1000);
-
-//         const dateStr = current.toLocaleDateString('ru-RU').split('/').map((part: string) => part.padStart(2, '0')).join('.');
-//         const timeStr = current.toTimeString().split(' ')[0];
-
-
-//         const birthDataCurrent: BirthData = {
-//           date: dateStr,
-//           time: timeStr,
-//           latitude: birthData.latitude,
-//           city: birthData.city,
-//           localCity: birthData.localCity || "",
-//           longitude: birthData.longitude,
-//           localLatitude: birthData.localLatitude || "",
-//           localLongitude: birthData.localLongitude || "",
-//           utcOffset: birthData.utcOffsetFore || birthData.utcOffset,
-//           nameComp: "",
-//           dateComp: "",
-//           timeComp: "",
-//           cityComp: "",
-//           latitudeComp: "",
-//           longitudeComp: "",
-//           timeFore: timeStr,
-//           dateFore: dateStr,
-//           utcOffsetFore: birthData.utcOffsetFore || birthData.utcOffset,
-//           utcOffsetComp: "",
-//           houseSystem: birthData.houseSystem || "Placidus",
-//           style: birthData.style || "default",
-//           isLocal: false,
-//           isCompatibility: false,
-//         };
-
-//         const natalCurrentData = getNatalChart(birthDataCurrent, false, false, false);
-
-//         if (natalCurrentData) {
-//           const data = getAspectsBetweenCharts(natalData.astroData, natalCurrentData.astroData, true);
-
-//           const calendarDataCurrent = {
-//             aspects: data,
-//             time: current
-//           }
-//           if (calendarDataCurrent?.aspects.length > 0) aspectsForDay.push(calendarDataCurrent);
-
-//         } else {
-//           console.log("Ошибка расчетов текущего момента");
-//         }
-//       }
-
-//       const aspectMap = new Map();
-
-//       console.log("aspectsForDay", aspectsForDay);
-
-//       // Находим наиболее приближенный к нулю орбис 
-//       for (const entry of aspectsForDay) {
-//         for (const aspect of entry.aspects) {
-//           const keyParts = [aspect.point1Key, aspect.point2Key].sort();
-//           const key = `${keyParts[0]}-${keyParts[1]}-${aspect.aspectKey}`;
-        
-//           if (!aspectMap.has(key) || aspect.orb < aspectMap.get(key).orb) {
-//             aspectMap.set(key, {
-//               ...aspect,
-//               time: entry.time,
-//             });
-//           }
-//         }
-//       }
-    
-//       if (aspectsForDay.length > 0) {
-//         calendarData.push({
-//           date: currentDayStart.toISOString().split("T")[0],
-//           aspects: aspectsForDay
-//         });
-//       }
-
-//     }
-//   } else {
-//     console.log("Нет натальной карты для прогноза");
-//     return [];
-//   }
-
-//   return calendarData;
-// };
-
-// export const getCalendarData = (birthData: BirthData) => {
-//   const natalData = getNatalChart(birthData, false, false, false);
-//   let calendarData = [];
-
-//   if (natalData){
-//     const [day, month, year] = birthData.dateFore.split('.').map(Number);
-//     const [hour = 0, minute = 0, second = 0] = birthData.timeFore.split(':').map(Number);
-
-//     const startDate = new Date(year, month - 1, day, hour, minute, second);
-//     const endDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-//     let current = new Date(startDate);
-
-//     while (current <= endDate) {
-//       // Форматируем дату и время для BirthData (dd.mm.yyyy / hh:mm:ss)
-//       const dateStr = current.toLocaleDateString('ru-RU').split('/').map((part: string) => part.padStart(2, '0')).join('.');
-//       const timeStr = current.toTimeString().split(' ')[0]; // формат hh:mm:ss
-
-//       const birthDataCurrent: BirthData = {
-//         date: dateStr,
-//         time: timeStr,
-//         latitude: birthData.latitude,
-//         city: birthData.city,
-//         localCity: birthData.localCity || "",
-//         longitude: birthData.longitude,
-//         localLatitude: birthData.localLatitude || "",
-//         localLongitude: birthData.localLongitude || "",
-//         utcOffset: birthData.utcOffsetFore || birthData.utcOffset,
-//         nameComp: "",
-//         dateComp: "",
-//         timeComp: "",
-//         cityComp: "",
-//         latitudeComp: "",
-//         longitudeComp: "",
-//         timeFore: timeStr,
-//         dateFore: dateStr,
-//         utcOffsetFore: birthData.utcOffsetFore || birthData.utcOffset,
-//         utcOffsetComp: "",
-//         houseSystem: birthData.houseSystem || "Placidus",
-//         style: birthData.style || "default",
-//         isLocal: false,
-//         isCompatibility: false,
-//       };
-
-//       const natalCurrentData = getNatalChart(birthDataCurrent, false, false, false);
-//       let calendarDataCurrent;
-
-//       if (natalCurrentData){  
-//         const data = getAspectsBetweenCharts(natalData?.astroData, natalCurrentData?.astroData, true);
-//         calendarDataCurrent = {
-//           aspects: data,
-//           time: current
-//         }
-//         if (calendarDataCurrent?.aspects.length > 0) calendarData.push(calendarDataCurrent);
-//       } 
-//       else console.log("Ошибка расчетов текущего момента");
-
-//       current = new Date(current.getTime() + 60 * 60 * 1000); // +1 час
-
-//     }
-//   } else{
-//     console.log("Нет натальной карты для прогноза")
-//     return []
-//   }
-
-//   const aspectMap = new Map();
-
-//   for (const entry of calendarData) {
-//     for (const aspect of entry.aspects) {
-//       const keys = [aspect.point1Key, aspect.point2Key].sort(); // если порядок неважен
-//       const key = ${keys[0]}-${keys[1]}-${aspect.aspectKey};
-
-//       if (!aspectMap.has(key) || aspect.orb < aspectMap.get(key).orb) {
-//         aspectMap.set(key, {
-//           ...aspect,
-//           time: entry.time, // чтобы сохранить время, когда аспект был минимален
-//         });
-//       }
-//     }
-//   }
-
-//   return calendarData;
-// }
-
-
-
-
 

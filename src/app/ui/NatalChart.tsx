@@ -21,7 +21,8 @@ const NatalChart: React.FC<NatalChartProps> = ({
   setCompAspectPositions, 
   setCompPairPositions,
   showPairPositions, 
-  setShowPairPositions
+  setShowPairPositions,
+  setCalendarPositions
 }) => {
   const chartRefMain = useRef<HTMLDivElement>(null);
   const chartRefLeft = useRef<HTMLDivElement>(null);
@@ -262,7 +263,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
         setCompPairPositions(data);
 
         getCalendarData(birthData).then(calendarData => {
-          console.log("calendarData", calendarData);
+          setCalendarPositions(calendarData);
         });
       }  
     }
@@ -271,13 +272,6 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
   // Рисуем радикс натала по дефолту
   useEffect(() => {
-    console.log("Data Debug:", {
-      isLocal: isLocal, 
-      chartData: chartData, 
-      chartRefMain: chartRefMain.current, 
-      containerRefMain: containerRefMain.current
-    });
-
     if (isLocal || !chartData || !chartRefMain.current || !containerRefMain.current) return;
 
     const settings = getStyleSettings();

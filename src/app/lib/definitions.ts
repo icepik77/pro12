@@ -90,4 +90,5 @@ export interface NatalChartProps {
     setActiveTab: (tab: "chart1" | "chart2") => void;
     showPairPositions: boolean;
     setShowPairPositions: (value: boolean) => void;
+    setCalendarPositions: (compPositions: any) => void;
 }
