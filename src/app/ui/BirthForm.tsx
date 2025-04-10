@@ -44,11 +44,11 @@ interface BirthFormProps {
 export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   const [formData, setFormData] = useState({
     name: "",
-    date: "09.01.2000",
-    time: "17:00:00",
+    date: "",
+    time: "",
     city: "",
-    latitude: "52.5394905",
-    longitude: "85.2148673",
+    latitude: "",
+    longitude: "",
     utcOffset: "",
 
     localCity: "",
@@ -56,23 +56,23 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     localLongitude: "",
 
     nameComp:"",
-    dateComp:"19.01.1999",
-    timeComp:"12:00:00",
+    dateComp:"",
+    timeComp:"",
     cityComp:"",
-    latitudeComp:"52.5394905",
-    longitudeComp:"85.2148673",
+    latitudeComp:"",
+    longitudeComp:"",
     utcOffsetComp: "",
 
-    timeFore:"11:30:00",
-    dateFore:"06.04.2025",
+    timeFore:"",
+    dateFore:"",
     utcOffsetFore:"",
 
     houseSystem: "koch",
     style: "elements", // Новый выбор для оформления
 
-    isLocal: true,
-    isCompatibility: true,
-    isFore: true,
+    isLocal: false,
+    isCompatibility: false,
+    isFore: false,
   });
 
   const [isLocal, setIsLocal] = useState(false);
@@ -360,30 +360,54 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     }
 
     if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset && validateDateTimeUTC(formData.date, formData.time, formData.utcOffset)) {
-      if (!isLocal || !formData.localLatitude || !formData.localLongitude){
+      if (isLocal){
         setBirthData({
           ...formData,
-          localCity: "",
-          localLatitude: "",
-          localLongitude: "",
-          isLocal: false
-        });
-      } else if(!isCompatibility){
-        setBirthData({
-          ...formData,
+
           cityComp: "",
           latitudeComp: "",
           longitudeComp: "",
-          isCompatibility: false
-        });
 
-      } else if(!isFore){
+          isLocal: true
+        });
+      } else if(isCompatibility){
         setBirthData({
           ...formData,
-          isTransit: false
+
+          localCity: "",
+          localLatitude: "",
+          localLongitude: "",
+
+          isCompatibility: true
         });
-      } else setBirthData(formData);
-      
+
+      } else if (isFore){
+        setBirthData({
+          ...formData,
+
+          localCity: "",
+          localLatitude: "",
+          localLongitude: "",
+
+          cityComp: "",
+          latitudeComp: "",
+          longitudeComp: "",
+
+          isFore: true
+        });
+      } else {
+        setBirthData({
+          ...formData,
+
+          localCity: "",
+          localLatitude: "",
+          localLongitude: "",
+
+          cityComp: "",
+          latitudeComp: "",
+          longitudeComp: "",
+        });
+      }
 
       setSubmittedData(formData);
 
@@ -531,7 +555,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             </div>
 
             {/* Чекбокс */}
-            {!isCompatibility && !isFore && 
+            {/* {!isCompatibility && !isFore && 
               <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
@@ -545,10 +569,10 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
               />
               <span>Локальная карта</span>
               </label>
-            }
+            } */}
 
             {/* Чекбокс */}
-            {!isLocal && !isFore && 
+            {/* {!isLocal && !isFore && 
               <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
@@ -562,7 +586,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
               />
               <span>Совместимость</span>
               </label>
-            }
+            } */}
 
             {/* Чекбокс */}
             {!isCompatibility && !isLocal &&

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
 import {NatalChartProps } from '../lib/definitions';
 import { createFormedAspects, getNatalChart, getAspectsBetweenCharts, getCalendarData } from '../lib/utils';
+import { div } from 'framer-motion/client';
 
 const NatalChart: React.FC<NatalChartProps> = ({ 
   birthData, 
@@ -129,14 +130,12 @@ const NatalChart: React.FC<NatalChartProps> = ({
   // Обработка формы ввода
   useEffect(() => {
     if (!birthData.date || !birthData.time || !birthData.latitude || !birthData.longitude) return;
-    const localLatitude = parseFloat(birthData.localLatitude);
-    const localLongitude = parseFloat(birthData.localLongitude);
 
     let isLocal;
     let isCompatibility;
     let isFore; 
 
-    if (localLatitude && localLongitude && birthData.isLocal){
+    if (birthData.isLocal){
       isLocal = true;
       setIsLocal(true);
     } 
@@ -265,6 +264,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
         setCompAspectsData(natalDataFore.aspects);
 
         const pairData = getAspectsBetweenCharts(natalData.astroData, natalDataFore.astroData, false);
+
         data = {
           planets: natalDataFore.planets,
           aspects: pairData,
@@ -403,10 +403,10 @@ const NatalChart: React.FC<NatalChartProps> = ({
   return (
     <div className="flex flex-col items-center w-full" ref={containerRefMobile}>
       {/* Локальная карта для небольших экранов */}
-      {(isLocal || isCompatibility) &&
+      {(isLocal || isCompatibility || isFore) &&
         <div>
           {/* Табы */}
-          {(isLocal || isCompatibility) && 
+          {(isLocal || isCompatibility || isFore) && 
             <div className="flex space-x-4 justify-center">
               <button
                 className={`px-4 py-2 rounded ${activeTab === "chart1" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
@@ -414,19 +414,23 @@ const NatalChart: React.FC<NatalChartProps> = ({
               >
                 {isCompatibility? "1 карта": "Натал"}
               </button>
-              <button
-                className={`px-4 py-2 rounded ${activeTab === "chart2" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
-                onClick={() => setActiveTab("chart2")}
-              >
-                {isCompatibility? "2 карта": "Локал"}
-              </button>
-              <button
-                className={`px-4 py-2 hidden 2xl:flex  ${twoMaps ? "bg-[#172935] text-white rounded" : "rounded bg-gray-200"}`}
-                onClick={()=>{setTwoMaps(!twoMaps)}}
-              >
-                2 карты
-              </button>
-              {isCompatibility &&
+              {!isFore && 
+                <>
+                  <button
+                    className={`px-4 py-2 rounded ${activeTab === "chart2" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
+                    onClick={() => setActiveTab("chart2")}
+                  >
+                    {isCompatibility? "2 карта": "Локал"}
+                  </button>
+                  <button
+                    className={`px-4 py-2 hidden 2xl:flex  ${twoMaps ? "bg-[#172935] text-white rounded" : "rounded bg-gray-200"}`}
+                    onClick={()=>{setTwoMaps(!twoMaps)}}
+                  >
+                    2 карты
+                  </button>
+                </>
+              }
+              {(isCompatibility || isFore) &&
                 <button
                   className={`px-4 py-2 ${showPairPositions ? "bg-[#172935] text-white rounded" : "rounded bg-gray-200"}`}
                   onClick={()=>{setShowPairPositions(!showPairPositions)}}
@@ -434,18 +438,19 @@ const NatalChart: React.FC<NatalChartProps> = ({
                   Аспекты
                 </button>
               }
-              
             </div>
           }
           {/* Контейнеры с изображениями */}
           <div className={`${twoMaps || showPairPositions ? "hidden" : ""}`}>
-            <div className={`w-full max-w-[800px]}`} style={{ display: activeTab === "chart1" ? "block" : "none" }}>
-              <div
-                id="chart-container-mobile"
-                ref={chartRefMobile}
-                className="w-full aspect-square flex items-center justify-center"
-              />
-            </div>
+            {!isFore && 
+              <div className={`w-full max-w-[800px]}`} style={{ display: activeTab === "chart1" ? "block" : "none" }}>
+                <div
+                  id="chart-container-mobile"
+                  ref={chartRefMobile}
+                  className="w-full aspect-square flex items-center justify-center"
+                />
+              </div>
+            }
             {(isLocal || isCompatibility) &&
               <div className={`w-full max-w-[800px] ${twoMaps ? "hidden" : ""}`} style={{ display: activeTab === "chart2" ? "block" : "none" }}>
                 <div
@@ -482,8 +487,8 @@ const NatalChart: React.FC<NatalChartProps> = ({
       }
 
       {/* Натальная карта по умолчанию */}
-      {!isLocal && !isCompatibility &&  
-        <div ref={containerRefMain} className="w-full max-w-[800px]">
+      {!isLocal && !isCompatibility && 
+        <div ref={containerRefMain} className={` ${showPairPositions ? "hidden": ""}w-full max-w-[800px]`}>
           <div
             id="chart-container-main"
             ref={chartRefMain}

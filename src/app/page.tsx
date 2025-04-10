@@ -276,7 +276,7 @@ export default function Home() {
             
 
             {/* Данные без локальной карты */}
-            {!birthData.isLocal && !birthData.isCompatibility && planetPositions.length > 0 &&
+            {!birthData.isLocal && !birthData.isCompatibility && planetPositions.length > 0 && !showPairPositions &&
               <div>
                 {/* Плавное появление таблицы только после загрузки данных */}
                 <motion.div
@@ -655,8 +655,6 @@ export default function Home() {
               />
               </motion.div>
             }
-            
-            
           </div>
 
 

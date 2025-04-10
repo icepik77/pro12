@@ -443,7 +443,7 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
     return;
   }
 
-  if (!isLocal && !isCompatibility){
+  if (!isLocal && !isCompatibility && !isForecast){
     origin = new Origin({
       year,
       month: month - 1, // В JS месяцы с 0
