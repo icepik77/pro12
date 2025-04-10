@@ -663,6 +663,7 @@ export  const getCalendarData = async (birthData: BirthData) => {
         style: birthData.style || "default",
         isLocal: false,
         isCompatibility: false,
+        isFore: false
       };
 
       const natalCurrentData = getNatalChart(birthDataCurrent, false, false, false);
@@ -729,14 +730,10 @@ export  const getCalendarData = async (birthData: BirthData) => {
       aspects: aspects.filter(aspect => {
         if (!aspect.time) return false; // Без time — сразу отбрасываем
 
-
-        console.log("aspectDateNot", aspect.time.toString());
         let aspectDate = aspect.time.toString();
         aspectDate = aspectDate.split(' ')[2];
         const day = date.slice(-2);
 
-        console.log("aspectDate", aspectDate);
-        console.log("day", day);
         return aspectDate === day;
       })
     };
@@ -781,9 +778,6 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
   let startTime = new Date(time.getTime() - halfHour);
   let endTime = new Date(time.getTime() + halfHour);
 
-  console.log("startTime", startTime);
-  console.log("endTime", endTime);
-
   let bestTime = time;
   let bestOrb = Infinity;
 
@@ -818,6 +812,7 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
       style: birthData.style || "default",
       isLocal: false,
       isCompatibility: false,
+      isFore: false
     };
 
     const astroDataCurrent = await getNatalChart(birthDataCurrent, false, false, false);
@@ -870,6 +865,7 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
         style: birthData.style || "default",
         isLocal: false,
         isCompatibility: false,
+        isFore: false
       };
 
       
@@ -903,6 +899,7 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
         style: birthData.style || "default",
         isLocal: false,
         isCompatibility: false,
+        isFore: false
       };
 
       const astroDataEnd = await getNatalChart(birthDataCurrent, false, false, false);

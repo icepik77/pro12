@@ -72,10 +72,12 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
 
     isLocal: true,
     isCompatibility: true,
+    isFore: true,
   });
 
   const [isLocal, setIsLocal] = useState(false);
   const [isCompatibility, setIsCompatibility] = useState(false);
+  const [isFore, setIsFore] = useState(false);
 
   const [errors, setErrors] = useState({
     latitude: "",
@@ -347,8 +349,12 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
       newErrors.longitude = "Некорректные координаты";
     }
 
-    // Проверяем координаты
     if (formData.localLatitude && formData.localLongitude  && !validateCoordinates(formData.localLatitude, formData.localLongitude)) {
+      newErrors.latitude = "Некорректные координаты";
+      newErrors.longitude = "Некорректные координаты";
+    }
+
+    if (formData.latitudeComp && formData.longitudeComp  && !validateCoordinates(formData.latitudeComp, formData.longitudeComp)) {
       newErrors.latitude = "Некорректные координаты";
       newErrors.longitude = "Некорректные координаты";
     }
@@ -371,6 +377,11 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
           isCompatibility: false
         });
 
+      } else if(!isFore){
+        setBirthData({
+          ...formData,
+          isTransit: false
+        });
       } else setBirthData(formData);
       
 
@@ -520,7 +531,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             </div>
 
             {/* Чекбокс */}
-            {!isCompatibility && 
+            {!isCompatibility && !isFore && 
               <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
@@ -528,6 +539,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                 onChange={() => {
                   setIsLocal(!isLocal)
                   if (isCompatibility) setIsCompatibility(!isCompatibility);
+                  if (isFore) setIsFore(!isFore);
                 }}
                 className="w-4 h-4"
               />
@@ -536,7 +548,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             }
 
             {/* Чекбокс */}
-            {!isLocal && 
+            {!isLocal && !isFore && 
               <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
@@ -544,10 +556,28 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                 onChange={() => {
                   setIsCompatibility(!isCompatibility)
                   if (isLocal) setIsLocal(!isLocal);
+                  if (isFore) setIsFore(!isFore);
                 }}
                 className="w-4 h-4"
               />
               <span>Совместимость</span>
+              </label>
+            }
+
+            {/* Чекбокс */}
+            {!isCompatibility && !isLocal &&
+              <label className="flex items-center space-x-2 cursor-pointer ">
+              <input
+                type="checkbox"
+                checked={isFore}
+                onChange={() => {
+                  setIsFore(!isFore)
+                  if (isCompatibility) setIsCompatibility(!isCompatibility);
+                  if (isLocal) setIsLocal(!isLocal);
+                }}
+                className="w-4 h-4"
+              />
+              <span>Транзиты</span>
               </label>
             }
 
@@ -703,6 +733,52 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                     </ul>
                   )}
                 </div>
+              </div>
+            )}
+
+            {isFore && (
+              <div className=" px-4 py-0 rounded-lg">
+                {/* Дата, время и UTC в одну строку */}
+                <div className="flex flex-wrap gap-4">
+                  {/* Дата */}
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-gray-700 text-sm mb-1">Дата</label>
+                    <input 
+                      type="text" 
+                      name="dateFore" 
+                      value={formData.dateFore} 
+                      onChange={handleDateInput} 
+                      placeholder="ДД.ММ.ГГГГ" 
+                      className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
+                    />
+                  </div>
+
+                  {/* Время */}
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-gray-700 text-sm mb-1">Время</label>
+                    <input 
+                      type="text" 
+                      name="timeFore" 
+                      value={formData.timeFore} 
+                      onChange={handleTimeInput} 
+                      placeholder="ЧЧ:ММ" 
+                      className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
+                    />
+                  </div>
+
+                  {/* UTC */}
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-gray-700 text-sm mb-1">UTC</label>
+                    <input
+                      type="text"
+                      name="utcOffsetFore"
+                      value={formData.utcOffsetFore}
+                      onChange={handleUtcOffsetInput}
+                      placeholder={localTime || "+00:00"}
+                      className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
+                    />
+                  </div>
+                </div>                          
               </div>
             )}
           </div>

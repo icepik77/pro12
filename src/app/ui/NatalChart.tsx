@@ -47,6 +47,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
   const [isLocal, setIsLocal] = useState(false);
   const [isCompatibility, setIsCompatibility] = useState(false);
+  const [isFore, setIsFore] = useState(false);
   
 
   const [twoMaps, setTwoMaps] = useState(false);
@@ -133,7 +134,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
     let isLocal;
     let isCompatibility;
-    let isFore = true; 
+    let isFore; 
 
     if (localLatitude && localLongitude && birthData.isLocal){
       isLocal = true;
@@ -150,6 +151,14 @@ const NatalChart: React.FC<NatalChartProps> = ({
     } else{
       isCompatibility = false;
       setIsCompatibility(false);
+    }
+
+    if (birthData.isFore){
+      isFore = true;
+      setIsFore(true);
+    } else{
+      isFore = false;
+      setIsFore(false);
     }
 
     const natalData = getNatalChart(birthData, false, false, false);

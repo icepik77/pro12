@@ -59,7 +59,8 @@ export default function Home() {
     houseSystem: "koch",
     style: "elements", 
     isLocal: false, 
-    isCompatibility: false
+    isCompatibility: false,
+    isFore: false
   });
 
   const [planetPositions, setPlanetPositions] = useState<any[]>([]);
