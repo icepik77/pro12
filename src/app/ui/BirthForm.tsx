@@ -70,8 +70,8 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     houseSystem: "koch",
     style: "elements", // Новый выбор для оформления
 
-    isLocal: true,
-    isCompatibility: true,
+    isLocal: false,
+    isCompatibility: false,
   });
 
   const [isLocal, setIsLocal] = useState(false);
@@ -354,25 +354,40 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     }
 
     if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset && validateDateTimeUTC(formData.date, formData.time, formData.utcOffset)) {
-      if (!isLocal || !formData.localLatitude || !formData.localLongitude){
+      if (isLocal){
         setBirthData({
           ...formData,
-          localCity: "",
-          localLatitude: "",
-          localLongitude: "",
-          isLocal: false
-        });
-      } else if(!isCompatibility){
-        setBirthData({
-          ...formData,
+
           cityComp: "",
           latitudeComp: "",
           longitudeComp: "",
-          isCompatibility: false
+
+          isLocal: true
+        });
+      } else if(isCompatibility){
+        setBirthData({
+          ...formData,
+
+          localCity: "",
+          localLatitude: "",
+          localLongitude: "",
+
+          isCompatibility: true
         });
 
-      } else setBirthData(formData);
-      
+      } else {
+        setBirthData({
+          ...formData,
+
+          localCity: "",
+          localLatitude: "",
+          localLongitude: "",
+
+          cityComp: "",
+          latitudeComp: "",
+          longitudeComp: "",
+        });
+      }
 
       setSubmittedData(formData);
 
