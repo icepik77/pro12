@@ -10,6 +10,7 @@ import Header from "./ui/Header";
 import dynamic from 'next/dynamic';
 import Script from "next/script";
 import Calendar from "./ui/Calendar";
+import { div } from "framer-motion/client";
 
 const NatalChart = dynamic(() => import('./ui/NatalChart'), { ssr: false });
 
@@ -84,19 +85,28 @@ export default function Home() {
   const [localTime, setLocalTime] = useState<string | undefined>();
 
   // Отслеживаем изменение данных в planetPositions
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [isDataLoaded, setIsDataLoaded] = useState(true);
 
   useEffect(() => {
-    if ((planetPositions && localAspectPositions && birthData.isLocal) || 
-      (planetPositions && compPlanetPositions && birthData.isCompatibility) || 
-      (planetPositions && !birthData.isCompatibility && !birthData.isLocal)) {
-      setIsDataLoaded(true); // Когда данные загружены, запускаем анимацию
-    }
-    else{
-      setIsDataLoaded(false);
-    }
-    setActiveTab("chart1");
-  }, [planetPositions]); // useEffect срабатывает, когда planetPositions обновляются
+    if (birthData.longitude) setIsDataLoaded(false);
+  }, [birthData])
+  
+
+  // useEffect(() => {
+  //   if ((planetPositions && localAspectPositions && birthData.isLocal) || 
+  //     (planetPositions && compPlanetPositions && birthData.isCompatibility) || 
+  //     (planetPositions && !birthData.isCompatibility && !birthData.isLocal)) {
+
+  //     setIsDataLoaded(true); // Когда данные загружены, запускаем анимацию
+  //     console.log("isDataLoaded", isDataLoaded);
+  //   }
+  //   else{
+  //     setIsDataLoaded(false);
+  //   }
+  //   setActiveTab("chart1");
+  // }, [planetPositions]); // useEffect срабатывает, когда planetPositions обновляются
+
+  
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] pt-3">
@@ -113,6 +123,7 @@ export default function Home() {
               <BirthForm setBirthData={setBirthData} localTime={localTime}/>
             </motion.div>
 
+            {(!isDataLoaded) && <div>Анимация тут</div>}
             {/* Плавное появление карты только после загрузки данных */}
             <motion.div
               className="w-full md:w-[48%] flex justify-center"
@@ -138,6 +149,7 @@ export default function Home() {
                 showPairPositions={showPairPositions}
                 setShowPairPositions={setShowPairPositions}
                 setCalendarPositions={setCalendarPositions}
+                setIsDataLoaded={setIsDataLoaded}
               />
             </motion.div>
 
@@ -628,10 +640,10 @@ export default function Home() {
             {/* Таблица совместимости */}
             {showPairPositions && 
               <motion.div
-              className="w-full flex justify-center"
-              initial={{ opacity: 0 }} // Начальная прозрачность
-              animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
-              transition={{ duration: 1 }} // Плавное появление за 1 секунду
+                className="w-full flex justify-center"
+                initial={{ opacity: 0 }} // Начальная прозрачность
+                animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+                transition={{ duration: 1 }} // Плавное появление за 1 секунду
               >
               <AspectTable
                 aspectsPositions={compPairPositions ? compPairPositions.aspects : []}
@@ -643,10 +655,10 @@ export default function Home() {
             {/* Календарь */}
             {showPairPositions && 
               <motion.div
-              className="w-full flex justify-center"
-              initial={{ opacity: 0 }} // Начальная прозрачность
-              animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
-              transition={{ duration: 1 }} // Плавное появление за 1 секунду
+                className="w-full flex justify-center"
+                initial={{ opacity: 0 }} // Начальная прозрачность
+                animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+                transition={{ duration: 1 }} // Плавное появление за 1 секунду
               >
               <Calendar
                 calendar={calendarPositions}

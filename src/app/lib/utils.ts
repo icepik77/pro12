@@ -749,8 +749,6 @@ export  const getCalendarData = async (birthData: BirthData) => {
     }
   }
 
-  console.log(filteredResult)
-
   return {filteredResult, exactTime};
 }
 

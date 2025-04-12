@@ -92,4 +92,5 @@ export interface NatalChartProps {
     showPairPositions: boolean;
     setShowPairPositions: (value: boolean) => void;
     setCalendarPositions: (compPositions: any) => void;
+    setIsDataLoaded: (value: boolean) => void;
 }

@@ -23,7 +23,8 @@ const NatalChart: React.FC<NatalChartProps> = ({
   setCompPairPositions,
   showPairPositions, 
   setShowPairPositions,
-  setCalendarPositions
+  setCalendarPositions,
+  setIsDataLoaded
 }) => {
   const chartRefMain = useRef<HTMLDivElement>(null);
   const chartRefLeft = useRef<HTMLDivElement>(null);
@@ -130,6 +131,8 @@ const NatalChart: React.FC<NatalChartProps> = ({
   // Обработка формы ввода
   useEffect(() => {
     if (!birthData.date || !birthData.time || !birthData.latitude || !birthData.longitude) return;
+
+    setIsDataLoaded(true);
 
     let isLocal;
     let isCompatibility;
@@ -275,6 +278,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
           setCalendarPositions(calendarData);
         });
       }  
+      setIsDataLoaded(false);
     }
   }, [birthData]);
 

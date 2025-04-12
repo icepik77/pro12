@@ -44,11 +44,11 @@ interface BirthFormProps {
 export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
   const [formData, setFormData] = useState({
     name: "",
-    date: "",
-    time: "",
+    date: "09.01.2000",
+    time: "17:00:00",
     city: "",
-    latitude: "",
-    longitude: "",
+    latitude: "52.53639",
+    longitude: "85.20722",
     utcOffset: "",
 
     localCity: "",
@@ -63,8 +63,8 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     longitudeComp:"",
     utcOffsetComp: "",
 
-    timeFore:"",
-    dateFore:"",
+    timeFore:"11:30:00",
+    dateFore:"06.04.2025",
     utcOffsetFore:"",
 
     houseSystem: "koch",
@@ -555,7 +555,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             </div>
 
             {/* Чекбокс */}
-            {/* {!isCompatibility && !isFore && 
+            {!isCompatibility && !isFore && 
               <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
@@ -569,10 +569,10 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
               />
               <span>Локальная карта</span>
               </label>
-            } */}
+            }
 
             {/* Чекбокс */}
-            {/* {!isLocal && !isFore && 
+            {!isLocal && !isFore && 
               <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
@@ -586,7 +586,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
               />
               <span>Совместимость</span>
               </label>
-            } */}
+            }
 
             {/* Чекбокс */}
             {!isCompatibility && !isLocal &&
