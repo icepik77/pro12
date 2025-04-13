@@ -471,7 +471,7 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
       handleUTCDate: handleUTCDateComp
     });
   }
-  else if (isForecast){
+  else if (isForecast && !isLocal){
     origin = new Origin({
       year: yearFore,
       month: monthFore - 1, // В JS месяцы с 0
@@ -484,6 +484,26 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
       handleUTCDate: handleUTCDateFore
     });
   }
+  else if(isLocal && isForecast){
+    if (handleUTCDate){
+      utc = utcOffset;
+    } 
+    else utc = getUTCFromOrigin(latitude, longitude);
+
+    const handleUTCDateLocal = convertToUTC(birthData.date, birthData.time, utc);
+  
+    origin = new Origin({
+      year: yearFore,
+      month: monthFore - 1, // В JS месяцы с 0
+      date: dayFore,
+      hour: hourFore,
+      minute: minuteFore,
+      second: secondFore,
+      latitude: localLatitude,
+      longitude: localLongitude,
+      handleUTCDate: handleUTCDateLocal
+    });
+  }
   else{
     if (handleUTCDate){
       utc = utcOffset;
@@ -491,7 +511,7 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
     else utc = getUTCFromOrigin(latitude, longitude);
   
     const handleUTCDateLocal = convertToUTC(birthData.date, birthData.time, utc);
-  
+
     origin = new Origin({
       year,
       month: month - 1, // В JS месяцы с 0

@@ -52,8 +52,8 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     utcOffset: "",
 
     localCity: "",
-    localLatitude: "",
-    localLongitude: "",
+    localLatitude: "55.75222",
+    localLongitude: "37.61556",
 
     nameComp:"",
     dateComp:"",
@@ -381,7 +381,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
           isCompatibility: true
         });
 
-      } else if (isFore){
+      } else if (isFore && !isLocal){
         setBirthData({
           ...formData,
 
@@ -395,7 +395,19 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
 
           isFore: true
         });
-      } else {
+      } else if (isFore && isLocal){
+          setBirthData({
+            ...formData,
+
+            cityComp: "",
+            latitudeComp: "",
+            longitudeComp: "",
+
+            isFore: true,
+            isLocal: true
+          });
+      }
+      else {
         setBirthData({
           ...formData,
 
@@ -555,7 +567,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             </div>
 
             {/* Чекбокс */}
-            {!isCompatibility && !isFore && 
+            {!isCompatibility &&  
               <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
@@ -563,7 +575,6 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                 onChange={() => {
                   setIsLocal(!isLocal)
                   if (isCompatibility) setIsCompatibility(!isCompatibility);
-                  if (isFore) setIsFore(!isFore);
                 }}
                 className="w-4 h-4"
               />
@@ -585,23 +596,6 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                 className="w-4 h-4"
               />
               <span>Совместимость</span>
-              </label>
-            }
-
-            {/* Чекбокс */}
-            {!isCompatibility && !isLocal &&
-              <label className="flex items-center space-x-2 cursor-pointer ">
-              <input
-                type="checkbox"
-                checked={isFore}
-                onChange={() => {
-                  setIsFore(!isFore)
-                  if (isCompatibility) setIsCompatibility(!isCompatibility);
-                  if (isLocal) setIsLocal(!isLocal);
-                }}
-                className="w-4 h-4"
-              />
-              <span>Транзиты</span>
               </label>
             }
 
@@ -759,6 +753,22 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                 </div>
               </div>
             )}
+
+            {/* Чекбокс */}
+            {!isCompatibility &&
+              <label className="flex items-center space-x-2 cursor-pointer ">
+              <input
+                type="checkbox"
+                checked={isFore}
+                onChange={() => {
+                  setIsFore(!isFore)
+                  if (isCompatibility) setIsCompatibility(!isCompatibility);
+                }}
+                className="w-4 h-4"
+              />
+              <span>Транзиты</span>
+              </label>
+            }
 
             {isFore && (
               <div className=" px-4 py-0 rounded-lg">

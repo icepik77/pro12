@@ -98,7 +98,6 @@ export default function Home() {
       (planetPositions && !birthData.isCompatibility && !birthData.isLocal)) {
 
       setIsDataLoaded(true); // Когда данные загружены, запускаем анимацию
-      console.log("isDataLoaded", isDataLoaded);
     }
     else{
       setIsDataLoaded(false);

@@ -161,6 +161,10 @@ const NatalChart: React.FC<NatalChartProps> = ({
       setIsFore(false);
     }
 
+    console.log("isLocal", isLocal)
+    console.log("isCompatibility", isCompatibility)
+    console.log("isFore", isFore)
+
     const natalData = getNatalChart(birthData, false, false, false);
     if (natalData){
       setChartData(natalData.astroData);
@@ -244,8 +248,9 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
     let natalDataFore;
     if (isFore){
-      natalDataFore = getNatalChart(birthData, false, false, true); 
-
+      if (isLocal) natalDataFore = getNatalChart(birthData, true, false, true); 
+      else natalDataFore = getNatalChart(birthData, false, false, true); 
+      
       if (natalDataFore && natalData){
         setCompChartData(natalDataFore.astroData);
         setCompPlanetPositions(natalDataFore.planets);
@@ -428,7 +433,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
               >
                 {isCompatibility? "1 карта": "Натал"}
               </button>
-              {!isFore && 
+              {(isLocal || isCompatibility) && 
                 <>
                   <button
                     className={`px-4 py-2 rounded ${activeTab === "chart2" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
@@ -475,8 +480,6 @@ const NatalChart: React.FC<NatalChartProps> = ({
               </div>
             }
           </div>
-          
-          
         </div> 
       }
 
