@@ -622,7 +622,7 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
   };
 }
 
-export  const getCalendarData = async (birthData: BirthData) => {
+export  const getCalendarData = (birthData: BirthData) => {
   const natalData = getNatalChart(birthData, false, false, false);
   let calendarData = [];
 
@@ -683,11 +683,8 @@ export  const getCalendarData = async (birthData: BirthData) => {
 
     }
   } else{
-    console.log("Нет натальной карты для прогноза")
-    return []
+    console.log("Нет натальной карты для прогноза");
   }
-
-  
 
   const dailyAspectMap = new Map<string, Map<string, any>>();
 
@@ -741,15 +738,9 @@ export  const getCalendarData = async (birthData: BirthData) => {
   .filter(day => day.aspects.length > 0); // убираем дни без аспектов
 
 
-  let exactTime = [];
-  for (const item of filteredResult) {
-    for (const aspect of item.aspects) {
-      const data = await findExactAspectTime(natalData, birthData, aspect);
-      exactTime.push(data);
-    }
-  }
+  
 
-  return {filteredResult, exactTime};
+  return filteredResult;
 }
 
 export const findExactAspectTime = async (natalData: any, birthData: any, {
@@ -866,7 +857,6 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
         isFore: false
       };
 
-      
       const astroDataStart = await getNatalChart(birthDataCurrent, false, false, false);
 
       // Форматируем дату и время для BirthData (dd.mm.yyyy / hh:mm:ss)

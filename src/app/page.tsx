@@ -92,19 +92,19 @@ export default function Home() {
   }, [birthData])
   
 
-  // useEffect(() => {
-  //   if ((planetPositions && localAspectPositions && birthData.isLocal) || 
-  //     (planetPositions && compPlanetPositions && birthData.isCompatibility) || 
-  //     (planetPositions && !birthData.isCompatibility && !birthData.isLocal)) {
+  useEffect(() => {
+    if ((planetPositions && localAspectPositions && birthData.isLocal) || 
+      (planetPositions && compPlanetPositions && birthData.isCompatibility) || 
+      (planetPositions && !birthData.isCompatibility && !birthData.isLocal)) {
 
-  //     setIsDataLoaded(true); // Когда данные загружены, запускаем анимацию
-  //     console.log("isDataLoaded", isDataLoaded);
-  //   }
-  //   else{
-  //     setIsDataLoaded(false);
-  //   }
-  //   setActiveTab("chart1");
-  // }, [planetPositions]); // useEffect срабатывает, когда planetPositions обновляются
+      setIsDataLoaded(true); // Когда данные загружены, запускаем анимацию
+      console.log("isDataLoaded", isDataLoaded);
+    }
+    else{
+      setIsDataLoaded(false);
+    }
+    setActiveTab("chart1");
+  }, [planetPositions]); // useEffect срабатывает, когда planetPositions обновляются
 
   
 
@@ -123,7 +123,7 @@ export default function Home() {
               <BirthForm setBirthData={setBirthData} localTime={localTime}/>
             </motion.div>
 
-            {(!isDataLoaded) && <div>Анимация тут</div>}
+            {/* {(!isDataLoaded) && <div>Анимация тут</div>} */}
             {/* Плавное появление карты только после загрузки данных */}
             <motion.div
               className="w-full md:w-[48%] flex justify-center"

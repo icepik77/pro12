@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
 import {NatalChartProps } from '../lib/definitions';
-import { createFormedAspects, getNatalChart, getAspectsBetweenCharts, getCalendarData } from '../lib/utils';
+import { createFormedAspects, getNatalChart, getAspectsBetweenCharts, getCalendarData, findExactAspectTime } from '../lib/utils';
 import { div } from 'framer-motion/client';
 
 const NatalChart: React.FC<NatalChartProps> = ({ 
@@ -131,8 +131,6 @@ const NatalChart: React.FC<NatalChartProps> = ({
   // Обработка формы ввода
   useEffect(() => {
     if (!birthData.date || !birthData.time || !birthData.latitude || !birthData.longitude) return;
-
-    setIsDataLoaded(true);
 
     let isLocal;
     let isCompatibility;
@@ -274,11 +272,23 @@ const NatalChart: React.FC<NatalChartProps> = ({
         };
         setCompPairPositions(data);
 
-        getCalendarData(birthData).then(calendarData => {
-          setCalendarPositions(calendarData);
-        });
+        const calendarData = getCalendarData(birthData);
+
+        let exactTime = [];
+        for (const item of calendarData) {
+          for (const aspect of item.aspects) {
+            const data = findExactAspectTime(natalData, birthData, aspect);
+            exactTime.push(data);
+          }
+        }
+
+        const transitCalendar = {
+          filteredResult: calendarData,
+          exactTime: exactTime
+        }
+  
+        setCalendarPositions(transitCalendar);
       }  
-      setIsDataLoaded(false);
     }
   }, [birthData]);
 
