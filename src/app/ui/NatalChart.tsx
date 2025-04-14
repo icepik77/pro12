@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
 import {HousePositionsList, NatalChartProps } from '../lib/definitions';
-import { createFormedAspects, getNatalChart, getAspectsBetweenCharts, getCalendarData, findExactAspectTime, getAspectsBetweenChartForecast } from '../lib/utils';
+import { createFormedAspects, getNatalChart, getAspectsBetweenCharts, getCalendarData, findExactAspectTime, getAspectsBetweenChartForecast, getNatalHouses } from '../lib/utils';
 import { div } from 'framer-motion/client';
 
 const NatalChart: React.FC<NatalChartProps> = ({ 
@@ -269,16 +269,18 @@ const NatalChart: React.FC<NatalChartProps> = ({
         
         const pairData = getAspectsBetweenCharts(natalData.astroData, natalDataFore.astroData, false);
 
-        const natalHouses;
+        let natalHouses = getNatalHouses(birthData, false, false, false);
+        let natalForecastHouses;
+
+        if (isLocal) natalForecastHouses = getNatalHouses(birthData, true, false, true);
+        else natalForecastHouses = getNatalHouses(birthData, false, false, true);
 
         const forecastData = getAspectsBetweenChartForecast(
           natalData.astroData,
           natalDataFore.astroData,
-          filteredHouses,
-          filteredForecastHouses
+          natalHouses,
+          natalForecastHouses
         );
-
-        console.log("forecastData", forecastData);
 
         data = {
           planets: natalDataFore.planets,

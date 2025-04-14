@@ -82,9 +82,7 @@ export interface House{
       }
     }
   },
-  Sign: {
-    label: string;
-  }
+  label: string;
 }
 
 export interface NatalChartProps {

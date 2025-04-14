@@ -419,6 +419,18 @@ export const getAspectsBetweenChartForecast = (astroData1: AstroData, astroData2
     Pluto: 1,
     Lilith: 1,
     NNode: 1,
+    First: 1,
+    Second: 1,
+    Third: 1,
+    Fourth: 1,
+    Fifth: 1,
+    Sixth: 1,
+    Seventh: 1,
+    Eighth: 1,
+    Ninth: 1,
+    Tenth: 1,
+    Eleventh: 1,
+    Twelfth: 1,
   };
     
   let foundAspects: Aspect[] = [];
@@ -429,7 +441,7 @@ export const getAspectsBetweenChartForecast = (astroData1: AstroData, astroData2
   }));
 
   const housesArray1 = houseData1.map((house: House, index: number) => ({
-    name: house.Sign.label,
+    name: house.label,
     position: house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees
   }));
   
@@ -440,16 +452,12 @@ export const getAspectsBetweenChartForecast = (astroData1: AstroData, astroData2
 
   // Теперь добавим дома в общий массив:
   const housesArray2 = houseData2.map((house: House, index: number) => ({
-    name: house.Sign.label,
+    name: house.label,
     position: house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees
   }));
 
-  
-
   const combinedArray1 = [...planetsArray1, ...housesArray1];
   const combinedArray2 = [...planetsArray2, ...housesArray2];
-
-  console.log("combinedArray1", combinedArray1)
 
   combinedArray1.forEach((planetA) => {
     combinedArray2.forEach((planetB) => {
