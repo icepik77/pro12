@@ -153,7 +153,7 @@ export default function Home() {
             </motion.div>
 
             {/* Карточка описания для мобильной версии */}
-            {birthData.isLocal && 
+            {birthData.isLocal && !showPairPositions && 
               <div className="2xl:hidden">
                 {birthData.longitude && activeTab == "chart1" && (
                   <div className="mt-2 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700">
@@ -185,7 +185,7 @@ export default function Home() {
             }
 
             {/* Карточка описания для десктопной версии c локальной картой*/}
-            {birthData.isLocal && 
+            {birthData.isLocal && !showPairPositions && 
               <div className="hidden 2xl:flex">
                 <div className="mt-2 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700 mr-3 max-w-[446px]">
                     <h3 className="text-lg font-medium">Введенные данные:</h3>
@@ -284,8 +284,6 @@ export default function Home() {
               </div>
             }
             
-            
-
             {/* Данные без локальной карты */}
             {!birthData.isLocal && !birthData.isCompatibility && planetPositions.length > 0 && !showPairPositions &&
               <div>
@@ -325,7 +323,7 @@ export default function Home() {
             }
 
             {/* Для локальной карты мобильная версия */}
-            {birthData.isLocal && localPlanetPositions.length > 0 &&
+            {birthData.isLocal && localPlanetPositions.length > 0 && !showPairPositions && 
               <div className="2xl:hidden">
                 {activeTab == "chart1" && 
                   <div>
@@ -403,7 +401,7 @@ export default function Home() {
             }
             
             {/* Для локальной карты, десктопа больше 1536px */}
-            {birthData.isLocal && localPlanetPositions.length > 0 && 
+            {birthData.isLocal && localPlanetPositions.length > 0 && !showPairPositions &&
               <div className="hidden 2xl:flex max-w-[1600px]">
                 <div className="w-[50%] flex">
                   <div>
@@ -481,7 +479,7 @@ export default function Home() {
             }
 
             {/* Для карты совместимости мобильная версия */}
-            {birthData.isCompatibility && !showPairPositions && compPlanetPositions.length > 0 && 
+            {birthData.isCompatibility  && !showPairPositions && compPlanetPositions.length > 0 && 
               <div className="2xl:hidden">
                 {activeTab == "chart1" && 
                   <div>
@@ -496,15 +494,16 @@ export default function Home() {
                     </motion.div>
 
                     {/* Плавное появление таблицы домов только после загрузки данных */}
+                    
                     <motion.div
-                      className="w-full flex justify-center"
-                      initial={{ opacity: 0 }} // Начальная прозрачность
-                      animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
-                      transition={{ duration: 1 }} // Плавное появление за 1 секунду
+                    className="w-full flex justify-center"
+                    initial={{ opacity: 0 }} // Начальная прозрачность
+                    animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+                    transition={{ duration: 1 }} // Плавное появление за 1 секунду
                     >
                       <HouseTable housePositions={housePositions} />
                     </motion.div>
-
+                    
                     {/* Плавное появление таблицы аспектов только после загрузки данных */}
                     <motion.div
                       className="w-full flex justify-center"
@@ -636,19 +635,33 @@ export default function Home() {
               </div>
             }
 
+            
+
             {/* Таблица совместимости */}
             {showPairPositions && 
-              <motion.div
-                className="w-full flex justify-center"
-                initial={{ opacity: 0 }} // Начальная прозрачность
-                animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
-                transition={{ duration: 1 }} // Плавное появление за 1 секунду
-              >
-              <AspectTable
-                aspectsPositions={compPairPositions ? compPairPositions.aspects : []}
-                planets={compPairPositions ? compPairPositions.planets : []}
-              />
-              </motion.div>
+              <div>
+                {/* Плавное появление таблицы только после загрузки данных */}
+                <motion.div
+                  className="w-full flex justify-center"
+                  initial={{ opacity: 0 }} // Начальная прозрачность
+                  animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+                  transition={{ duration: 1 }} // Плавное появление за 1 секунду
+                >
+                  <PlanetTable planetPositions={compPlanetPositions} />
+                </motion.div>
+
+                <motion.div
+                  className="w-full flex justify-center"
+                  initial={{ opacity: 0 }} // Начальная прозрачность
+                  animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+                  transition={{ duration: 1 }} // Плавное появление за 1 секунду
+                >
+                <AspectTable
+                  aspectsPositions={compPairPositions ? compPairPositions.aspects : []}
+                  planets={compPairPositions ? compPairPositions.planets : []}
+                />
+                </motion.div>
+              </div>
             }
 
             {/* Календарь */}

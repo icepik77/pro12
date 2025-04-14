@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
-import {NatalChartProps } from '../lib/definitions';
-import { createFormedAspects, getNatalChart, getAspectsBetweenCharts, getCalendarData, findExactAspectTime } from '../lib/utils';
+import {HousePositionsList, NatalChartProps } from '../lib/definitions';
+import { createFormedAspects, getNatalChart, getAspectsBetweenCharts, getCalendarData, findExactAspectTime, getAspectsBetweenChartForecast } from '../lib/utils';
 import { div } from 'framer-motion/client';
 
 const NatalChart: React.FC<NatalChartProps> = ({ 
@@ -161,10 +161,6 @@ const NatalChart: React.FC<NatalChartProps> = ({
       setIsFore(false);
     }
 
-    console.log("isLocal", isLocal)
-    console.log("isCompatibility", isCompatibility)
-    console.log("isFore", isFore)
-
     const natalData = getNatalChart(birthData, false, false, false);
     if (natalData){
       setChartData(natalData.astroData);
@@ -250,8 +246,10 @@ const NatalChart: React.FC<NatalChartProps> = ({
     if (isFore){
       if (isLocal) natalDataFore = getNatalChart(birthData, true, false, true); 
       else natalDataFore = getNatalChart(birthData, false, false, true); 
+      let data;
       
       if (natalDataFore && natalData){
+        
         setCompChartData(natalDataFore.astroData);
         setCompPlanetPositions(natalDataFore.planets);
 
@@ -260,16 +258,27 @@ const NatalChart: React.FC<NatalChartProps> = ({
         } else {
           console.error("Данные домов локальной карты пустые или некорректные");
         }
-  
-        let data = {
+
+        data = {
           planets: natalDataFore.planets,
           aspects: natalDataFore.aspects,
         };
-  
+
         setCompAspectPositions(data);
         setCompAspectsData(natalDataFore.aspects);
-
+        
         const pairData = getAspectsBetweenCharts(natalData.astroData, natalDataFore.astroData, false);
+
+        const natalHouses;
+
+        const forecastData = getAspectsBetweenChartForecast(
+          natalData.astroData,
+          natalDataFore.astroData,
+          filteredHouses,
+          filteredForecastHouses
+        );
+
+        console.log("forecastData", forecastData);
 
         data = {
           planets: natalDataFore.planets,
@@ -277,22 +286,29 @@ const NatalChart: React.FC<NatalChartProps> = ({
         };
         setCompPairPositions(data);
 
-        const calendarData = getCalendarData(birthData);
-
-        let exactTime = [];
-        for (const item of calendarData) {
-          for (const aspect of item.aspects) {
-            const data = findExactAspectTime(natalData, birthData, aspect);
-            exactTime.push(data);
+        const run = async () => {
+          const calendarData = getCalendarData(birthData);
+      
+          const promises = [];
+      
+          for (const item of calendarData) {
+            for (const aspect of item.aspects) {
+              const promise = findExactAspectTime(natalData, birthData, aspect);
+              promises.push(promise);
+            }
           }
-        }
-
-        const transitCalendar = {
-          filteredResult: calendarData,
-          exactTime: exactTime
-        }
-  
-        setCalendarPositions(transitCalendar);
+      
+          const exactTime = await Promise.all(promises);
+      
+          const transitCalendar = {
+            filteredResult: calendarData,
+            exactTime: exactTime
+          };
+      
+          setCalendarPositions(transitCalendar);
+        };
+      
+        run(); 
       }  
     }
   }, [birthData]);
@@ -324,7 +340,6 @@ const NatalChart: React.FC<NatalChartProps> = ({
     const settings = getStyleSettings();
     const customAspects = createFormedAspects(aspectsData, chartData);
 
-    
     const containerSizeMobile = containerRefMobile.current.clientWidth; // Размер родительского контейнера
     const chartSizeMobile = Math.min(containerSizeMobile, 800);
     chartRefMobile.current.innerHTML = "";
@@ -387,7 +402,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
   //Рисуем радикс для мобильной версии карты совместимости
   useEffect(() => {
-    if (!compChartData || !localChartRefMobile.current || !containerRefMobile.current) return;
+    if (!compChartData || isLocal || !localChartRefMobile.current || !containerRefMobile.current) return;
 
     const settings = getStyleSettings();
     const localCustomAspects = createFormedAspects(compAspectsData, compChartData);
@@ -405,7 +420,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
   //Рисуем радикс для настольной версии карты совместимости
   useEffect(() => {
-    if (!compChartData || !containerRefDesk.current || !localChartRefRight.current) return;
+    if (!compChartData || isLocal || !containerRefDesk.current || !localChartRefRight.current) return;
     const settings = getStyleSettings();
     const localCustomAspects = createFormedAspects(compAspectsData, compChartData);
 
@@ -454,14 +469,14 @@ const NatalChart: React.FC<NatalChartProps> = ({
                   className={`px-4 py-2 ${showPairPositions ? "bg-[#172935] text-white rounded" : "rounded bg-gray-200"}`}
                   onClick={()=>{setShowPairPositions(!showPairPositions)}}
                 >
-                  Аспекты
+                  {isFore? "Прогноз": "Аспекты"}
                 </button>
               }
             </div>
           }
           {/* Контейнеры с изображениями */}
           <div className={`${twoMaps || showPairPositions ? "hidden" : ""}`}>
-            {!isFore && 
+            { 
               <div className={`w-full max-w-[800px]}`} style={{ display: activeTab === "chart1" ? "block" : "none" }}>
                 <div
                   id="chart-container-mobile"
@@ -505,7 +520,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
       {/* Натальная карта по умолчанию */}
       {!isLocal && !isCompatibility && 
-        <div ref={containerRefMain} className={` ${showPairPositions ? "hidden": ""}w-full max-w-[800px]`}>
+        <div ref={containerRefMain} className={` ${showPairPositions ? "hidden" : ""}w-full max-w-[800px]`}>
           <div
             id="chart-container-main"
             ref={chartRefMain}

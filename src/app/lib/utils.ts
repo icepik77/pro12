@@ -1,4 +1,4 @@
-import { AstroData, Aspect, BirthData, PlanetPositionList } from "./definitions";
+import { AstroData, Aspect, BirthData, House, HousePositionsList } from "./definitions";
 import { Origin, Horoscope } from "circular-natal-horoscope-js";
 
 type AspectWithTimestamp = Aspect & { timestamp: Date, orb: number };
@@ -39,7 +39,6 @@ export const createFormedAspects = (aspectsArray : any[], astroData: AstroData) 
   return aspectsArray.map((aspect) => {
     const pointPosition = astroData.planets[aspect.point1Label.charAt(0).toUpperCase() + aspect.point1Label.slice(1)]?.[0] || 0;
     const toPointPosition = astroData.planets[aspect.point2Label.charAt(0).toUpperCase() + aspect.point2Label.slice(1)]?.[0] || 0;
-
 
     return {
       point: {
@@ -396,6 +395,96 @@ export const getAspectsBetweenCharts = (astroData1: AstroData, astroData2: Astro
   return foundAspects;
 };
 
+export const getAspectsBetweenChartForecast = (astroData1: AstroData, astroData2: AstroData, houseData1: House[], houseData2: House[]) => { 
+  const aspects = {
+    conjunction: 0,
+    opposition: 180,
+    trine: 120,
+    square: 90,
+    sextile: 60,
+    semisextile: 30, 
+    quincunx: 150     
+  };
+  
+  const orbs = {
+    Sun: 1,
+    Moon: 1,
+    Mercury: 1,
+    Venus: 1,
+    Mars: 1,
+    Jupiter: 1,
+    Saturn: 1,
+    Uranus: 1,
+    Neptune: 1,
+    Pluto: 1,
+    Lilith: 1,
+    NNode: 1,
+  };
+    
+  let foundAspects: Aspect[] = [];
+
+  const planetsArray1 = Object.entries(astroData1.planets).map(([name, position]) => ({
+    name,
+    position: position[0], // уже объект с градусами, знаком и т.д.
+  }));
+
+  const housesArray1 = houseData1.map((house: House, index: number) => ({
+    name: house.Sign.label,
+    position: house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees
+  }));
+  
+  const planetsArray2 = Object.entries(astroData2.planets).map(([name, position]) => ({
+    name,
+    position: position[0],
+  }));
+
+  // Теперь добавим дома в общий массив:
+  const housesArray2 = houseData2.map((house: House, index: number) => ({
+    name: house.Sign.label,
+    position: house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees
+  }));
+
+  
+
+  const combinedArray1 = [...planetsArray1, ...housesArray1];
+  const combinedArray2 = [...planetsArray2, ...housesArray2];
+
+  console.log("combinedArray1", combinedArray1)
+
+  combinedArray1.forEach((planetA) => {
+    combinedArray2.forEach((planetB) => {
+      const degreeA = planetA.position;
+      const degreeB = planetB.position;
+
+      const diff = Math.abs(degreeA - degreeB);
+      const adjustedDiff = Math.min(diff, 360 - diff);
+
+      Object.entries(aspects).forEach(([aspect, aspectDegree]) => {
+        const orbA = orbs[planetA.name as keyof typeof orbs]
+        const orbB = orbs[planetB.name as keyof typeof orbs]
+        let maxOrb;
+  
+        maxOrb = Math.min(orbA, orbB);
+         
+        const aspectDiff = Math.abs(adjustedDiff - aspectDegree);
+
+        if (aspectDiff <= maxOrb) {
+          foundAspects.push({
+            point1Key: planetA.name,
+            point2Key: planetB.name,
+            aspectKey: aspect,
+            orb: aspectDiff,
+            point1Label: planetA.name,
+            point2Label: planetB.name,
+          });
+        }
+      });
+    });
+  });
+
+  return foundAspects;
+};
+
 export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatibility: boolean, isForecast: boolean) => {
   const [day, month, year] = birthData.date.split('.').map(Number);
   const [hour, minute, second] = birthData.time.split(':').map(Number);
@@ -456,7 +545,6 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
       handleUTCDate
     });
   
-    
   }
   else if (isCompatibility){
     origin = new Origin({
@@ -536,7 +624,6 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
     language: 'en',
   });
   
-
   const planetsData = horoscope.CelestialBodies;
   let cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
   const ascendant = horoscope._ascendant.ChartPosition.Ecliptic.DecimalDegrees;
@@ -640,6 +727,155 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
     aspects: aspectDataPlanet,
     utcTime: origin.localTimeFormatted
   };
+}
+
+export const getNatalHouses = (birthData: BirthData, isLocal: boolean, isCompatibility: boolean, isForecast: boolean) => {
+  let horoscope;
+  
+  const houseSystem = birthData.houseSystem || 'koch'; // Берём систему домов
+
+  const customOrbs = {
+    conjunction: 10,
+    opposition: 8,
+    trine: 6,
+    square: 7,
+    sextile: 5,
+    quincunx: 5,
+    quintile: 1,
+    septile: 1,
+    "semi-square": 1,
+    "semi-sextile": 1,
+  };
+
+  const origin = setOrigin(birthData, isLocal, isCompatibility, isForecast);
+  
+  horoscope = new Horoscope({
+    origin,
+    houseSystem: houseSystem,
+    zodiac: 'tropical',
+    aspectPoints: ['bodies', 'points'],
+    aspectWithPoints: ['bodies', 'points'],
+    aspectTypes: ['major'],
+    customOrbs: customOrbs,
+    language: 'en',
+  });
+
+  return horoscope.Houses;
+}
+
+export const setOrigin = (birthData: BirthData, isLocal: boolean, isCompatibility: boolean, isForecast: boolean) => {
+  const [day, month, year] = birthData.date.split('.').map(Number);
+  const [hour, minute, second] = birthData.time.split(':').map(Number);
+  const utcOffset = birthData.utcOffset;
+  const latitude = parseFloat(birthData.latitude);
+  const longitude = parseFloat(birthData.longitude);
+  const handleUTCDate = utcOffset ? convertToUTC(birthData.date, birthData.time, utcOffset) : undefined;
+
+  const localLatitude = parseFloat(birthData.localLatitude);
+  const localLongitude = parseFloat(birthData.localLongitude);
+
+  const [dayComp, monthComp, yearComp] = birthData.dateComp.split('.').map(Number);
+  const [hourComp, minuteComp, secondComp] = birthData.timeComp.split(':').map(Number);
+  const utcOffsetComp = birthData.utcOffsetComp;
+  const latitudeComp = parseFloat(birthData.latitudeComp);
+  const longitudeComp = parseFloat(birthData.longitudeComp);
+  const handleUTCDateComp = utcOffsetComp ? convertToUTC(birthData.dateComp, birthData.timeComp, utcOffsetComp) : undefined;
+
+  const [dayFore, monthFore, yearFore] = birthData.dateFore.split('.').map(Number);
+  const [hourFore, minuteFore, secondFore] = birthData.timeFore.split(':').map(Number); 
+  const utcOffsetFore = birthData.utcOffsetFore;
+  const handleUTCDateFore = utcOffsetFore ? convertToUTC(birthData.dateFore, birthData.timeFore, utcOffsetFore) : undefined;
+
+  let origin;
+  let utc;
+
+  if (isNaN(latitude) || isNaN(longitude)) {
+    console.error("Некорректные координаты:", latitude, longitude);
+    return;
+  }
+
+  if (!isLocal && !isCompatibility && !isForecast){
+    origin = new Origin({
+      year,
+      month: month - 1, // В JS месяцы с 0
+      date: day,
+      hour,
+      minute,
+      second,
+      latitude,
+      longitude,
+      handleUTCDate
+    });
+  
+  }
+  else if (isCompatibility){
+    origin = new Origin({
+      year: yearComp,
+      month: monthComp - 1, // В JS месяцы с 0
+      date: dayComp,
+      hour: hourComp,
+      minute: minuteComp,
+      second: secondComp,
+      latitude: latitudeComp,
+      longitude: longitudeComp,
+      handleUTCDate: handleUTCDateComp
+    });
+  }
+  else if (isForecast && !isLocal){
+    origin = new Origin({
+      year: yearFore,
+      month: monthFore - 1, // В JS месяцы с 0
+      date: dayFore,
+      hour: hourFore,
+      minute: minuteFore,
+      second: secondFore,
+      latitude: latitude,
+      longitude: longitude,
+      handleUTCDate: handleUTCDateFore
+    });
+  }
+  else if(isLocal && isForecast){
+    if (handleUTCDate){
+      utc = utcOffset;
+    } 
+    else utc = getUTCFromOrigin(latitude, longitude);
+
+    const handleUTCDateLocal = convertToUTC(birthData.date, birthData.time, utc);
+  
+    origin = new Origin({
+      year: yearFore,
+      month: monthFore - 1, // В JS месяцы с 0
+      date: dayFore,
+      hour: hourFore,
+      minute: minuteFore,
+      second: secondFore,
+      latitude: localLatitude,
+      longitude: localLongitude,
+      handleUTCDate: handleUTCDateLocal
+    });
+  }
+  else{
+    if (handleUTCDate){
+      utc = utcOffset;
+    } 
+    else utc = getUTCFromOrigin(latitude, longitude);
+  
+    const handleUTCDateLocal = convertToUTC(birthData.date, birthData.time, utc);
+
+     origin = new Origin({
+      year,
+      month: month - 1, // В JS месяцы с 0
+      date: day,
+      hour,
+      minute,
+      second,
+      latitude: localLatitude,
+      longitude: localLongitude,
+      handleUTCDate: handleUTCDateLocal
+    });
+  }
+
+  return origin;
 }
 
 export  const getCalendarData = (birthData: BirthData) => {

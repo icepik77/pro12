@@ -91,8 +91,4 @@ const Calendar: React.FC<CalendarTableProps> = ({calendar, planets}) => {
     );
 };
 
-
-
-
 export default Calendar;
-{/* <span className="align-baseline font-normal text-sm">{isRetrograde1 ? "нR" : "н"}</span> */}

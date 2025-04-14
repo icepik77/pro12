@@ -74,6 +74,19 @@ export interface AstroData {
     cusps: number[]; // Дома представлены массивом чисел (градусы начала домов)
 }
 
+export interface House{
+  ChartPosition: {
+    StartPosition: {
+      Ecliptic:{
+        DecimalDegrees: number;
+      }
+    }
+  },
+  Sign: {
+    label: string;
+  }
+}
+
 export interface NatalChartProps {
     birthData: BirthData;
     setPlanetPositions: (positions: any[]) => void;

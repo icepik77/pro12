@@ -360,7 +360,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     }
 
     if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset && validateDateTimeUTC(formData.date, formData.time, formData.utcOffset)) {
-      if (isLocal){
+      if (isLocal && !isFore){
         setBirthData({
           ...formData,
 
