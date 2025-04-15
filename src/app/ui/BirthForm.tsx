@@ -73,11 +73,14 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     isLocal: false,
     isCompatibility: false,
     isFore: false,
+    isForeSlow: false,
   });
 
   const [isLocal, setIsLocal] = useState(false);
   const [isCompatibility, setIsCompatibility] = useState(false);
   const [isFore, setIsFore] = useState(false);
+  const [isForeSlow, setIsForeSlow] = useState(false);
+
 
   const [errors, setErrors] = useState({
     latitude: "",
@@ -360,7 +363,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     }
 
     if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset && validateDateTimeUTC(formData.date, formData.time, formData.utcOffset)) {
-      if (isLocal && !isFore){
+      if (isLocal && !isFore && !isForeSlow){
         setBirthData({
           ...formData,
 
@@ -381,7 +384,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
           isCompatibility: true
         });
 
-      } else if (isFore && !isLocal){
+      } else if ((isFore && !isLocal) || (isForeSlow && !isLocal)){
         setBirthData({
           ...formData,
 
@@ -393,9 +396,10 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
           latitudeComp: "",
           longitudeComp: "",
 
-          isFore: true
+          isFore: isFore ? true : false,
+          isForeSlow: isForeSlow ? true : false 
         });
-      } else if (isFore && isLocal){
+      } else if ((isFore && isLocal) || (isForeSlow && isLocal)){
           setBirthData({
             ...formData,
 
@@ -403,9 +407,12 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             latitudeComp: "",
             longitudeComp: "",
 
-            isFore: true,
+            isFore: isFore ? true : false,
+            isForeSlow: isForeSlow ? true : false, 
             isLocal: true
           });
+
+        console.log("here")
       }
       else {
         setBirthData({
@@ -583,7 +590,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             }
 
             {/* Чекбокс */}
-            {!isLocal && !isFore && 
+            {!isLocal && !isFore && !isForeSlow && 
               <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
@@ -754,8 +761,8 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
               </div>
             )}
 
-            {/* Чекбокс */}
-            {!isCompatibility &&
+            {/* Чекбокс транзиты*/}
+            {(!isCompatibility && !isForeSlow) &&
               <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
@@ -763,6 +770,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                 onChange={() => {
                   setIsFore(!isFore)
                   if (isCompatibility) setIsCompatibility(!isCompatibility);
+                  if (isForeSlow) setIsCompatibility(!isForeSlow);
                 }}
                 className="w-4 h-4"
               />
@@ -770,7 +778,24 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
               </label>
             }
 
-            {isFore && (
+            {/* Чекбокс медленная прогрессия */}
+            {(!isCompatibility && !isFore) &&
+              <label className="flex items-center space-x-2 cursor-pointer ">
+              <input
+                type="checkbox"
+                checked={isForeSlow}
+                onChange={() => {
+                  setIsForeSlow(!isForeSlow)
+                  if (isCompatibility) setIsCompatibility(!isCompatibility);
+                  if (isFore) setIsCompatibility(!isFore);
+                }}
+                className="w-4 h-4"
+              />
+              <span>Медленная прогрессия</span>
+              </label>
+            }
+
+            {(isFore || isForeSlow) && (
               <div className=" px-4 py-0 rounded-lg">
                 {/* Дата, время и UTC в одну строку */}
                 <div className="flex flex-wrap gap-4">
@@ -815,6 +840,8 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                 </div>                          
               </div>
             )}
+
+            
           </div>
 
           <button type="submit" className="mt-6 w-full p-3 bg-[#172935] text-white font-medium rounded-md hover:bg-gray-800 transition">Построить карту</button>

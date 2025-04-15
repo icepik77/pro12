@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
 import {HousePositionsList, NatalChartProps } from '../lib/definitions';
-import { createFormedAspects, getNatalChart, getAspectsBetweenCharts, getCalendarData, findExactAspectTime, getAspectsBetweenChartForecast, getNatalHouses } from '../lib/utils';
+import { createFormedAspects, getNatalChart, getAspectsBetweenCharts, getCalendarData, 
+  findExactAspectTime, getAspectsBetweenChartForecast, getNatalHouses, getSlowProgressionCalendar } from '../lib/utils';
 import { div } from 'framer-motion/client';
 
 const NatalChart: React.FC<NatalChartProps> = ({ 
@@ -50,10 +51,9 @@ const NatalChart: React.FC<NatalChartProps> = ({
   const [isLocal, setIsLocal] = useState(false);
   const [isCompatibility, setIsCompatibility] = useState(false);
   const [isFore, setIsFore] = useState(false);
+  const [isForeSlow, setIsForeSlow] = useState(false);
   
-
   const [twoMaps, setTwoMaps] = useState(false);
-
 
   // Функция для определения цветов в зависимости от стиля
   const getStyleSettings = () => {
@@ -135,6 +135,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
     let isLocal;
     let isCompatibility;
     let isFore; 
+    let isForeSlow; 
 
     if (birthData.isLocal){
       isLocal = true;
@@ -160,6 +161,18 @@ const NatalChart: React.FC<NatalChartProps> = ({
       isFore = false;
       setIsFore(false);
     }
+
+    if (birthData.isForeSlow){
+      isForeSlow = true;
+      setIsForeSlow(true);
+    } else{
+      isForeSlow = false;
+      setIsForeSlow(false);
+    }
+
+    console.log("isLocal", isLocal);
+    console.log("isForeSlow", isForeSlow);
+    console.log("birthData.isForeSlow", birthData.isForeSlow);
 
     const natalData = getNatalChart(birthData, false, false, false);
     if (natalData){
@@ -269,19 +282,6 @@ const NatalChart: React.FC<NatalChartProps> = ({
         
         const pairData = getAspectsBetweenCharts(natalData.astroData, natalDataFore.astroData, false);
 
-        let natalHouses = getNatalHouses(birthData, false, false, false);
-        let natalForecastHouses;
-
-        if (isLocal) natalForecastHouses = getNatalHouses(birthData, true, false, true);
-        else natalForecastHouses = getNatalHouses(birthData, false, false, true);
-
-        const forecastData = getAspectsBetweenChartForecast(
-          natalData.astroData,
-          natalDataFore.astroData,
-          natalHouses,
-          natalForecastHouses
-        );
-
         data = {
           planets: natalDataFore.planets,
           aspects: pairData,
@@ -313,6 +313,89 @@ const NatalChart: React.FC<NatalChartProps> = ({
         run(); 
       }  
     }
+
+    let natalDataForeSlow;
+    if (isForeSlow){
+      if (isLocal) natalDataForeSlow = getNatalChart(birthData, true, false, true); 
+      else natalDataForeSlow = getNatalChart(birthData, false, false, true); 
+      let data;
+      
+      if (natalDataForeSlow && natalData){
+        
+        setCompChartData(natalDataForeSlow.astroData);
+        setCompPlanetPositions(natalDataForeSlow.planets);
+
+        if (natalDataForeSlow.houses.length > 0) {
+          setCompHousePositions(natalDataForeSlow.houses);
+        } else {
+          console.error("Данные домов локальной карты пустые или некорректные");
+        }
+
+        data = {
+          planets: natalDataForeSlow.planets,
+          aspects: natalDataForeSlow.aspects,
+        };
+
+        setCompAspectPositions(data);
+        setCompAspectsData(natalDataForeSlow.aspects);
+        
+        // const pairData = getAspectsBetweenCharts(natalData.astroData, natalDataForeSlow.astroData, false);
+
+        let natalHouses = getNatalHouses(birthData, false, false, false);
+        let natalForecastHouses;
+
+        if (isLocal) natalForecastHouses = getNatalHouses(birthData, true, false, true);
+        else natalForecastHouses = getNatalHouses(birthData, false, false, true);
+
+        const pairData = getAspectsBetweenChartForecast(
+          natalData.astroData,
+          natalDataForeSlow.astroData,
+          natalHouses,
+          natalForecastHouses
+        );
+
+        data = {
+          planets: natalDataForeSlow.planets,
+          aspects: pairData,
+        };
+        setCompPairPositions(data);
+
+        const run = async () => {
+          const calendarData = getSlowProgressionCalendar(birthData);
+
+          console.log("calendarData", calendarData);
+
+
+          // const transitCalendar = {
+          //   filteredResult: calendarData,
+          //   exactTime: []
+          // };
+      
+          setCalendarPositions(calendarData);
+
+      
+          // const promises = [];
+      
+          // for (const item of calendarData) {
+          //   for (const aspect of item.aspects) {
+          //     const promise = findExactAspectTime(natalData, birthData, aspect);
+          //     promises.push(promise);
+          //   }
+          // }
+      
+          // const exactTime = await Promise.all(promises);
+      
+          // const transitCalendar = {
+          //   filteredResult: calendarData,
+          //   exactTime: exactTime
+          // };
+      
+          // setCalendarPositions(transitCalendar);
+        };
+      
+        run(); 
+      }  
+    }
   }, [birthData]);
 
 
@@ -330,8 +413,6 @@ const NatalChart: React.FC<NatalChartProps> = ({
     const chartMain = new Chart(chartRefMain.current.id, chartSizeMain, chartSizeMain, settings);
     const radixMain = chartMain.radix(chartData);
     radixMain.aspects(customAspects);
-
-
 
   }, [chartData]); 
 
@@ -439,10 +520,10 @@ const NatalChart: React.FC<NatalChartProps> = ({
   return (
     <div className="flex flex-col items-center w-full" ref={containerRefMobile}>
       {/* Локальная карта для небольших экранов */}
-      {(isLocal || isCompatibility || isFore) &&
+      {(isLocal || isCompatibility || isFore || isForeSlow) &&
         <div>
           {/* Табы */}
-          {(isLocal || isCompatibility || isFore) && 
+          {(isLocal || isCompatibility || isFore || isForeSlow) && 
             <div className="flex space-x-4 justify-center">
               <button
                 className={`px-4 py-2 rounded ${activeTab === "chart1" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
@@ -466,19 +547,19 @@ const NatalChart: React.FC<NatalChartProps> = ({
                   </button>
                 </>
               }
-              {(isCompatibility || isFore) &&
+              {(isCompatibility || isFore || isForeSlow) &&
                 <button
                   className={`px-4 py-2 ${showPairPositions ? "bg-[#172935] text-white rounded" : "rounded bg-gray-200"}`}
                   onClick={()=>{setShowPairPositions(!showPairPositions)}}
                 >
-                  {isFore? "Прогноз": "Аспекты"}
+                  {(isFore || isForeSlow) ? "Прогноз": "Аспекты"}
                 </button>
               }
             </div>
           }
           {/* Контейнеры с изображениями */}
           <div className={`${twoMaps || showPairPositions ? "hidden" : ""}`}>
-            { 
+            { (isLocal || isCompatibility) &&
               <div className={`w-full max-w-[800px]}`} style={{ display: activeTab === "chart1" ? "block" : "none" }}>
                 <div
                   id="chart-container-mobile"
@@ -521,8 +602,8 @@ const NatalChart: React.FC<NatalChartProps> = ({
       }
 
       {/* Натальная карта по умолчанию */}
-      {!isLocal && !isCompatibility && 
-        <div ref={containerRefMain} className={` ${showPairPositions ? "hidden" : ""}w-full max-w-[800px]`}>
+      {!isLocal && !isCompatibility &&
+        <div ref={containerRefMain} className={` ${showPairPositions ? "hidden" : ""} w-full max-w-[800px]`}>
           <div
             id="chart-container-main"
             ref={chartRefMain}

@@ -567,7 +567,7 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
       handleUTCDate: handleUTCDateComp
     });
   }
-  else if (isForecast && !isLocal){
+  else if ((isForecast && !isLocal)){
     origin = new Origin({
       year: yearFore,
       month: monthFore - 1, // В JS месяцы с 0
@@ -927,7 +927,8 @@ export  const getCalendarData = (birthData: BirthData) => {
         style: birthData.style || "default",
         isLocal: false,
         isCompatibility: false,
-        isFore: false
+        isFore: false,
+        isForeSlow: false
       };
 
       const natalCurrentData = getNatalChart(birthDataCurrent, false, false, false);
@@ -1007,6 +1008,87 @@ export  const getCalendarData = (birthData: BirthData) => {
   return filteredResult;
 }
 
+export const getSlowProgressionCalendar = (birthData: BirthData) => {
+  const natalData = getNatalChart(birthData, false, false, false);
+  if (!natalData) {
+    console.log("Невозможно построить натальную карту.");
+    return [];
+  }
+
+  const [day, month, year] = birthData.dateFore.split('.').map(Number);
+  const centerDate = new Date(year, month - 1, day);
+  const startDate = new Date(centerDate.getTime() - 365 * 24 * 60 * 60 * 1000);
+  const endDate = new Date(centerDate.getTime() + 365 * 24 * 60 * 60 * 1000);
+
+  const activeAspects = new Map<string, { start: Date, end: Date | null, aspect: any }>();
+  const calendarData: { start: Date, end: Date, aspect: any }[] = [];
+
+  for (let current = new Date(startDate); current <= endDate; current.setDate(current.getDate() + 1)) {
+    const dateStr = current.toLocaleDateString('ru-RU').split('/').map(part => part.padStart(2, '0')).join('.');
+    const timeStr = '12:00:00';
+
+    const birthDataCurrent: BirthData = {
+      ...birthData,
+      date: dateStr,
+      time: timeStr,
+      timeFore: timeStr,
+      dateFore: dateStr,
+    };
+
+    const progressedChart = getNatalChart(birthDataCurrent, false, false, false);
+    if (!progressedChart) continue;
+
+    const aspects = getAspectsBetweenCharts(natalData.astroData, progressedChart.astroData, true);
+
+    const seenThisDay = new Set<string>();
+
+    for (const aspect of aspects) {
+      if (aspect.orb <= 1.0) {
+        const keyParts = [aspect.point1Key, aspect.point2Key].sort();
+        const key = `${keyParts[0]}-${keyParts[1]}-${aspect.aspectKey}`;
+
+        seenThisDay.add(key);
+
+        if (!activeAspects.has(key)) {
+          activeAspects.set(key, { start: new Date(current), end: null, aspect });
+        } else {
+          const existing = activeAspects.get(key);
+          if (existing) existing.end = new Date(current);
+        }
+      }
+    }
+
+    for (const [key, value] of activeAspects.entries()) {
+      if (!seenThisDay.has(key) && value.end) {
+        calendarData.push({
+          start: value.start,
+          end: value.end,
+          aspect: value.aspect
+        });
+        activeAspects.delete(key);
+      }
+    }
+  }
+
+  // Закрываем висячие аспекты и обрезаем end по границе
+  for (const { start, end, aspect } of activeAspects.values()) {
+    calendarData.push({
+      start,
+      end: end && end > endDate ? new Date(endDate) : (end || new Date(endDate)),
+      aspect
+    });
+  }
+
+  // Фильтруем: берём только аспекты, активные 06.04.2025 и позже, но не выходящие за пределы года вперёд
+  const filtered = calendarData.filter(({ start, end }) => {
+    return end >= centerDate && start <= endDate;
+  });
+
+  return filtered;
+};
+
+
+
 export const findExactAspectTime = async (natalData: any, birthData: any, {
   aspectKey,
   orb,
@@ -1065,7 +1147,8 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
       style: birthData.style || "default",
       isLocal: false,
       isCompatibility: false,
-      isFore: false
+      isFore: false, 
+      isForeSlow: false
     };
 
     const astroDataCurrent = await getNatalChart(birthDataCurrent, false, false, false);
@@ -1118,7 +1201,8 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
         style: birthData.style || "default",
         isLocal: false,
         isCompatibility: false,
-        isFore: false
+        isFore: false, 
+        isForeSlow: false
       };
 
       const astroDataStart = await getNatalChart(birthDataCurrent, false, false, false);
@@ -1151,7 +1235,8 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
         style: birthData.style || "default",
         isLocal: false,
         isCompatibility: false,
-        isFore: false
+        isFore: false, 
+        isForeSlow: false
       };
 
       const astroDataEnd = await getNatalChart(birthDataCurrent, false, false, false);

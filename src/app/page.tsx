@@ -10,6 +10,7 @@ import Header from "./ui/Header";
 import dynamic from 'next/dynamic';
 import Script from "next/script";
 import Calendar from "./ui/Calendar";
+import ProgressionCalendar from "./ui/ProgressionCalendar";
 import { div } from "framer-motion/client";
 
 const NatalChart = dynamic(() => import('./ui/NatalChart'), { ssr: false });
@@ -61,7 +62,8 @@ export default function Home() {
     style: "elements", 
     isLocal: false, 
     isCompatibility: false,
-    isFore: false
+    isFore: false, 
+    isForeSlow: false
   });
 
   const [planetPositions, setPlanetPositions] = useState<any[]>([]);
@@ -664,8 +666,8 @@ export default function Home() {
               </div>
             }
 
-            {/* Календарь */}
-            {showPairPositions && 
+            {/* Календарь транзиты*/}
+            {showPairPositions && birthData.isFore &&
               <motion.div
                 className="w-full flex justify-center"
                 initial={{ opacity: 0 }} // Начальная прозрачность
@@ -679,11 +681,23 @@ export default function Home() {
               />
               </motion.div>
             }
+
+            {/* Календарь медленной прогрессии */}
+            {showPairPositions && birthData.isForeSlow && 
+              <motion.div
+                className="w-full flex justify-center"
+                initial={{ opacity: 0 }} // Начальная прозрачность
+                animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+                transition={{ duration: 1 }} // Плавное появление за 1 секунду
+              >
+              <ProgressionCalendar
+                calendarData={calendarPositions}
+                planets={compPairPositions ? compPairPositions.planets : []}
+                
+              />
+              </motion.div>
+            }
           </div>
-
-
-          
-
         </div>
           {/* Футер */}
         <footer className="p-6 rounded-t-[50px] bg-[#172935]">

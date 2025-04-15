@@ -23,6 +23,7 @@ export interface BirthData {
   isLocal: boolean;
   isCompatibility: boolean;
   isFore: boolean;
+  isForeSlow: boolean;
 }
   // Интерфейс для координат планет
 export interface PlanetPositions {
