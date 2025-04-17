@@ -10,12 +10,34 @@ const planetSymbols: Record<string, string> = {
   Chiron: "⚷", Lilith: "⚸", NNode: "☊", Southnode: "☋", Sirius: "★"
 };
 
-// Символы аспектов
+// Символы аспектов, включая минорные
 const aspectSymbols: Record<string, string> = {
-  conjunction: "☌", opposition: "☍", trine: "△", square: "□", sextile: "⚹"
+  conjunction: "☌",
+  opposition: "☍",
+  trine: "△",
+  square: "□",
+  sextile: "⚹",
+  semisextile: "⚺", // 30°
+  quincunx: "⚻"     // 150°
 };
 
-// Компонент прогрессии
+// Римские цифры для домов
+const houseRomanNumerals: Record<string, string> = {
+  First: "I",
+  Second: "II",
+  Third: "III",
+  Fourth: "IV",
+  Fifth: "V",
+  Sixth: "VI",
+  Seventh: "VII",
+  Eighth: "VIII",
+  Ninth: "IX",
+  Tenth: "X",
+  Eleventh: "XI",
+  Twelfth: "XII"
+};
+
+// Интерфейс пропсов
 interface ProgressionCalendarProps {
   calendarData: {
     start: Date;
@@ -32,42 +54,47 @@ const ProgressionCalendar: React.FC<ProgressionCalendarProps> = ({ calendarData,
       <table className="table-auto w-full max-w-[600px] border-collapse">
         <tbody>
           {calendarData.map(({ start, end, aspect }, index) => {
-            const point1Symbol = planetSymbols[aspect.point1Key] || aspect.point1Label;
-            const aspectSymbol = aspectSymbols[aspect.aspectKey] || aspect.aspectKey;
-            const point2Symbol = planetSymbols[aspect.point2Key] || aspect.point2Label;
+            const point1Symbol =
+              planetSymbols[aspect.point1Key] ||
+              houseRomanNumerals[aspect.point1Label] ||
+              aspect.point1Label;
+
+            const aspectSymbol =
+              aspectSymbols[aspect.aspectKey] || aspect.aspectKey;
+
+            const point2Symbol =
+              planetSymbols[aspect.point2Key] ||
+              houseRomanNumerals[aspect.point2Label] ||
+              aspect.point2Label;
 
             const isRetrograde1 = planets.find(p => p.name === aspect.point1Key.toLowerCase())?.isRetrograde;
             const isRetrograde2 = planets.find(p => p.name === aspect.point2Key.toLowerCase())?.isRetrograde;
 
-            // Цвет для аспекта
+            // Цвет аспекта
             let aspectColor = '';
-            if (aspect.aspectKey === 'opposition') {
+            if (['opposition', 'square', 'quincunx'].includes(aspect.aspectKey)) {
               aspectColor = 'text-red-600';
-            } else if (['trine', 'sextile'].includes(aspect.aspectKey)) {
+            } else if (['trine', 'sextile', 'semisextile'].includes(aspect.aspectKey)) {
               aspectColor = 'text-green-600';
             } else if (aspect.aspectKey === 'conjunction') {
               aspectColor = 'text-black';
-            } else if (aspect.aspectKey === 'square') {
-              aspectColor = 'text-red-600';
             }
 
             return (
               <tr key={index} className={`${index % 2 === 1 ? 'bg-gray-100' : ''} hover:bg-gray-200`}>
                 <td className="p-1 font-bold text-base w-[50px]">
-                  {point2Symbol} <span className="align-baseline font-normal text-sm">{isRetrograde2 ? "нR" : ""}</span>
+                  {point2Symbol}
+                  <span className="align-baseline font-normal text-sm">{isRetrograde2 ? "нR" : ""}</span>
                 </td>
                 <td className="p-1 font-bold text-base w-[40px]">
                   <span className={aspectColor}>{aspectSymbol}</span>
                 </td>
                 <td className="p-1 font-bold text-base">
-                  {point1Symbol} <span className="align-baseline font-normal text-sm">{isRetrograde1 ? "нR" : ""}</span>
+                  {point1Symbol}
+                  <span className="align-baseline font-normal text-sm">{isRetrograde1 ? "нR" : ""}</span>
                 </td>
-                <td className="p-1">
-                  {new Date(start).toLocaleDateString('ru-RU')}
-                </td>
-                <td className="p-1">
-                  {new Date(end).toLocaleDateString('ru-RU')}
-                </td>
+                <td className="p-1">{new Date(start).toLocaleDateString('ru-RU')}</td>
+                <td className="p-1">{new Date(end).toLocaleDateString('ru-RU')}</td>
               </tr>
             );
           })}

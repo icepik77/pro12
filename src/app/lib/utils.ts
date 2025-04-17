@@ -168,7 +168,6 @@ export const validateDateTimeUTC = (handleDate: string, handleTime: string, utc:
     return false;
   }
 
-
   // Проверка на корректность месяца (1-12)
   if (month < 1 || month > 12) {
     console.log("Некорректный месяц");
@@ -735,45 +734,28 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
   };
 }
 
-export const getProgressionChart = (birthData: BirthData, isLocal: boolean, isCompatibility: boolean, isForecast: boolean) => {
+export const getProgressionChart = (birthData: BirthData) => {
+  const {originProgress, horoscope, planetsData, progressedCusps, ascendant} = getProgressionData(birthData);
+
+  return getAstroData(originProgress, horoscope, planetsData, progressedCusps, ascendant);
+}
+
+const getProgressionData = (birthData: BirthData) =>{
   let horoscope;
   
-  const houseSystem = birthData.houseSystem || 'koch'; // Берём систему домов
-
-  const customOrbs = {
-    conjunction: 10,
-    opposition: 8,
-    trine: 6,
-    square: 7,
-    sextile: 5,
-    quincunx: 5,
-    quintile: 1,
-    septile: 1,
-    "semi-square": 1,
-    "semi-sextile": 1,
-  };
-
-  const originNatal = setOrigin(birthData, isLocal, false, false);
-  let originProgress = setOrigin(birthData, isLocal, false, true);
+  const originNatal = setOrigin(birthData, birthData.isLocal, false, false);
+  let originProgress = setOrigin(birthData, birthData.isLocal, false, true);
 
   const natalTime = originNatal.julianDate;  
   const interestTime = originProgress.julianDate;
 
-  console.log("natalTime", natalTime);
-  console.log("interestTime", interestTime);
-
   const kp = calculateProgressionCoefficient(natalTime, interestTime);
-  console.log(`Коэффициент прогрессии: ${kp.toFixed(3)}`);
 
-  const progressionMoment = calculateProgressionMomentFromJulian(natalTime, interestTime);
+  const utcTime = birthData.utcOffset? birthData.utcOffset : originNatal.localTimeFormatted?.slice(-6); 
 
-  console.log("progressionMoment", progressionMoment);
-
-  //1989-10-09T15:23:35.342Z
+  const progressionMoment = calculateProgressionMomentFromJulian(natalTime, interestTime, utcTime);
 
   const { date, time } = formatDateTimeForBirthData(progressionMoment);
-
-  console.log("date", date);
   
   const birthDataCurrent: BirthData = {
     date: date,
@@ -803,57 +785,67 @@ export const getProgressionChart = (birthData: BirthData, isLocal: boolean, isCo
     isForeSlow: false
   };
 
-  originProgress = setOrigin(birthDataCurrent, isLocal, false, false);
+  originProgress = setOrigin(birthDataCurrent, birthData.isLocal, false, false);
 
   horoscope = new Horoscope({
     origin: originProgress,
-    houseSystem: houseSystem,
+    houseSystem: birthData.houseSystem || 'koch',
     zodiac: 'tropical',
     aspectPoints: ['bodies', 'points'],
     aspectWithPoints: ['bodies', 'points'],
     aspectTypes: ['major'],
-    customOrbs: customOrbs,
+    customOrbs: {
+      conjunction: 10,
+      opposition: 8,
+      trine: 6,
+      square: 7,
+      sextile: 5,
+      quincunx: 5,
+      quintile: 1,
+      septile: 1,
+      "semi-square": 1,
+      "semi-sextile": 1,
+    },
     language: 'en',
   });
 
-  const horoscope1 = new Horoscope({
+  const horoscopeOriginNatal = new Horoscope({
     origin: originNatal,
-    houseSystem: houseSystem,
+    houseSystem: birthData.houseSystem || 'koch',
     zodiac: 'tropical',
     aspectPoints: ['bodies', 'points'],
     aspectWithPoints: ['bodies', 'points'],
     aspectTypes: ['major'],
-    customOrbs: customOrbs,
+    customOrbs: {
+      conjunction: 10,
+      opposition: 8,
+      trine: 6,
+      square: 7,
+      sextile: 5,
+      quincunx: 5,
+      quintile: 1,
+      septile: 1,
+      "semi-square": 1,
+      "semi-sextile": 1,
+    },
     language: 'en',
   });
 
-  let cuspsData1 = horoscope1.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
+  let cuspsData = horoscopeOriginNatal.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
   
   const planetsData = horoscope.CelestialBodies;
-  let cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
-  const ascendant = horoscope1._ascendant.ChartPosition.Ecliptic.DecimalDegrees;
+  const ascendant = horoscopeOriginNatal._ascendant.ChartPosition.Ecliptic.DecimalDegrees;
+  const progressedCusps = recalculateCusps(cuspsData, kp);
 
-  console.log("ascendant", ascendant);
-
-  const progressedCusps = recalculateCusps(cuspsData1, kp);
-
-  console.log("cuspsData", cuspsData);
-  console.log("progressedCusps", progressedCusps);
-  console.log("planetsData", planetsData);
-  console.log("cuspsData1", cuspsData1);
-
-  return getAstroData(originProgress, horoscope, planetsData, progressedCusps, ascendant);
+  return {originProgress, horoscope, planetsData, progressedCusps, ascendant}
 }
 
 const getAstroData = (origin: Origin, horoscope: Horoscope, planetsData:any, cuspsData: any, ascendant: number) => {
 
-  console.log("cuspsData", cuspsData);
   // Правильный расчет домов для системы Коха
   if (horoscope._houseSystem == "koch") {
     cuspsData = setKochCusps(ascendant, cuspsData);
   }
-
-  console.log("cuspsData", cuspsData);
 
   const astroData : AstroData = {
     planets: {
@@ -984,6 +976,24 @@ export const getNatalHouses = (birthData: BirthData, isLocal: boolean, isCompati
 
   return horoscope.Houses;
 }
+
+const setProgressionHouses = (cusps: number[]): House[] => {
+  const houseNames = [
+    'First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth',
+    'Seventh', 'Eighth', 'Ninth', 'Tenth', 'Eleventh', 'Twelfth'
+  ];
+
+  return cusps.map((degree, index) => ({
+    ChartPosition: {
+      StartPosition: {
+        Ecliptic: {
+          DecimalDegrees: degree
+        }
+      }
+    },
+    label: houseNames[index]
+  }));
+};
 
 export const setOrigin = (birthData: BirthData, isLocal: boolean, isCompatibility: boolean, isForecast: boolean) => {
   const [day, month, year] = birthData.date.split('.').map(Number);
@@ -1222,7 +1232,7 @@ export  const getCalendarData = (birthData: BirthData) => {
 }
 
 export const getSlowProgressionCalendar = (birthData: BirthData) => {
-  const natalData = getNatalChart(birthData, false, false, false);
+  const natalData = getNatalChart(birthData, birthData.isLocal, false, false);
   if (!natalData) {
     console.log("Невозможно построить натальную карту.");
     return [];
@@ -1242,16 +1252,26 @@ export const getSlowProgressionCalendar = (birthData: BirthData) => {
 
     const birthDataCurrent: BirthData = {
       ...birthData,
-      date: dateStr,
-      time: timeStr,
-      timeFore: timeStr,
+      date: birthData.date,
+      time: birthData.time,
+      timeFore: birthData.timeFore,
       dateFore: dateStr,
     };
 
-    const progressedChart = getNatalChart(birthDataCurrent, false, false, false);
+    const progressedChart = getProgressionChart(birthDataCurrent);
     if (!progressedChart) continue;
 
-    const aspects = getAspectsBetweenCharts(natalData.astroData, progressedChart.astroData, true);
+    let natalHouses = getNatalHouses(birthData, birthData.isLocal? true : false, false, false);
+    let natalProgressionData = getProgressionData(birthData);
+
+    const natalForecastHouses = setProgressionHouses(natalProgressionData.progressedCusps);
+
+    const aspects = getAspectsBetweenChartForecast(
+      natalData.astroData,
+      progressedChart.astroData,
+      natalHouses,
+      natalForecastHouses
+    );
 
     const seenThisDay = new Set<string>();
 
@@ -1259,14 +1279,20 @@ export const getSlowProgressionCalendar = (birthData: BirthData) => {
       if (aspect.orb <= 1.0) {
         const keyParts = [aspect.point1Key, aspect.point2Key].sort();
         const key = `${keyParts[0]}-${keyParts[1]}-${aspect.aspectKey}`;
-
+      
         seenThisDay.add(key);
-
-        if (!activeAspects.has(key)) {
+      
+        const existing = activeAspects.get(key);
+      
+        if (!existing) {
+          // Зафиксировали вход в орбис
           activeAspects.set(key, { start: new Date(current), end: null, aspect });
-        } else {
-          const existing = activeAspects.get(key);
-          if (existing) existing.end = new Date(current);
+        }
+      
+        // Если аспект стал точным — фиксируем его как end
+        if (Math.abs(aspect.orb) < 0.01) {
+          const tracked = activeAspects.get(key);
+          if (tracked) tracked.end = new Date(current);
         }
       }
     }
@@ -1285,16 +1311,30 @@ export const getSlowProgressionCalendar = (birthData: BirthData) => {
 
   // Закрываем висячие аспекты и обрезаем end по границе
   for (const { start, end, aspect } of activeAspects.values()) {
-    calendarData.push({
-      start,
-      end: end && end > endDate ? new Date(endDate) : (end || new Date(endDate)),
-      aspect
-    });
+    if (end) {
+      const adjustedStart = new Date(start.getTime() - 24 * 60 * 60 * 1000); // минус 1 день
+      const adjustedEnd = new Date(end.getTime() - 48 * 60 * 60 * 1000); // минус 1 день
+      calendarData.push({
+        start:adjustedStart,
+        end: adjustedEnd,
+        aspect
+      });
+    }
+    
+    // Если нет end — аспект не дошёл до точного (orb = 0), значит не нужен
   }
+  
 
-  // Фильтруем: берём только аспекты, активные 06.04.2025 и позже, но не выходящие за пределы года вперёд
-  const filtered = calendarData.filter(({ start, end }) => {
-    return end >= centerDate && start <= endDate;
+  // // Фильтруем: берём только аспекты, активные 06.04.2025 и позже, но не выходящие за пределы года вперёд
+  // const filtered = calendarData.filter(({ start, end }) => {
+  //   return end >= centerDate && start <= endDate;
+  // });
+
+  const filtered = calendarData
+  .filter(({ start, end }) => end >= centerDate && start <= endDate)
+  .filter(({ aspect }) => {
+    // Убираем соединения типа Луна-Луна и т.п.
+    return !(aspect.aspectKey === 'conjunction' && aspect.point1Key === aspect.point2Key);
   });
 
   return filtered;
@@ -1542,13 +1582,26 @@ export function calculateProgressionMoment(
 function calculateProgressionMomentFromJulian(
   jdNatal: number,
   jdInterest: number,
+  utc: string,
   progressionPeriod: number = 365
 ): Date {
   const kp = (jdInterest - jdNatal) / progressionPeriod;
   const addedSeconds = kp * 86400;
   const natalTimestamp = julianToUnixTimestamp(jdNatal);
-  const pmTimestamp = natalTimestamp + addedSeconds * 1000;
-  return new Date(pmTimestamp);
+  const pmTimestampUTC = natalTimestamp + addedSeconds * 1000;
+
+  // Парсинг UTC-офсета
+  const match = utc.match(/^([+-])(\d{2}):(\d{2})$/);
+  if (!match) throw new Error("Invalid UTC format. Use format ±HH:MM");
+
+  const sign = match[1] === "+" ? 1 : -1;
+  const hours = parseInt(match[2], 10);
+  const minutes = parseInt(match[3], 10);
+  const offsetMs = sign * (hours * 60 + minutes) * 60 * 1000;
+
+  const localTimestamp = pmTimestampUTC + offsetMs;
+
+  return new Date(localTimestamp);
 }
 
 function julianToUnixTimestamp(jd: number): number {

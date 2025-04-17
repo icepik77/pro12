@@ -325,15 +325,12 @@ const NatalChart: React.FC<NatalChartProps> = ({
       
       if (isLocal) {
         natalData = getNatalChart(birthData, true, false, false); 
-        natalDataForeSlow = getProgressionChart(birthData, true, false, true); 
+        natalDataForeSlow = getProgressionChart(birthData); 
       }
       else {
         natalData = getNatalChart(birthData, false, false, false); 
-        natalDataForeSlow = getProgressionChart(birthData, false, false, true); 
+        natalDataForeSlow = getProgressionChart(birthData); 
       }
-
-      console.log("natalData?.astroData", natalData?.astroData);
-      console.log("natalDataForeSlow?.astroData", natalDataForeSlow?.astroData)
 
       if (natalDataForeSlow && natalData){
         
@@ -375,8 +372,6 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
         const run = async () => {
           const calendarData = getSlowProgressionCalendar(birthData);
-
-          console.log("calendarData", calendarData);
 
           setCalendarPositions(calendarData);
         };
