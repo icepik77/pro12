@@ -52,7 +52,6 @@ const PlanetTable: React.FC<PlanetTableProps> = ({ planetPositions, localPlanetP
           {planetPositions.map((planet, index) => {
             const signSymbol = zodiacSymbols[planet.sign.toLowerCase()] || planet.sign;
             const degrees = planet.position;
-
             return (
               <tr
                 key={index}

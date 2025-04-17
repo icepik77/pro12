@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import Chart from '@astrodraw/astrochart';
 import {HousePositionsList, NatalChartProps } from '../lib/definitions';
 import { createFormedAspects, getNatalChart, getAspectsBetweenCharts, getCalendarData, 
-  findExactAspectTime, getAspectsBetweenChartForecast, getNatalHouses, getSlowProgressionCalendar } from '../lib/utils';
+  findExactAspectTime, getAspectsBetweenChartForecast, getNatalHouses, 
+  getSlowProgressionCalendar, calculateProgressionCoefficient, calculateProgressionMoment, getProgressionChart } from '../lib/utils';
 import { div } from 'framer-motion/client';
 
 const NatalChart: React.FC<NatalChartProps> = ({ 
@@ -170,10 +171,6 @@ const NatalChart: React.FC<NatalChartProps> = ({
       setIsForeSlow(false);
     }
 
-    console.log("isLocal", isLocal);
-    console.log("isForeSlow", isForeSlow);
-    console.log("birthData.isForeSlow", birthData.isForeSlow);
-
     const natalData = getNatalChart(birthData, false, false, false);
     if (natalData){
       setChartData(natalData.astroData);
@@ -257,9 +254,16 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
     let natalDataFore;
     if (isFore){
-      if (isLocal) natalDataFore = getNatalChart(birthData, true, false, true); 
-      else natalDataFore = getNatalChart(birthData, false, false, true); 
       let data;
+      let natalData;
+      if (isLocal) {
+        natalData = getNatalChart(birthData, true, false, false); 
+        natalDataFore = getNatalChart(birthData, true, false, true); 
+      }
+      else {
+        natalData = getNatalChart(birthData, false, false, false); 
+        natalDataFore = getNatalChart(birthData, false, false, true); 
+      }
       
       if (natalDataFore && natalData){
         
@@ -316,10 +320,21 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
     let natalDataForeSlow;
     if (isForeSlow){
-      if (isLocal) natalDataForeSlow = getNatalChart(birthData, true, false, true); 
-      else natalDataForeSlow = getNatalChart(birthData, false, false, true); 
+      let natalData; 
       let data;
       
+      if (isLocal) {
+        natalData = getNatalChart(birthData, true, false, false); 
+        natalDataForeSlow = getProgressionChart(birthData, true, false, true); 
+      }
+      else {
+        natalData = getNatalChart(birthData, false, false, false); 
+        natalDataForeSlow = getProgressionChart(birthData, false, false, true); 
+      }
+
+      console.log("natalData?.astroData", natalData?.astroData);
+      console.log("natalDataForeSlow?.astroData", natalDataForeSlow?.astroData)
+
       if (natalDataForeSlow && natalData){
         
         setCompChartData(natalDataForeSlow.astroData);
@@ -338,10 +353,8 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
         setCompAspectPositions(data);
         setCompAspectsData(natalDataForeSlow.aspects);
-        
-        // const pairData = getAspectsBetweenCharts(natalData.astroData, natalDataForeSlow.astroData, false);
 
-        let natalHouses = getNatalHouses(birthData, false, false, false);
+        let natalHouses = getNatalHouses(birthData, isLocal? true : false, false, false);
         let natalForecastHouses;
 
         if (isLocal) natalForecastHouses = getNatalHouses(birthData, true, false, true);
@@ -365,32 +378,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
           console.log("calendarData", calendarData);
 
-
-          // const transitCalendar = {
-          //   filteredResult: calendarData,
-          //   exactTime: []
-          // };
-      
           setCalendarPositions(calendarData);
-
-      
-          // const promises = [];
-      
-          // for (const item of calendarData) {
-          //   for (const aspect of item.aspects) {
-          //     const promise = findExactAspectTime(natalData, birthData, aspect);
-          //     promises.push(promise);
-          //   }
-          // }
-      
-          // const exactTime = await Promise.all(promises);
-      
-          // const transitCalendar = {
-          //   filteredResult: calendarData,
-          //   exactTime: exactTime
-          // };
-      
-          // setCalendarPositions(transitCalendar);
         };
       
         run(); 

@@ -411,8 +411,6 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             isForeSlow: isForeSlow ? true : false, 
             isLocal: true
           });
-
-        console.log("here")
       }
       else {
         setBirthData({

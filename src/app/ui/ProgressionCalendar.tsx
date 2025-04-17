@@ -26,8 +26,6 @@ interface ProgressionCalendarProps {
 }
 
 const ProgressionCalendar: React.FC<ProgressionCalendarProps> = ({ calendarData, planets }) => {
-
-    console.log("calendarData", calendarData);
   return (
     <div className="w-full max-w-5xl px-4 py-1 lg:p-4 flex flex-col items-center text-[14px]">
       <h3 className="text-xl font-medium mb-2 lg:mb-4 text-center">Календарь</h3>

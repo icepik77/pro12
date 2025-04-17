@@ -1,8 +1,6 @@
 import { AstroData, Aspect, BirthData, House, HousePositionsList } from "./definitions";
 import { Origin, Horoscope } from "circular-natal-horoscope-js";
 
-type AspectWithTimestamp = Aspect & { timestamp: Date, orb: number };
-
 export const formatPosition = (decimalDegrees: number) => {
   const degreesInSign = decimalDegrees % 30; // Ограничиваем до 30 градусов
   const degrees = Math.floor(degreesInSign);
@@ -737,6 +735,222 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
   };
 }
 
+export const getProgressionChart = (birthData: BirthData, isLocal: boolean, isCompatibility: boolean, isForecast: boolean) => {
+  let horoscope;
+  
+  const houseSystem = birthData.houseSystem || 'koch'; // Берём систему домов
+
+  const customOrbs = {
+    conjunction: 10,
+    opposition: 8,
+    trine: 6,
+    square: 7,
+    sextile: 5,
+    quincunx: 5,
+    quintile: 1,
+    septile: 1,
+    "semi-square": 1,
+    "semi-sextile": 1,
+  };
+
+  const originNatal = setOrigin(birthData, isLocal, false, false);
+  let originProgress = setOrigin(birthData, isLocal, false, true);
+
+  const natalTime = originNatal.julianDate;  
+  const interestTime = originProgress.julianDate;
+
+  console.log("natalTime", natalTime);
+  console.log("interestTime", interestTime);
+
+  const kp = calculateProgressionCoefficient(natalTime, interestTime);
+  console.log(`Коэффициент прогрессии: ${kp.toFixed(3)}`);
+
+  const progressionMoment = calculateProgressionMomentFromJulian(natalTime, interestTime);
+
+  console.log("progressionMoment", progressionMoment);
+
+  //1989-10-09T15:23:35.342Z
+
+  const { date, time } = formatDateTimeForBirthData(progressionMoment);
+
+  console.log("date", date);
+  
+  const birthDataCurrent: BirthData = {
+    date: date,
+    time: time,
+    latitude: birthData.latitude,
+    city: birthData.city,
+    localCity: birthData.localCity || "",
+    longitude: birthData.longitude,
+    localLatitude: birthData.localLatitude || "",
+    localLongitude: birthData.localLongitude || "",
+    utcOffset: "",
+    nameComp: "",
+    dateComp: "",
+    timeComp: "",
+    cityComp: "",
+    latitudeComp: "",
+    longitudeComp: "",
+    timeFore: "",
+    dateFore: "",
+    utcOffsetFore: birthData.utcOffsetFore,
+    utcOffsetComp: "",
+    houseSystem: birthData.houseSystem || "Placidus",
+    style: birthData.style || "default",
+    isLocal: false,
+    isCompatibility: false,
+    isFore: false,
+    isForeSlow: false
+  };
+
+  originProgress = setOrigin(birthDataCurrent, isLocal, false, false);
+
+  horoscope = new Horoscope({
+    origin: originProgress,
+    houseSystem: houseSystem,
+    zodiac: 'tropical',
+    aspectPoints: ['bodies', 'points'],
+    aspectWithPoints: ['bodies', 'points'],
+    aspectTypes: ['major'],
+    customOrbs: customOrbs,
+    language: 'en',
+  });
+
+  const horoscope1 = new Horoscope({
+    origin: originNatal,
+    houseSystem: houseSystem,
+    zodiac: 'tropical',
+    aspectPoints: ['bodies', 'points'],
+    aspectWithPoints: ['bodies', 'points'],
+    aspectTypes: ['major'],
+    customOrbs: customOrbs,
+    language: 'en',
+  });
+
+  let cuspsData1 = horoscope1.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
+  
+  const planetsData = horoscope.CelestialBodies;
+  let cuspsData = horoscope.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
+  const ascendant = horoscope1._ascendant.ChartPosition.Ecliptic.DecimalDegrees;
+
+  console.log("ascendant", ascendant);
+
+  const progressedCusps = recalculateCusps(cuspsData1, kp);
+
+  console.log("cuspsData", cuspsData);
+  console.log("progressedCusps", progressedCusps);
+  console.log("planetsData", planetsData);
+  console.log("cuspsData1", cuspsData1);
+
+  return getAstroData(originProgress, horoscope, planetsData, progressedCusps, ascendant);
+}
+
+const getAstroData = (origin: Origin, horoscope: Horoscope, planetsData:any, cuspsData: any, ascendant: number) => {
+
+  console.log("cuspsData", cuspsData);
+  // Правильный расчет домов для системы Коха
+  if (horoscope._houseSystem == "koch") {
+    cuspsData = setKochCusps(ascendant, cuspsData);
+  }
+
+  console.log("cuspsData", cuspsData);
+
+  const astroData : AstroData = {
+    planets: {
+      "Sun": [planetsData.sun.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Moon": [planetsData.moon.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Mercury": [planetsData.mercury.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Venus": [planetsData.venus.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Mars": [planetsData.mars.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Jupiter": [planetsData.jupiter.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Saturn": [planetsData.saturn.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Uranus": [planetsData.uranus.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Neptune": [planetsData.neptune.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Pluto": [planetsData.pluto.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "Lilith": [horoscope.CelestialPoints.lilith.ChartPosition.Ecliptic.DecimalDegrees || 0],
+      "NNode": [horoscope.CelestialPoints.northnode.ChartPosition.Ecliptic.DecimalDegrees || 0],
+    },
+    cusps: cuspsData,
+  };
+
+  const utcTime = origin.localTimeFormatted?.slice(-6) || ""; 
+
+  // Формируем данные для таблицы планет
+  const planetPositionsList = Object.entries(planetsData)
+  .map(([key, planet]: any) => {
+    if (!planet?.ChartPosition?.Ecliptic?.DecimalDegrees) return null;
+
+    const ecliptic = planet.ChartPosition.Ecliptic.DecimalDegrees;
+    const isRetrograde = planet.isRetrograde;
+    const sign = getZodiacSign(ecliptic);
+    const position = formatPosition(ecliptic);
+    const house = findHouseForPlanet(ecliptic, cuspsData);
+
+    return { name: key, isRetrograde, sign, position, house };
+  })
+  .filter(Boolean); // Убираем null-значения
+  // Данные о Лилит
+  const lilithData = horoscope.CelestialPoints.lilith?.ChartPosition?.Ecliptic?.DecimalDegrees;
+  if (lilithData) {
+    const sign = getZodiacSign(lilithData);
+    const isRetrograde = lilithData.isRetrograde;
+    const position = formatPosition(lilithData);
+    const house = findHouseForPlanet(lilithData, cuspsData);
+    
+    // Заменяем последний элемент в списке на Лилит
+    if (planetPositionsList.length > 0) {
+      planetPositionsList[planetPositionsList.length - 1] = { name: "lilith", isRetrograde, sign, position, house };
+    } else {
+      // Если список пуст, просто добавляем Лилит
+      planetPositionsList.push({ name: "lilith", isRetrograde, sign, position, house });
+    }
+  }
+  // Данные о Северном узле
+  const nNode = horoscope.CelestialPoints.northnode?.ChartPosition?.Ecliptic?.DecimalDegrees;
+  if (nNode) {
+    const sign = getZodiacSign(nNode);
+    const position = formatPosition(nNode);
+    const house = findHouseForPlanet(nNode, cuspsData);
+    const isRetrograde = nNode.isRetrograde;
+
+    // Заменяем последний элемент в списке на NN
+    if (planetPositionsList.length > 0) {
+      planetPositionsList[planetPositionsList.length - 2] = { name: "northnode", isRetrograde, sign, position, house };
+    } else {
+      // Если список пуст, просто добавляем NN
+      planetPositionsList.push({ name: "northnode", isRetrograde, sign, position, house });
+    }
+  }
+  // Список значений для поля name
+  const houseNames = [
+    'Asc', 'II', 'III', 'IC', 'V', 'VI', 'Dsc', 'VIII', 'IX', 'MC', 'XI', 'XII'
+  ];
+  // Формируем данные для таблицы домов
+  const housePositionsList = cuspsData
+  .map((ecliptic: number, index: number) => {
+    if (ecliptic == null) return null; // Проверка на null или undefined
+
+    const sign = getZodiacSign(ecliptic);
+    const position = formatPosition(ecliptic);
+
+    // Сопоставляем значения для поля name с соответствующими значениями из houseNames
+    const name = houseNames[index];
+
+    return { name, position, sign };
+  })
+  .filter(Boolean); // Убираем null-значения
+
+  const aspectDataPlanet = getAspectsForPlanet(astroData);
+
+  return {
+    astroData: astroData,
+    planets: planetPositionsList,
+    houses: housePositionsList,
+    aspects: aspectDataPlanet,
+    utcTime: origin.localTimeFormatted
+  };
+}
+
 export const getNatalHouses = (birthData: BirthData, isLocal: boolean, isCompatibility: boolean, isForecast: boolean) => {
   let horoscope;
   
@@ -799,7 +1013,6 @@ export const setOrigin = (birthData: BirthData, isLocal: boolean, isCompatibilit
 
   if (isNaN(latitude) || isNaN(longitude)) {
     console.error("Некорректные координаты:", latitude, longitude);
-    return;
   }
 
   if (!isLocal && !isCompatibility && !isForecast){
@@ -887,7 +1100,7 @@ export const setOrigin = (birthData: BirthData, isLocal: boolean, isCompatibilit
 }
 
 export  const getCalendarData = (birthData: BirthData) => {
-  const natalData = getNatalChart(birthData, false, false, false);
+  const natalData = getNatalChart(birthData, birthData.isLocal? true : false, false, false);
   let calendarData = [];
 
   if (natalData){
@@ -912,7 +1125,7 @@ export  const getCalendarData = (birthData: BirthData) => {
         longitude: birthData.longitude,
         localLatitude: birthData.localLatitude || "",
         localLongitude: birthData.localLongitude || "",
-        utcOffset: birthData.utcOffsetFore || birthData.utcOffset,
+        utcOffset: birthData.utcOffset,
         nameComp: "",
         dateComp: "",
         timeComp: "",
@@ -921,7 +1134,7 @@ export  const getCalendarData = (birthData: BirthData) => {
         longitudeComp: "",
         timeFore: timeStr,
         dateFore: dateStr,
-        utcOffsetFore: birthData.utcOffsetFore || birthData.utcOffset,
+        utcOffsetFore: birthData.utcOffsetFore,
         utcOffsetComp: "",
         houseSystem: birthData.houseSystem || "Placidus",
         style: birthData.style || "default",
@@ -1087,8 +1300,6 @@ export const getSlowProgressionCalendar = (birthData: BirthData) => {
   return filtered;
 };
 
-
-
 export const findExactAspectTime = async (natalData: any, birthData: any, {
   aspectKey,
   orb,
@@ -1132,7 +1343,7 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
       longitude: birthData.longitude,
       localLatitude: birthData.localLatitude || "",
       localLongitude: birthData.localLongitude || "",
-      utcOffset: birthData.utcOffsetFore || birthData.utcOffset,
+      utcOffset: birthData.utcOffset,
       nameComp: "",
       dateComp: "",
       timeComp: "",
@@ -1141,7 +1352,7 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
       longitudeComp: "",
       timeFore: timeStr,
       dateFore: dateStr,
-      utcOffsetFore: birthData.utcOffsetFore || birthData.utcOffset,
+      utcOffsetFore: birthData.utcOffsetFore,
       utcOffsetComp: "",
       houseSystem: birthData.houseSystem || "Placidus",
       style: birthData.style || "default",
@@ -1186,7 +1397,7 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
         longitude: birthData.longitude,
         localLatitude: birthData.localLatitude || "",
         localLongitude: birthData.localLongitude || "",
-        utcOffset: birthData.utcOffsetFore || birthData.utcOffset,
+        utcOffset: birthData.utcOffset,
         nameComp: "",
         dateComp: "",
         timeComp: "",
@@ -1195,7 +1406,7 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
         longitudeComp: "",
         timeFore: timeStr,
         dateFore: dateStr,
-        utcOffsetFore: birthData.utcOffsetFore || birthData.utcOffset,
+        utcOffsetFore: birthData.utcOffsetFore,
         utcOffsetComp: "",
         houseSystem: birthData.houseSystem || "Placidus",
         style: birthData.style || "default",
@@ -1220,7 +1431,7 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
         longitude: birthData.longitude,
         localLatitude: birthData.localLatitude || "",
         localLongitude: birthData.localLongitude || "",
-        utcOffset: birthData.utcOffsetFore || birthData.utcOffset,
+        utcOffset: birthData.utcOffset,
         nameComp: "",
         dateComp: "",
         timeComp: "",
@@ -1229,7 +1440,7 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
         longitudeComp: "",
         timeFore: timeStr,
         dateFore: dateStr,
-        utcOffsetFore: birthData.utcOffsetFore || birthData.utcOffset,
+        utcOffsetFore: birthData.utcOffsetFore,
         utcOffsetComp: "",
         houseSystem: birthData.houseSystem || "Placidus",
         style: birthData.style || "default",
@@ -1275,4 +1486,97 @@ export const findExactAspectTime = async (natalData: any, birthData: any, {
 
   return { time: bestTime, orb: bestOrb };
 };
+
+function toJulianDate(dateUTC: Date): number {
+  const year = dateUTC.getUTCFullYear();
+  const month = dateUTC.getUTCMonth() + 1;
+  const day = dateUTC.getUTCDate();
+  const hour = dateUTC.getUTCHours();
+  const minute = dateUTC.getUTCMinutes();
+  const second = dateUTC.getUTCSeconds();
+
+  let Y = year;
+  let M = month;
+  if (M <= 2) {
+    Y -= 1;
+    M += 12;
+  }
+
+  const D = day + (hour + minute / 60 + second / 3600) / 24;
+  const A = Math.floor(Y / 100);
+  const B = 2 - A + Math.floor(A / 4);
+
+  const JD = Math.floor(365.25 * (Y + 4716)) +
+             Math.floor(30.6001 * (M + 1)) +
+             D + B - 1524.5;
+
+  return JD;
+}
+
+export function calculateProgressionCoefficient(
+  natalDateUTC: number,
+  interestDateUTC: number,
+  progressionPeriod: number = 365
+): number {
+  const jdNatal = natalDateUTC;
+  const jdInterest = interestDateUTC;
+  return (jdInterest - jdNatal) / progressionPeriod;
+}
+
+export function calculateProgressionMoment(
+  natalDateUTC: Date,
+  interestDateUTC: Date,
+  progressionPeriod: number = 365
+): Date {
+  const jdNatal = toJulianDate(natalDateUTC);
+  const jdInterest = toJulianDate(interestDateUTC);
+  const kp = (jdInterest - jdNatal) / progressionPeriod;
+
+  const secondsPerDay = 86400;
+  const addedSeconds = kp * secondsPerDay;
+
+  const pmTimestamp = natalDateUTC.getTime() + addedSeconds * 1000; // переводим в мс
+  return new Date(pmTimestamp);
+}
+
+function calculateProgressionMomentFromJulian(
+  jdNatal: number,
+  jdInterest: number,
+  progressionPeriod: number = 365
+): Date {
+  const kp = (jdInterest - jdNatal) / progressionPeriod;
+  const addedSeconds = kp * 86400;
+  const natalTimestamp = julianToUnixTimestamp(jdNatal);
+  const pmTimestamp = natalTimestamp + addedSeconds * 1000;
+  return new Date(pmTimestamp);
+}
+
+function julianToUnixTimestamp(jd: number): number {
+  const JD_UNIX_EPOCH = 2440587.5;
+  return (jd - JD_UNIX_EPOCH) * 86400 * 1000;
+}
+
+function formatDateTimeForBirthData(date: Date): { date: string, time: string } {
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const year = date.getUTCFullYear();
+
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+
+  return {
+    date: `${day}.${month}.${year}`,
+    time: `${hours}:${minutes}:${seconds}`
+  };
+}
+
+function recalculateCusps(cusps: number[], kp: number): number[] {
+  return cusps.map(degree => {
+    let progressed = degree + kp;
+    progressed = parseFloat(progressed.toFixed(4)); // округляем и превращаем обратно в число
+    return (progressed + 360) % 360;
+  });
+}
+
 
