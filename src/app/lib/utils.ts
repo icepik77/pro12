@@ -1243,12 +1243,17 @@ export const getSlowProgressionCalendar = (birthData: BirthData) => {
   const startDate = new Date(centerDate.getTime() - 365 * 24 * 60 * 60 * 1000);
   const endDate = new Date(centerDate.getTime() + 365 * 24 * 60 * 60 * 1000);
 
-  const activeAspects = new Map<string, { start: Date, end: Date | null, aspect: any }>();
+  const activeAspects = new Map<string, {
+    start: Date,
+    end: Date | null,
+    aspect: any,
+    orbAtStart?: number,
+    orbAtEnd?: number
+  }>();
   const calendarData: { start: Date, end: Date, aspect: any }[] = [];
 
   for (let current = new Date(startDate); current <= endDate; current.setDate(current.getDate() + 1)) {
     const dateStr = current.toLocaleDateString('ru-RU').split('/').map(part => part.padStart(2, '0')).join('.');
-    const timeStr = '12:00:00';
 
     const birthDataCurrent: BirthData = {
       ...birthData,
@@ -1261,8 +1266,8 @@ export const getSlowProgressionCalendar = (birthData: BirthData) => {
     const progressedChart = getProgressionChart(birthDataCurrent);
     if (!progressedChart) continue;
 
-    let natalHouses = getNatalHouses(birthData, birthData.isLocal? true : false, false, false);
-    let natalProgressionData = getProgressionData(birthData);
+    let natalHouses = getNatalHouses(birthDataCurrent, birthDataCurrent.isLocal? true : false, false, false);
+    let natalProgressionData = getProgressionData(birthDataCurrent);
 
     const natalForecastHouses = setProgressionHouses(natalProgressionData.progressedCusps);
 
@@ -1275,35 +1280,83 @@ export const getSlowProgressionCalendar = (birthData: BirthData) => {
 
     const seenThisDay = new Set<string>();
 
+    console.log("current", current);
+    console.log("aspects", aspects);
+
     for (const aspect of aspects) {
-      if (aspect.orb <= 1.0) {
+      if (Math.abs(aspect.orb - 1.0) < 0.04) {
         const keyParts = [aspect.point1Key, aspect.point2Key].sort();
         const key = `${keyParts[0]}-${keyParts[1]}-${aspect.aspectKey}`;
       
         seenThisDay.add(key);
       
-        const existing = activeAspects.get(key);
-      
-        if (!existing) {
-          // Зафиксировали вход в орбис
-          activeAspects.set(key, { start: new Date(current), end: null, aspect });
+        // Только если ещё не отслеживаем
+        if (!activeAspects.has(key)) {
+          activeAspects.set(key, {
+            start: new Date(current),
+            end: null,
+            aspect,
+            orbAtStart: aspect.orb,
+          });
         }
+      }
       
-        // Если аспект стал точным — фиксируем его как end
-        if (Math.abs(aspect.orb) < 0.01) {
-          const tracked = activeAspects.get(key);
-          if (tracked) tracked.end = new Date(current);
+      // Если орбис стал ≈ 0, фиксируем конец аспекта
+      if (Math.abs(aspect.orb) < 0.01) {
+        const keyParts = [aspect.point1Key, aspect.point2Key].sort();
+        const key = `${keyParts[0]}-${keyParts[1]}-${aspect.aspectKey}`;
+      
+        seenThisDay.add(key);
+      
+        const tracked = activeAspects.get(key);
+        if (tracked && !tracked.end) {
+          tracked.end = new Date(current);
+          tracked.orbAtEnd = aspect.orb;
         }
       }
     }
 
+    // for (const aspect of aspects) {
+    //   if (aspect.orb <= 1) {
+    //     const keyParts = [aspect.point1Key, aspect.point2Key].sort();
+    //     const key = `${keyParts[0]}-${keyParts[1]}-${aspect.aspectKey}`;
+      
+    //     seenThisDay.add(key);
+      
+    //     const existing = activeAspects.get(key);
+      
+    //     if (!existing) {
+    //       activeAspects.set(key, {
+    //         start: new Date(current),
+    //         end: null,
+    //         aspect,
+    //         orbAtStart: aspect.orb
+    //       });
+    //     }
+      
+    //     // Если аспект стал точным — фиксируем его как end
+    //     if (Math.abs(aspect.orb) < 0.01) {
+    //       const tracked = activeAspects.get(key);
+    //       if (tracked) {
+    //         tracked.end = new Date(current);
+    //         tracked.orbAtEnd = aspect.orb;
+    //       }
+    //     }
+    //   }
+    // }
+
     for (const [key, value] of activeAspects.entries()) {
       if (!seenThisDay.has(key) && value.end) {
+        console.log(`Аспект ${value.aspect.point1Key} ${value.aspect.aspectKey} ${value.aspect.point2Key}:`);
+        console.log(`  orbAtStart: ${value.orbAtStart?.toFixed(2)}°`);
+        console.log(`  orbAtEnd:   ${value.orbAtEnd?.toFixed(2)}°`);
+        
         calendarData.push({
           start: value.start,
           end: value.end,
-          aspect: value.aspect
+          aspect: value.aspect,
         });
+    
         activeAspects.delete(key);
       }
     }
@@ -1336,6 +1389,8 @@ export const getSlowProgressionCalendar = (birthData: BirthData) => {
     // Убираем соединения типа Луна-Луна и т.п.
     return !(aspect.aspectKey === 'conjunction' && aspect.point1Key === aspect.point2Key);
   });
+
+  console.log("filtered", filtered); 
 
   return filtered;
 };
