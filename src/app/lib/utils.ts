@@ -809,6 +809,23 @@ const getProgressionData = (birthData: BirthData) =>{
     language: 'en',
   });
 
+  // const localSiderealTime = getLocalSiderealTime({
+  //   jd: originNatal.julianDate,
+  //   longitude: originNatal.longitude
+  // });
+  // const rightAscensionMC = modulo(localSiderealTime - 24.1, 360)
+  
+  // const ascendant = getAscendant({
+  //   latitude: originProgress.latitude,
+  //   localSiderealTime: localSiderealTime
+  // })
+  // const progressedAscendant = ascendant * kp;
+
+  // const midheaven = getMidheavenSun({
+  //   localSiderealTime: localSiderealTime
+  // })
+  // const progressedMidheaven = midheaven * kp;
+
   const horoscopeOriginNatal = new Horoscope({
     origin: originNatal,
     houseSystem: birthData.houseSystem || 'koch',
@@ -1168,7 +1185,6 @@ export  const getCalendarData = (birthData: BirthData) => {
       else console.log("Ошибка расчетов текущего момента");
 
       current = new Date(current.getTime() + 60 * 60 * 1000); // +1 час
-
     }
   } else{
     console.log("Нет натальной карты для прогноза");
@@ -1224,9 +1240,6 @@ export  const getCalendarData = (birthData: BirthData) => {
     };
   })
   .filter(day => day.aspects.length > 0); // убираем дни без аспектов
-
-
-  
 
   return filteredResult;
 }
@@ -1687,4 +1700,197 @@ function recalculateCusps(cusps: number[], kp: number): number[] {
   });
 }
 
+const getAscendant = ({ latitude = 0.00, obliquityEcliptic = 23.4367, localSiderealTime = 0.00 } = {}) => {
+  // latitude = parseFloat(latitude);
+  // obliquityEcliptic = parseFloat(obliquityEcliptic);
+  // localSiderealTime = parseFloat(localSiderealTime); // this should be in degrees, aka right ascension of MC
 
+  const a = -cosFromDegrees(localSiderealTime);
+  const b = sinFromDegrees(obliquityEcliptic) * tanFromDegrees(latitude);
+  const c = cosFromDegrees(obliquityEcliptic) * sinFromDegrees(localSiderealTime);
+  const d = b + c;
+  const e = a / d;
+  const f = Math.atan(e);
+
+  // console.log(latitude, localSiderealTime, a, b, c, d, e, f)
+  let ascendant = radiansToDegrees(f);
+
+  // modulation from wikipedia
+  // https://en.wikipedia.org/wiki/Ascendant
+  // citation Peter Duffett-Smith, Jonathan Zwart, Practical astronomy with your calculator or spreadsheet-4th ed., p47, 2011
+
+  if (d < 0) {
+    ascendant += 180;
+  } else {
+    ascendant += 360;
+  }
+
+  if (ascendant >= 180) {
+    ascendant -= 180;
+  } else {
+    ascendant += 180;
+  }
+
+  return modulo(ascendant, 360);
+};
+
+const getLocalSiderealTime = ({ jd = 0, longitude = 0 } = {}) => {
+  // Also gives: Right Ascension of M.C. or RAMC
+  /////////
+  // * float jd = julian date decimal
+  // * float longitude = local longitude in decimal form
+  // => returns Float || the sidereal time in arc degrees (0...359)
+  /////////
+  // Source: Astronomical Algorithims by Jean Meeus (1991) - Ch 11, pg 84 formula 11.4
+  // verified with http://neoprogrammics.com/sidereal_time_calculator/index.php
+
+  const julianDaysJan1st2000 = 2451545.0;
+  const julianDaysSince2000 = jd - julianDaysJan1st2000;
+  const tFactor = (julianDaysSince2000) / 36525; // centuries
+  const degreesRotationInSiderealDay = 360.98564736629;
+  const lst = 280.46061837
+    + (degreesRotationInSiderealDay * (julianDaysSince2000))
+    + 0.000387933 * Math.pow(tFactor, 2)
+    - (Math.pow(tFactor, 3) / 38710000)
+    + longitude;
+
+  const modLst = modulo(lst, 360);
+  return modLst;
+};
+
+const arccot = (x: number) =>
+// calculates the arc-cotangent
+// https://stackoverflow.com/a/39244477/6826976
+Math.PI / 2 - Math.atan(x);
+
+const degreesToRadians = (degrees: number) =>
+// https://www.rapidtables.com/convert/number/degrees-to-radians.html
+degrees * (Math.PI / 180);
+
+const radiansToDegrees = (radians: number) =>
+// https://www.rapidtables.com/convert/number/degrees-to-radians.html
+radians * (180 / Math.PI);
+
+const sinFromDegrees = (degrees: number) => Math.sin(degreesToRadians(degrees));
+const cosFromDegrees = (degrees: number) => Math.cos(degreesToRadians(degrees));
+const tanFromDegrees = (degrees: number) => Math.tan(degreesToRadians(degrees));
+
+// export const calculateKochHouseCusps = ({
+//   rightAscensionMC = 0.00, midheaven = 0.00, ascendant = 0.00, latitude = 0.00, obliquityEcliptic = 23.4367,
+// } = {}) => {
+//   // The house system is named after the German astrologer Walter Koch (1895-1970) but was actually // invented by Fiedrich Zanzinger (1913-1967) and Heinz Specht (1925-).
+//   // NOTE - known to perform irregularly at latitudes greater than +60 and less than -60
+//   // source: An Astrological House Formulary by Michael P. Munkasey, page 14
+//   // verified with https://astrolibrary.org/compare-house-systems/
+//   //////////
+//   // * float rightAscensionMC = localSiderealTime converted to degrees
+//   // * float midheaven = midheaven (aka M.C.) in degrees
+//   // * float ascendant = ascendant in degrees
+//   // * float latitude = latitude of origin in degrees
+//   // * float obliquityEcliptic = obliquity of ecliptic in degrees
+//   // returns => [1..12] (array of 12 floats marking the cusp of each house)
+//   //////////
+
+//   const declinationMC = Math.asin(sinFromDegrees(midheaven) * sinFromDegrees(obliquityEcliptic)); // radians
+//   const ascensionalDiff = Math.asin(Math.tan(declinationMC) * tanFromDegrees(latitude)); // radians
+//   const obliqueAscensionMC = degreesToRadians(rightAscensionMC) - ascensionalDiff; // radians
+//   const cuspDisplacementInterval = modulo(((rightAscensionMC + 90) - radiansToDegrees(obliqueAscensionMC)) / 3, 360); // degrees
+
+//   const houseCuspPosition = (houseNumber) => {
+//     // returns => n in degrees
+//     switch (houseNumber) {
+//       case 11:
+//         return radiansToDegrees(obliqueAscensionMC) + cuspDisplacementInterval - 90;
+//       case 12:
+//         return houseCuspPosition(11) + cuspDisplacementInterval;
+//       case 1:
+//         return houseCuspPosition(12) + cuspDisplacementInterval;
+//       case 2:
+//         return houseCuspPosition(1) + cuspDisplacementInterval;
+//       case 3:
+//         return houseCuspPosition(2) + cuspDisplacementInterval;
+//     }
+//   };
+
+//   const calculatedCusp = (houseNumber) => {
+//     const radians = arccot(-((tanFromDegrees(latitude) * sinFromDegrees(obliquityEcliptic)) + (sinFromDegrees(houseCuspPosition(houseNumber)) * cosFromDegrees(obliquityEcliptic))) / cosFromDegrees(houseCuspPosition(houseNumber)));
+
+//     return radiansToDegrees(radians);
+//   };
+
+//   const c1 = modulo(calculatedCusp(1), 360);
+//   const c2 = modulo(calculatedCusp(2), 360);
+//   const c3 = modulo(calculatedCusp(3), 360);
+//   const c4 = modulo(midheaven + 180, 360);
+//   const c10 = midheaven;
+//   const c11 = calculatedCusp(11);
+//   const c12 = calculatedCusp(12);
+//   const c5 = modulo(c11 + 180, 360);
+//   const c6 = modulo(c12 + 180, 360);
+//   const c7 = modulo(ascendant + 180, 360);
+//   const c8 = modulo(c2 + 180, 360);
+//   const c9 = modulo(c3 + 180, 360);
+
+//   // ** For debugging **
+//   // const rawArr = [c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12]
+//   // console.log(rawArr)
+
+//   const firstCusp = c1;
+//   const secondCusp = shouldMod180(c1, c2) ? modulo(c2 + 180, 360) : c2;
+//   const thirdCusp = shouldMod180(c1, c3) ? modulo(c3 + 180, 360) : c3;
+//   const fourthCusp = c4;
+//   const fifthCusp = shouldMod180(c4, c5) ? modulo(c5 + 180, 360) : c5;
+//   const sixthCusp = shouldMod180(c4, c6) ? modulo(c6 + 180, 360) : c6;
+//   const seventhCusp = c7;
+//   const eighthCusp = shouldMod180(c7, c8) ? modulo(c8 + 180, 360) : c8;
+//   const ninthCusp = shouldMod180(c7, c9) ? modulo(c9 + 180, 360) : c9;
+//   const tenthCusp = c10;
+//   const eleventhCusp = shouldMod180(c10, c11) ? modulo(c11 + 180, 360) : c11;
+//   const twelthCusp = shouldMod180(c10, c12) ? modulo(c12 + 180, 360) : c12;
+
+//   const arr = [
+//     firstCusp.toFixed(4), secondCusp.toFixed(4), thirdCusp.toFixed(4), fourthCusp.toFixed(4), fifthCusp.toFixed(4), sixthCusp.toFixed(4),
+//     seventhCusp.toFixed(4), eighthCusp.toFixed(4), ninthCusp.toFixed(4), tenthCusp.toFixed(4), eleventhCusp.toFixed(4), twelthCusp.toFixed(4),
+//   ];
+
+//   return arr;
+// };
+
+export const getMidheavenSun = ({ localSiderealTime = 0.00, obliquityEcliptic = 23.4367 } = {}) => {
+  // Also known as: Medium Coeli or M.C.
+  //////////
+  // * float localSiderealTime = local sidereal time in degrees
+  // * float obliquityEcliptic = obliquity of ecpliptic in degrees
+  // => returns Float as degrees
+  /////////
+  // Source: Astronomical Algorithims by Jean Meeus (1991) Ch 24 pg 153 - formula 24.6
+  // verified with https://astrolibrary.org/midheaven-calculator/ and https://cafeastrology.com/midheaven.html
+  // Default obliquityEcliptic value from http://www.neoprogrammics.com/obliquity_of_the_ecliptic/
+  // for Mean Obliquity on Sept. 22 2019 at 0000 UTC
+
+  const tanLST = tanFromDegrees(localSiderealTime);
+  const cosOE = cosFromDegrees(obliquityEcliptic);
+  let midheaven = radiansToDegrees(Math.atan(tanLST / cosOE));
+
+  // Correcting the quadrant
+  if (midheaven < 0) {
+    midheaven += 360;
+  }
+
+  if (midheaven > localSiderealTime) {
+    midheaven -= 180;
+  }
+
+  if (midheaven < 0) {
+    midheaven += 180;
+  }
+
+  if (midheaven < 180 && localSiderealTime >= 180) {
+    midheaven += 180;
+  }
+
+  return modulo(midheaven, 360);
+};
+
+
+// return modulo(parseFloat(tropicalZodiacLongitude) - 24.1, 360);
