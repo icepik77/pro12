@@ -87,22 +87,22 @@ export interface House{
 }
 
 export interface NatalChartProps {
-    birthData: BirthData;
-    setPlanetPositions: (positions: any[]) => void;
-    setHousePositions: (positions: any[]) => void;
-    setAspectPositions: (positions: any) => void;
-    setLocalPlanetPositions: (localPositions: any) => void;
-    setLocalHousePositions: (localPositions: any) => void;
-    setLocalAspectPositions: (localPositions: any) => void;
-    setCompPlanetPositions: (compPositions: any) => void;
-    setCompHousePositions: (compPositions: any) => void;
-    setCompAspectPositions: (compPositions: any) => void;
-    setCompPairPositions: (compPositions: any) => void;
-    setLocalTime?: (time: string) => void;
-    activeTab: "chart1" | "chart2"; 
-    setActiveTab: (tab: "chart1" | "chart2") => void;
-    showPairPositions: boolean;
-    setShowPairPositions: (value: boolean) => void;
-    setCalendarPositions: (compPositions: any) => void;
-    setIsDataLoaded: (value: boolean) => void;
+  birthData: BirthData;
+  setPlanetPositions: (positions: any[]) => void;
+  setHousePositions: (positions: any[]) => void;
+  setAspectPositions: (positions: any) => void;
+  setLocalPlanetPositions: (localPositions: any) => void;
+  setLocalHousePositions: (localPositions: any) => void;
+  setLocalAspectPositions: (localPositions: any) => void;
+  setCompPlanetPositions: (compPositions: any) => void;
+  setCompHousePositions: (compPositions: any) => void;
+  setCompAspectPositions: (compPositions: any) => void;
+  setCompPairPositions: (compPositions: any) => void;
+  setLocalTime?: (time: string) => void;
+  activeTab: "chart1" | "chart2"; 
+  setActiveTab: (tab: "chart1" | "chart2") => void;
+  showPairPositions: boolean;
+  setShowPairPositions: (value: boolean) => void;
+  setCalendarPositions: (compPositions: any) => void;
+  setIsDataLoaded: (value: boolean) => void;
 }

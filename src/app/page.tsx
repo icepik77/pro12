@@ -637,8 +637,7 @@ export default function Home() {
               </div>
             }
 
-            
-
+          
             {/* Таблица совместимости */}
             {showPairPositions && 
               <div>
@@ -651,6 +650,18 @@ export default function Home() {
                 >
                   <PlanetTable planetPositions={compPlanetPositions} />
                 </motion.div>
+
+                {/* Дома медленной прогрессии */}
+                {showPairPositions && birthData.isForeSlow && 
+                  <motion.div
+                  className="w-full flex justify-center"
+                  initial={{ opacity: 0 }} // Начальная прозрачность
+                  animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+                  transition={{ duration: 1 }} // Плавное появление за 1 секунду
+                >
+                  <HouseTable housePositions={compHousePositions} />
+                </motion.div>
+                }
 
                 <motion.div
                   className="w-full flex justify-center"
@@ -681,6 +692,8 @@ export default function Home() {
               />
               </motion.div>
             }
+
+            
 
             {/* Календарь медленной прогрессии */}
             {showPairPositions && birthData.isForeSlow && 

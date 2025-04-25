@@ -735,6 +735,127 @@ export const getNatalChart = (birthData: BirthData, isLocal: boolean, isCompatib
   };
 }
 
+// export const getSlowProgressionCalendar = (birthData: BirthData) => {
+//   const natalData = getNatalChart(birthData, birthData.isLocal, false, false);
+//   if (!natalData) {
+//     console.log("Невозможно построить натальную карту.");
+//     return [];
+//   }
+
+//   const [day, month, year] = birthData.dateFore.split('.').map(Number);
+//   const centerDate = new Date(year, month - 1, day);
+//   const startDate = new Date(centerDate.getTime() - 365 * 24 * 60 * 60 * 1000);
+//   const endDate = new Date(centerDate.getTime() + 365 * 24 * 60 * 60 * 1000);
+
+//   const activeAspects = new Map<string, {
+//     start: Date,
+//     end: Date | null,
+//     aspect: any,
+//     orbAtStart?: number,
+//     orbAtEnd?: number
+//   }>();
+//   const calendarData: { start: Date, end: Date, aspect: any }[] = [];
+
+//   for (let current = new Date(startDate); current <= endDate; current.setDate(current.getDate() + 1)) {
+//     const dateStr = current.toLocaleDateString('ru-RU').split('/').map(part => part.padStart(2, '0')).join('.');
+
+//     const birthDataCurrent: BirthData = {
+//       ...birthData,
+//       date: birthData.date,
+//       time: birthData.time,
+//       timeFore: birthData.timeFore,
+//       dateFore: dateStr,
+//     };
+
+//     const progressedChart = getProgressionChart(birthDataCurrent);
+//     if (!progressedChart) continue;
+
+//     let natalHouses = getNatalHouses(birthDataCurrent, birthDataCurrent.isLocal ? true : false, false, false);
+//     let natalProgressionData = getProgressionDataDefaultKP(birthDataCurrent);
+//     const natalForecastHouses = setProgressionHouses(natalProgressionData.progressedCusps);
+
+//     const aspects = getAspectsBetweenChartForecast(
+//       natalData.astroData,
+//       progressedChart.astroData,
+//       natalHouses,
+//       natalForecastHouses
+//     );
+
+//     const seenThisDay = new Set<string>();
+
+//     for (const aspect of aspects) {
+//       const keyParts = [aspect.point1Key, aspect.point2Key].sort();
+//       const key = `${keyParts[0]}-${keyParts[1]}-${aspect.aspectKey}`;
+//       seenThisDay.add(key);
+
+//       // 1. Если орбис ≤ 1.0, начинаем отслеживать
+//       if (aspect.orb <= 1.0) {
+//         const existing = activeAspects.get(key);
+
+//         if (!existing) {
+//           activeAspects.set(key, {
+//             start: new Date(current),
+//             end: null,
+//             aspect,
+//             orbAtStart: aspect.orb
+//           });
+//         } else {
+//           // 2. Если орбис ≈ 1.0, обновляем старт
+//           if (Math.abs(aspect.orb - 1.0) < 0.04) {
+//             existing.start = new Date(current);
+//             existing.orbAtStart = aspect.orb;
+//           }
+//         }
+//       }
+
+//       // 3. Если орбис ≈ 0.0, фиксируем окончание
+//       if (Math.abs(aspect.orb) < 0.01) {
+//         const tracked = activeAspects.get(key);
+//         if (tracked && !tracked.end) {
+//           tracked.end = new Date(current);
+//           tracked.orbAtEnd = aspect.orb;
+//         }
+//       }
+//     }
+
+//     // Завершаем аспекты, которые исчезли из эфемерид
+//     for (const [key, value] of activeAspects.entries()) {
+//       if (!seenThisDay.has(key) && value.end) {
+//         calendarData.push({
+//           start: value.start,
+//           end: value.end,
+//           aspect: value.aspect,
+//         });
+
+//         activeAspects.delete(key);
+//       }
+//     }
+//   }
+
+//   // Закрываем висячие аспекты
+//   for (const { start, end, aspect } of activeAspects.values()) {
+//     if (end) {
+//       const adjustedStart = new Date(start.getTime() - 24 * 60 * 60 * 1000);
+//       const adjustedEnd = new Date(end.getTime() - 48 * 60 * 60 * 1000);
+//       calendarData.push({
+//         start: adjustedStart,
+//         end: adjustedEnd,
+//         aspect
+//       });
+//     }
+//   }
+
+//   // Фильтрация
+//   const filtered = calendarData
+//     .filter(({ start, end }) => end >= centerDate && start <= endDate)
+//     .filter(({ aspect }) => {
+//       return !(aspect.aspectKey === 'conjunction' && aspect.point1Key === aspect.point2Key);
+//     });
+
+//   return filtered;
+// };
+
+
 export const getSlowProgressionCalendar = (birthData: BirthData) => {
   const natalData = getNatalChart(birthData, birthData.isLocal, false, false);
   if (!natalData) {
@@ -867,17 +988,30 @@ export const getSlowProgressionCalendar = (birthData: BirthData) => {
   }
 
   // Закрываем висячие аспекты и обрезаем end по границе
-  for (const { start, end, aspect } of activeAspects.values()) {
+  for (const { start, end, aspect, orbAtStart } of activeAspects.values()) {
+    // Проверяем, если орбис отличается от 1 (например, погрешность 0.04)
+    const isOrbNotOne = Math.abs((orbAtStart ?? 0) - 1.0) >= 0.04;
+  
+    // Если орбис не равен 1, можно добавить соответствующую пометку или обработку
+    if (isOrbNotOne) {
+      console.log(`Орбис аспекта ${aspect.point1Key} ${aspect.aspectKey} ${aspect.point2Key} отличается от 1: ${orbAtStart}`);
+    }
+  
+    // Если есть конечная дата
     if (end) {
       const adjustedStart = new Date(start.getTime() - 24 * 60 * 60 * 1000); // минус 1 день
-      const adjustedEnd = new Date(end.getTime() - 48 * 60 * 60 * 1000); // минус 1 день
+      const adjustedEnd = new Date(end.getTime() - 48 * 60 * 60 * 1000); // минус 2 дня
+  
+      // Добавляем в календарь, если орбис не равен 1, можно также передать пустое значение или дополнительную информацию
       calendarData.push({
-        start:adjustedStart,
+        start: adjustedStart,
         end: adjustedEnd,
-        aspect
+        aspect: {
+          ...aspect,
+          orbAtStart: isOrbNotOne ? null : orbAtStart, // Если орбис не равен 1, помечаем как null
+        }
       });
     }
-    
     // Если нет end — аспект не дошёл до точного (orb = 0), значит не нужен
   }
   
@@ -2052,8 +2186,6 @@ const calculateKochHouseCusps = ({
 
   return arr;
 };
-
-
 
 const getLocalSiderealTimeFormMC  = (
   MC: number,
