@@ -1200,7 +1200,7 @@ const getProgressionDataDefaultKP = (birthData: BirthData) =>{
   const originNatal = setOrigin(birthData, birthData.isLocal, false, false);
   let originProgress = setOrigin(birthData, birthData.isLocal, false, true);
 
-  let houseSome = getNatalHouses(birthData, birthData.isLocal, false, true);
+  // let houseSome = getNatalHouses(birthData, birthData.isLocal, false, true);
   let baseHouses = getNatalHouses(birthData, birthData.isLocal, false, false);
 
   const natalTime = originNatal.julianDate;  
@@ -1215,10 +1215,10 @@ const getProgressionDataDefaultKP = (birthData: BirthData) =>{
 
   // let cuspsData = getOldPascalCupsMethod(birthData.latitude, 23.4367, localSiderealTime);
 
-  const ascendant = getAscendant({
-    latitude: Number(birthData.latitude),
-    localSiderealTime:  localSiderealTime
-  })
+  // const ascendant = getAscendant({
+  //   latitude: Number(birthData.latitude),
+  //   localSiderealTime:  localSiderealTime
+  // })
 
   const utcTime = birthData.utcOffset? birthData.utcOffset : originNatal.localTimeFormatted?.slice(-6); 
 
@@ -1372,7 +1372,7 @@ const getAstroData = (origin: Origin, horoscope: Horoscope, planetsData:any, cus
     cusps: cuspsData,
   };
 
-  const utcTime = origin.localTimeFormatted?.slice(-6) || ""; 
+  // const utcTime = origin.localTimeFormatted?.slice(-6) || ""; 
 
   // Формируем данные для таблицы планет
   const planetPositionsList = Object.entries(planetsData)
