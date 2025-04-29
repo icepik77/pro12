@@ -12,6 +12,7 @@ import Script from "next/script";
 import Calendar from "./ui/Calendar";
 import ProgressionCalendar from "./ui/ProgressionCalendar";
 import { div } from "framer-motion/client";
+import { boolean } from "zod";
 
 const NatalChart = dynamic(() => import('./ui/NatalChart'), { ssr: false });
 
@@ -86,12 +87,26 @@ export default function Home() {
 
   const [localTime, setLocalTime] = useState<string | undefined>();
 
+  const [loadAnimation, setLoadAnimation] = useState<boolean>(false);
+
   // Отслеживаем изменение данных в planetPositions
   const [isDataLoaded, setIsDataLoaded] = useState(true);
 
   useEffect(() => {
     if (birthData.longitude) setIsDataLoaded(false);
+    if (birthData.isFore || birthData.isForeSlow) {
+      setLoadAnimation(true);
+      setTimeout(() => {
+        setLoadAnimation(false);
+      }, 4000); // 4 секунды = 4000 мс
+    }
   }, [birthData])
+
+  useEffect(() => {
+    setTimeout(() => {
+      setLoadAnimation(false);
+    }, 4000); // 4 секунды = 4000 мс
+  }, [loadAnimation])
   
 
   useEffect(() => {
@@ -121,17 +136,17 @@ export default function Home() {
               animate={{ opacity: 1 }}  // Конечная прозрачность
               transition={{ duration: 1 }} // Плавное появление за 1 секунду
             >
-              <BirthForm setBirthData={setBirthData} localTime={localTime}/>
+              <BirthForm setBirthData={setBirthData} localTime={localTime} setLoadAnimation={setLoadAnimation}/>
             </motion.div>
 
-            {/* {(!isDataLoaded) && <div>Анимация тут</div>} */}
+            
             {/* Плавное появление карты только после загрузки данных */}
-            <motion.div
+            {/* <motion.div
               className="w-full md:w-[48%] flex justify-center"
               initial={{ opacity: 0 }} // Начальная прозрачность
               animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
               transition={{ duration: 1 }} // Плавное появление за 1 секунду
-            >
+            > */}
               <NatalChart 
                 birthData={birthData} 
                 setPlanetPositions={setPlanetPositions} 
@@ -150,12 +165,12 @@ export default function Home() {
                 showPairPositions={showPairPositions}
                 setShowPairPositions={setShowPairPositions}
                 setCalendarPositions={setCalendarPositions}
-                setIsDataLoaded={setIsDataLoaded}
+                setIsDataLoaded={setLoadAnimation}
               />
-            </motion.div>
+            {/* </motion.div> */}
 
             {/* Карточка описания для мобильной версии */}
-            {birthData.isLocal && !showPairPositions && 
+            {birthData.isLocal && !showPairPositions && isDataLoaded &&
               <div className="2xl:hidden">
                 {birthData.longitude && activeTab == "chart1" && (
                   <div className="mt-2 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700">
@@ -187,7 +202,7 @@ export default function Home() {
             }
 
             {/* Карточка описания для десктопной версии c локальной картой*/}
-            {birthData.isLocal && !showPairPositions && 
+            {birthData.isLocal && !showPairPositions && isDataLoaded &&
               <div className="hidden 2xl:flex">
                 <div className="mt-2 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700 mr-3 max-w-[446px]">
                     <h3 className="text-lg font-medium">Введенные данные:</h3>
@@ -214,7 +229,7 @@ export default function Home() {
             }
 
             {/* Карточка описания для мобильной версии */}
-            {birthData.isCompatibility && !showPairPositions && 
+            {birthData.isCompatibility && !showPairPositions && isDataLoaded &&
               <div className="2xl:hidden">
                 {birthData.longitude && activeTab == "chart1" && (
                   <div className="mt-2 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700">
@@ -246,7 +261,7 @@ export default function Home() {
             }
 
             {/* Карточка описания для десктопной версии c картой совместимости*/}
-            {birthData.isCompatibility && !showPairPositions && 
+            {birthData.isCompatibility && !showPairPositions && isDataLoaded &&
               <div className="hidden 2xl:flex">
                 <div className="mt-2 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700 mr-3 max-w-[446px]">
                     <h3 className="text-lg font-medium">Введенные данные:</h3>
@@ -273,7 +288,7 @@ export default function Home() {
             }
 
             {/* Карточка описания для дефолтной версии*/}
-            {!birthData.isLocal && !birthData.isCompatibility && birthData.longitude && 
+            {!birthData.isLocal && !birthData.isCompatibility && birthData.longitude && isDataLoaded &&
               <div className="mt-2 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700 mr-3">
                 <h3 className="text-lg font-medium">Введенные данные:</h3>
                 {/* <p><strong>Имя:</strong> {birthData.name}</p> */}

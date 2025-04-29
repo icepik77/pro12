@@ -6,7 +6,7 @@ import {HousePositionsList, NatalChartProps } from '../lib/definitions';
 import { createFormedAspects, getNatalChart, getAspectsBetweenCharts, getCalendarData, 
   findExactAspectTime, getAspectsBetweenChartForecast, getNatalHouses, 
   getSlowProgressionCalendar, calculateProgressionCoefficient, calculateProgressionMoment, getProgressionChart } from '../lib/utils';
-import { div } from 'framer-motion/client';
+import Spinner from './Spiner';
 
 const NatalChart: React.FC<NatalChartProps> = ({ 
   birthData, 
@@ -55,6 +55,8 @@ const NatalChart: React.FC<NatalChartProps> = ({
   const [isForeSlow, setIsForeSlow] = useState(false);
   
   const [twoMaps, setTwoMaps] = useState(false);
+
+  const [loadAnimation, setLoadAnimation] = useState<boolean>(false);
 
   // Функция для определения цветов в зависимости от стиля
   const getStyleSettings = () => {
@@ -131,255 +133,273 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
   // Обработка формы ввода
   useEffect(() => {
-    if (!birthData.date || !birthData.time || !birthData.latitude || !birthData.longitude) return;
+    const caltulateNatalChart = () =>{
+      if (!birthData.date || !birthData.time || !birthData.latitude || !birthData.longitude) return;
 
-    let isLocal;
-    let isCompatibility;
-    let isFore; 
-    let isForeSlow; 
+      let isLocal;
+      let isCompatibility;
+      let isFore; 
+      let isForeSlow; 
 
-    if (birthData.isLocal){
-      isLocal = true;
-      setIsLocal(true);
-    } 
-    else {
-      setIsLocal(false);
-      isLocal = false;
-    }
-
-    if (birthData.isCompatibility){
-      isCompatibility = true;
-      setIsCompatibility(true);
-    } else{
-      isCompatibility = false;
-      setIsCompatibility(false);
-    }
-
-    if (birthData.isFore){
-      isFore = true;
-      setIsFore(true);
-    } else{
-      isFore = false;
-      setIsFore(false);
-    }
-
-    if (birthData.isForeSlow){
-      isForeSlow = true;
-      setIsForeSlow(true);
-    } else{
-      isForeSlow = false;
-      setIsForeSlow(false);
-    }
-
-    const natalData = getNatalChart(birthData, false, false, false);
-    if (natalData){
-      setChartData(natalData.astroData);
-      setPlanetPositions(natalData.planets);
-
-      if (natalData.houses.length > 0) {
-        setHousePositions(natalData.houses);
-      } else {
-        console.error("Данные домов локальной карты пустые или некорректные");
+      if (birthData.isLocal){
+        isLocal = true;
+        setIsLocal(true);
+      } 
+      else {
+        setIsLocal(false);
+        isLocal = false;
       }
 
-      const data = {
-        planets: natalData.planets,
-        aspects: natalData.aspects,
-      };
+      if (birthData.isCompatibility){
+        isCompatibility = true;
+        setIsCompatibility(true);
+      } else{
+        isCompatibility = false;
+        setIsCompatibility(false);
+      }
 
-      setAspectPositions(data);
-      setAspectsData(natalData.aspects);
+      if (birthData.isFore){
+        isFore = true;
+        setIsFore(true);
+      } else{
+        isFore = false;
+        setIsFore(false);
+      }
 
-    } 
+      if (birthData.isForeSlow){
+        isForeSlow = true;
+        setIsForeSlow(true);
+      } else{
+        isForeSlow = false;
+        setIsForeSlow(false);
+      }
 
-    const utcTime = natalData?.utcTime?.slice(-6) || ""; 
-    if (setLocalTime) {
-      setLocalTime(utcTime);
-    }
+      const natalData = getNatalChart(birthData, false, false, false);
+      if (natalData){
+        setChartData(natalData.astroData);
+        setPlanetPositions(natalData.planets);
 
-    let localData;
-    if (isLocal){
-      localData = getNatalChart(birthData, true, false, false); 
-
-      if (localData){
-        setLocalChartData(localData.astroData);
-        setLocalPlanetPositions(localData.planets);
-
-        if (localData.houses.length > 0) {
-          setLocalHousePositions(localData.houses);
+        if (natalData.houses.length > 0) {
+          setHousePositions(natalData.houses);
         } else {
           console.error("Данные домов локальной карты пустые или некорректные");
         }
-  
+
         const data = {
-          planets: localData.planets,
-          aspects: localData.aspects,
+          planets: natalData.planets,
+          aspects: natalData.aspects,
         };
-  
-        setLocalAspectPositions(data);
-        setLocalAspectsData(localData.aspects);
+
+        setAspectPositions(data);
+        setAspectsData(natalData.aspects);
+
       } 
-    }
 
-    let compNatalData;
-    if (isCompatibility){
-      compNatalData = getNatalChart(birthData, false, true, false); 
-
-      if (compNatalData && natalData){
-        setCompChartData(compNatalData.astroData);
-        setCompPlanetPositions(compNatalData.planets);
-
-        if (compNatalData.houses.length > 0) {
-          setCompHousePositions(compNatalData.houses);
-        } else {
-          console.error("Данные домов локальной карты пустые или некорректные");
-        }
-  
-        let data = {
-          planets: compNatalData.planets,
-          aspects: compNatalData.aspects,
-        };
-  
-        setCompAspectPositions(data);
-        setCompAspectsData(compNatalData.aspects);
-
-        const pairData = getAspectsBetweenCharts(natalData.astroData, compNatalData.astroData, false);
-        data = {
-          planets: compNatalData.planets,
-          aspects: pairData,
-        };
-        setCompPairPositions(data);
-      } 
-    }
-
-    let natalDataFore;
-    if (isFore){
-      let data;
-      let natalData;
-      if (isLocal) {
-        natalData = getNatalChart(birthData, true, false, false); 
-        natalDataFore = getNatalChart(birthData, true, false, true); 
+      const utcTime = natalData?.utcTime?.slice(-6) || ""; 
+      if (setLocalTime) {
+        setLocalTime(utcTime);
       }
-      else {
-        natalData = getNatalChart(birthData, false, false, false); 
-        natalDataFore = getNatalChart(birthData, false, false, true); 
-      }
-      
-      if (natalDataFore && natalData){
-        
-        setCompChartData(natalDataFore.astroData);
-        setCompPlanetPositions(natalDataFore.planets);
 
-        if (natalDataFore.houses.length > 0) {
-          setCompHousePositions(natalDataFore.houses);
-        } else {
-          console.error("Данные домов локальной карты пустые или некорректные");
-        }
+      let localData;
+      if (isLocal){
+        localData = getNatalChart(birthData, true, false, false); 
 
-        data = {
-          planets: natalDataFore.planets,
-          aspects: natalDataFore.aspects,
-        };
+        if (localData){
+          setLocalChartData(localData.astroData);
+          setLocalPlanetPositions(localData.planets);
 
-        setCompAspectPositions(data);
-        setCompAspectsData(natalDataFore.aspects);
-        
-        const pairData = getAspectsBetweenCharts(natalData.astroData, natalDataFore.astroData, false);
-
-        data = {
-          planets: natalDataFore.planets,
-          aspects: pairData,
-        };
-        setCompPairPositions(data);
-
-        const run = async () => {
-          const calendarData = getCalendarData(birthData);
-      
-          const promises = [];
-      
-          for (const item of calendarData) {
-            for (const aspect of item.aspects) {
-              const promise = findExactAspectTime(natalData, birthData, aspect);
-              promises.push(promise);
-            }
+          if (localData.houses.length > 0) {
+            setLocalHousePositions(localData.houses);
+          } else {
+            console.error("Данные домов локальной карты пустые или некорректные");
           }
-      
-          const exactTime = await Promise.all(promises);
-      
-          const transitCalendar = {
-            filteredResult: calendarData,
-            exactTime: exactTime
+    
+          const data = {
+            planets: localData.planets,
+            aspects: localData.aspects,
           };
-      
-          setCalendarPositions(transitCalendar);
-        };
-      
-        run(); 
-      }  
-    }
-
-    let natalDataForeSlow;
-    if (isForeSlow){
-      let natalData; 
-      let data;
-      
-      if (isLocal) {
-        natalData = getNatalChart(birthData, true, false, false); 
-        natalDataForeSlow = getProgressionChart(birthData); 
-      }
-      else {
-        natalData = getNatalChart(birthData, false, false, false); 
-        natalDataForeSlow = getProgressionChart(birthData); 
+    
+          setLocalAspectPositions(data);
+          setLocalAspectsData(localData.aspects);
+        } 
       }
 
-      if (natalDataForeSlow && natalData){
+      let compNatalData;
+      if (isCompatibility){
+        compNatalData = getNatalChart(birthData, false, true, false); 
+
+        if (compNatalData && natalData){
+          setCompChartData(compNatalData.astroData);
+          setCompPlanetPositions(compNatalData.planets);
+
+          if (compNatalData.houses.length > 0) {
+            setCompHousePositions(compNatalData.houses);
+          } else {
+            console.error("Данные домов локальной карты пустые или некорректные");
+          }
+    
+          let data = {
+            planets: compNatalData.planets,
+            aspects: compNatalData.aspects,
+          };
+    
+          setCompAspectPositions(data);
+          setCompAspectsData(compNatalData.aspects);
+
+          const pairData = getAspectsBetweenCharts(natalData.astroData, compNatalData.astroData, false);
+          data = {
+            planets: compNatalData.planets,
+            aspects: pairData,
+          };
+          setCompPairPositions(data);
+        } 
+      }
+
+      let natalDataFore;
+      if (isFore){
+        let data;
+        let natalData;
+        if (isLocal) {
+          natalData = getNatalChart(birthData, true, false, false); 
+          natalDataFore = getNatalChart(birthData, true, false, true); 
+        }
+        else {
+          natalData = getNatalChart(birthData, false, false, false); 
+          natalDataFore = getNatalChart(birthData, false, false, true); 
+        }
         
-        setCompChartData(natalDataForeSlow.astroData);
-        setCompPlanetPositions(natalDataForeSlow.planets);
+        if (natalDataFore && natalData){
+          
+          setCompChartData(natalDataFore.astroData);
+          setCompPlanetPositions(natalDataFore.planets);
 
-        if (natalDataForeSlow.houses.length > 0) {
-          setCompHousePositions(natalDataForeSlow.houses);
-        } else {
-          console.error("Данные домов локальной карты пустые или некорректные");
+          if (natalDataFore.houses.length > 0) {
+            setCompHousePositions(natalDataFore.houses);
+          } else {
+            console.error("Данные домов локальной карты пустые или некорректные");
+          }
+
+          data = {
+            planets: natalDataFore.planets,
+            aspects: natalDataFore.aspects,
+          };
+
+          setCompAspectPositions(data);
+          setCompAspectsData(natalDataFore.aspects);
+          
+          const pairData = getAspectsBetweenCharts(natalData.astroData, natalDataFore.astroData, false);
+
+          data = {
+            planets: natalDataFore.planets,
+            aspects: pairData,
+          };
+          setCompPairPositions(data);
+
+          const run = async () => {
+            const calendarData = getCalendarData(birthData);
+        
+            const promises = [];
+        
+            for (const item of calendarData) {
+              for (const aspect of item.aspects) {
+                const promise = findExactAspectTime(natalData, birthData, aspect);
+                promises.push(promise);
+              }
+            }
+        
+            const exactTime = await Promise.all(promises);
+        
+            const transitCalendar = {
+              filteredResult: calendarData,
+              exactTime: exactTime
+            };
+        
+            setCalendarPositions(transitCalendar);
+          };
+        
+          run(); 
+        }  
+      }
+
+      let natalDataForeSlow;
+      if (isForeSlow){
+        let natalData; 
+        let data;
+        
+        if (isLocal) {
+          natalData = getNatalChart(birthData, true, false, false); 
+          natalDataForeSlow = getProgressionChart(birthData); 
+        }
+        else {
+          natalData = getNatalChart(birthData, false, false, false); 
+          natalDataForeSlow = getProgressionChart(birthData); 
         }
 
-        data = {
-          planets: natalDataForeSlow.planets,
-          aspects: natalDataForeSlow.aspects,
-        };
+        if (natalDataForeSlow && natalData){
+          
+          setCompChartData(natalDataForeSlow.astroData);
+          setCompPlanetPositions(natalDataForeSlow.planets);
 
-        setCompAspectPositions(data);
-        setCompAspectsData(natalDataForeSlow.aspects);
+          if (natalDataForeSlow.houses.length > 0) {
+            setCompHousePositions(natalDataForeSlow.houses);
+          } else {
+            console.error("Данные домов локальной карты пустые или некорректные");
+          }
 
-        let natalHouses = getNatalHouses(birthData, isLocal? true : false, false, false);
-        let natalForecastHouses;
+          data = {
+            planets: natalDataForeSlow.planets,
+            aspects: natalDataForeSlow.aspects,
+          };
 
-        if (isLocal) natalForecastHouses = getNatalHouses(birthData, true, false, true);
-        else natalForecastHouses = getNatalHouses(birthData, false, false, true);
+          setCompAspectPositions(data);
+          setCompAspectsData(natalDataForeSlow.aspects);
 
-        const pairData = getAspectsBetweenChartForecast(
-          natalData.astroData,
-          natalDataForeSlow.astroData,
-          natalHouses,
-          natalForecastHouses
-        );
+          let natalHouses = getNatalHouses(birthData, isLocal? true : false, false, false);
+          let natalForecastHouses;
 
-        data = {
-          planets: natalDataForeSlow.planets,
-          aspects: pairData,
-        };
-        setCompPairPositions(data);
+          if (isLocal) natalForecastHouses = getNatalHouses(birthData, true, false, true);
+          else natalForecastHouses = getNatalHouses(birthData, false, false, true);
 
-        const run = async () => {
-          const calendarData = getSlowProgressionCalendar(birthData);
+          const pairData = getAspectsBetweenChartForecast(
+            natalData.astroData,
+            natalDataForeSlow.astroData,
+            natalHouses,
+            natalForecastHouses
+          );
 
-          setCalendarPositions(calendarData);
-        };
-      
-        run(); 
-      }  
+          data = {
+            planets: natalDataForeSlow.planets,
+            aspects: pairData,
+          };
+          setCompPairPositions(data);
+
+          const run = async () => {
+            const calendarData = getSlowProgressionCalendar(birthData);
+
+            setCalendarPositions(calendarData);
+          };
+        
+          run(); 
+        }  
+      }
     }
+
+    if (birthData.longitude){
+      setLoadAnimation(true);
+      setTimeout(() => {
+        console.log("here");
+        caltulateNatalChart();
+        setLoadAnimation(false);
+      }, 100);
+    } 
+    
+    // setTimeout(() => {
+    //   console.log("hereto");
+    //   setLoadAnimation(false);
+    // }, 6000);
   }, [birthData]);
+
+  useEffect(()=>{console.log("loadAnimation", loadAnimation)}, [loadAnimation])
 
 
   // Рисуем радикс натала по дефолту
@@ -502,6 +522,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
 
   return (
     <div className="flex flex-col items-center w-full" ref={containerRefMobile}>
+      {(loadAnimation) && <Spinner/>} 
       {/* Локальная карта для небольших экранов */}
       {(isLocal || isCompatibility || isFore || isForeSlow) &&
         <div>

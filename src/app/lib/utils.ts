@@ -87,7 +87,7 @@ export const getAspectsForPlanet = (astroData: AstroData) => {
 
   const orbs = {
     Sun: 8.5,
-    Moon: 8.5,
+    Moon: 5.5,
     Mercury: 8.5,
     Venus: 8.5,
     Mars: 8.5,
@@ -96,8 +96,8 @@ export const getAspectsForPlanet = (astroData: AstroData) => {
     Uranus: 8.5,
     Neptune: 6.5,
     Pluto: 6.5,
-    Lilith: 8.5,
-    NNode: 8.5,
+    Lilith: 5.5,
+    NNode: 5.5,
   };
   
   let foundAspects: Aspect[] = [];
@@ -316,18 +316,18 @@ export const getAspectsBetweenCharts = (astroData1: AstroData, astroData2: Astro
   let orbs;
   if (!orbisNUll){
     orbs = {
-      Sun: 8.5,
-      Moon: 8.5,
-      Mercury: 8.5,
-      Venus: 8.5,
-      Mars: 8.5,
-      Jupiter: 8.5,
+      Sun: 8,
+      Moon: 5,
+      Mercury: 8,
+      Venus: 8,
+      Mars: 8,
+      Jupiter: 8,
       Saturn: 9,
-      Uranus: 8.5,
+      Uranus: 8,
       Neptune: 6.5,
       Pluto: 6.5,
-      Lilith: 8.5,
-      NNode: 8.5,
+      Lilith: 5,
+      NNode: 5,
     };
   } else{
     orbs = {
@@ -905,9 +905,6 @@ export const getSlowProgressionCalendar = (birthData: BirthData) => {
 
     const seenThisDay = new Set<string>();
 
-    console.log("current", current);
-    console.log("aspects", aspects);
-
     for (const aspect of aspects) {
       if (Math.abs(aspect.orb - 1.0) < 0.04) {
         const keyParts = [aspect.point1Key, aspect.point2Key].sort();
@@ -972,9 +969,6 @@ export const getSlowProgressionCalendar = (birthData: BirthData) => {
 
     for (const [key, value] of activeAspects.entries()) {
       if (!seenThisDay.has(key) && value.end) {
-        console.log(`Аспект ${value.aspect.point1Key} ${value.aspect.aspectKey} ${value.aspect.point2Key}:`);
-        console.log(`  orbAtStart: ${value.orbAtStart?.toFixed(2)}°`);
-        console.log(`  orbAtEnd:   ${value.orbAtEnd?.toFixed(2)}°`);
         
         calendarData.push({
           start: value.start,
@@ -1027,8 +1021,6 @@ export const getSlowProgressionCalendar = (birthData: BirthData) => {
     // Убираем соединения типа Луна-Луна и т.п.
     return !(aspect.aspectKey === 'conjunction' && aspect.point1Key === aspect.point2Key);
   });
-
-  console.log("filtered", filtered); 
 
   return filtered;
 };
@@ -1211,25 +1203,15 @@ const getProgressionDataDefaultKP = (birthData: BirthData) =>{
   let houseSome = getNatalHouses(birthData, birthData.isLocal, false, true);
   let baseHouses = getNatalHouses(birthData, birthData.isLocal, false, false);
 
-  console.log("houseSome", houseSome); 
-  console.log("baseHouses", baseHouses);
-
   const natalTime = originNatal.julianDate;  
   const interestTime = originProgress.julianDate;
 
-  console.log("natalTime", natalTime);
-  console.log("interestTime", interestTime);
-  console.log("originNatal.date", originNatal.date);
-  console.log("originProgress.date", originProgress.date);
-
   const kp = calculateProgressionCoefficient(natalTime, interestTime) + 0.177;
-  console.log("kp", kp);
 
   let midheavenSome = baseHouses[9].ChartPosition.StartPosition.Ecliptic.DecimalDegrees;
   midheavenSome = midheavenSome + kp;
   
   const localSiderealTime = getLocalSiderealTimeFormMC(midheavenSome, Number(birthData.latitude));
-  console.log("localSiderealTime", localSiderealTime);
 
   // let cuspsData = getOldPascalCupsMethod(birthData.latitude, 23.4367, localSiderealTime);
 
@@ -1237,9 +1219,6 @@ const getProgressionDataDefaultKP = (birthData: BirthData) =>{
     latitude: Number(birthData.latitude),
     localSiderealTime:  localSiderealTime
   })
-
-  console.log("midheavenSome", midheavenSome);
-  console.log("ascendant", ascendant);
 
   const utcTime = birthData.utcOffset? birthData.utcOffset : originNatal.localTimeFormatted?.slice(-6); 
 
@@ -1359,7 +1338,6 @@ const getProgressionDataDefaultKP = (birthData: BirthData) =>{
   });
 
   let cuspsData = horoscopeOriginNatal.Houses.map((house: any) => house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees);
-  console.log("cuspsData", cuspsData);
   
   const planetsData = horoscope.CelestialBodies;
   // const ascendant = horoscopeOriginNatal._ascendant.ChartPosition.Ecliptic.DecimalDegrees;
@@ -2194,10 +2172,6 @@ const getLocalSiderealTimeFormMC  = (
 ): number => {
   let mc = MC;
 
-  console.log("mc", mc); 
-  console.log("LATITUDE", LATITUDE);
-  console.log("ECLIPTIC_OBLIQUITY", ECLIPTIC_OBLIQUITY); 
-
   if (mc < 0) mc += 180;
   if (Math.abs(mc - 180) > 10) mc += 180;
   mc = normalize(mc);
@@ -2206,7 +2180,6 @@ const getLocalSiderealTimeFormMC  = (
   const φ = LATITUDE;
 
   const tanRAMC = tanDeg(mc) / cosDeg(E);
-  console.log("tanRAMC", tanRAMC);
   let RAMC = atanDeg(tanRAMC);
   if (mc > 180) RAMC += 180;
   RAMC = normalize(RAMC);

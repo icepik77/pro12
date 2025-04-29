@@ -39,9 +39,10 @@ const styleOptions = [
 interface BirthFormProps {
   setBirthData: (data: any) => void;
   localTime?: string;
+  setLoadAnimation: (value: boolean) => void;
 }
 
-export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
+export default function BirthForm({ setBirthData, localTime, setLoadAnimation }: BirthFormProps) {
   const [formData, setFormData] = useState({
     name: "",
     date: "01.01.2003",
@@ -385,6 +386,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
         });
 
       } else if ((isFore && !isLocal) || (isForeSlow && !isLocal)){
+        setLoadAnimation(true);
         setBirthData({
           ...formData,
 
@@ -400,6 +402,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
           isForeSlow: isForeSlow ? true : false 
         });
       } else if ((isFore && isLocal) || (isForeSlow && isLocal)){
+          setLoadAnimation(true);
           setBirthData({
             ...formData,
 
