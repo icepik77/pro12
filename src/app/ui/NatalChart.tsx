@@ -379,7 +379,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
             setCalendarPositions(calendarData);
           };
         
-          run(); 
+          // run(); 
         }  
       }
     }
