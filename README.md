@@ -20,8 +20,12 @@
 - **date-fns** — работа с датами
 - **Custom алгоритмы** — для расчета аспектов, транзитов и прогрессий
 
-## ⚙️ Установка и запуск
+## Обзор 
 
+![Десктоп](https://github.com/icepik77/pro12/blob/master/public/view_2.png)
+![Мобильный экран](https://github.com/icepik77/pro12/blob/master/public/view_1.png)
+
+## ⚙️ Установка и запуск
 
 git clone https://github.com/icepik77/pro12.git
 cd pro12
