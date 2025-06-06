@@ -12,14 +12,43 @@ const planetSymbols: Record<string, string> = {
 
 // Сопоставление аспектов с их символами
 const aspectSymbols: Record<string, string> = {
-  conjunction: "☌", opposition: "☍", trine: "△", square: "□", sextile: "⚹"
+  conjunction: "☌",    // Соединение
+  opposition: "☍",     // Оппозиция
+  trine: "△",          // Тригон
+  square: "□",         // Квадрат
+  sextile: "⚹",        // Секстиль
+  semisextile: "⚺",    // Полусекстиль
+  quincunx: "⚻"        // Квинконс (150°)
 };
+
+
+// Сопоставление домов с римскими цифрами
+const houseRomanNumerals: Record<string, string> = {
+  First: "I",
+  Second: "II",
+  Third: "III",
+  Fourth: "IV",
+  Fifth: "V",
+  Sixth: "VI",
+  Seventh: "VII",
+  Eighth: "VIII",
+  Ninth: "IX",
+  Tenth: "X",
+  Eleventh: "XI",
+  Twelfth: "XII"
+};
+
 
 // Функция преобразования орбиса в формат градусов, минут, секунд
 const formatOrb = (orb: number): string => {
   const degrees = Math.floor(orb);
   const minutes = Math.floor((orb - degrees) * 60);
   const seconds = Math.floor(((orb - degrees) * 60 - minutes) * 60);
+
+  if (degrees === 0) {
+    return `${minutes}' ${seconds}''`;
+  }
+
   return `${degrees}° ${minutes}' ${seconds}''`;
 };
 
@@ -41,9 +70,9 @@ const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions, planets }) 
       <table className="table-auto w-full max-w-[400px] border-collapse">
         <tbody>
           {aspectsPositions.map((aspect, index) => {
-            const point1Symbol = planetSymbols[aspect.point1Key] || aspect.point1Label;
+            const point1Symbol = planetSymbols[aspect.point1Key] || houseRomanNumerals[aspect.point1Label] || aspect.point1Label;
             const aspectSymbol = aspectSymbols[aspect.aspectKey] || aspect.aspectKey;
-            const point2Symbol = planetSymbols[aspect.point2Key] || aspect.point2Label;
+            const point2Symbol = planetSymbols[aspect.point2Key] || houseRomanNumerals[aspect.point2Label] || aspect.point2Label;
             const formattedOrb = formatOrb(aspect.orb);
 
             const planet1 = planets.find(p => p.name == aspect.point1Key.toLowerCase());
@@ -55,14 +84,12 @@ const AspectTable: React.FC<AspectTableProps> = ({ aspectsPositions, planets }) 
 
             // Выбираем цвет для символа аспекта
             let aspectColor = '';
-            if (aspect.aspectKey === 'opposition') {
-              aspectColor = 'text-red-600'; // Красный для оппозиции
-            } else if (['trine', 'sextile'].includes(aspect.aspectKey)) {
-              aspectColor = 'text-green-600'; // Зеленый для гармоничных аспектов
+            if (['opposition', 'square', 'quincunx'].includes(aspect.aspectKey)) {
+              aspectColor = 'text-red-600'; // Красный для напряжённых аспектов
+            } else if (['trine', 'sextile', 'semisextile'].includes(aspect.aspectKey)) {
+              aspectColor = 'text-green-600'; // Зелёный для гармоничных аспектов
             } else if (aspect.aspectKey === 'conjunction') {
-              aspectColor = 'text-black'; // Черный для соединений
-            } else if (aspect.aspectKey === 'square') {
-              aspectColor = 'text-red-600'; // Красный для квадрата
+              aspectColor = 'text-black'; // Чёрный для соединения (нейтральный)
             }
 
             return (

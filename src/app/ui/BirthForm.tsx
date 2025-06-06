@@ -39,16 +39,17 @@ const styleOptions = [
 interface BirthFormProps {
   setBirthData: (data: any) => void;
   localTime?: string;
+  setLoadAnimation: (value: boolean) => void;
 }
 
-export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
+export default function BirthForm({ setBirthData, localTime, setLoadAnimation }: BirthFormProps) {
   const [formData, setFormData] = useState({
     name: "",
-    date: "",
-    time: "",
+    date: "01.01.2000",
+    time: "17:00:00",
     city: "",
-    latitude: "",
-    longitude: "",
+    latitude: "52.53639",
+    longitude: "85.20722",
     utcOffset: "",
 
     localCity: "",
@@ -63,8 +64,8 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
     longitudeComp:"",
     utcOffsetComp: "",
 
-    timeFore:"",
-    dateFore:"",
+    timeFore:"12:30:00",
+    dateFore:"10.01.2000",
     utcOffsetFore:"",
 
     houseSystem: "koch",
@@ -72,10 +73,20 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
 
     isLocal: false,
     isCompatibility: false,
+<<<<<<< HEAD
+    isFore: false,
+    isForeSlow: false,
+    isForeFast: false
+=======
+>>>>>>> f50753d7e39c928295ccbf8c739348ba1ad896e8
   });
 
   const [isLocal, setIsLocal] = useState(false);
   const [isCompatibility, setIsCompatibility] = useState(false);
+  const [isFore, setIsFore] = useState(false);
+  const [isForeSlow, setIsForeSlow] = useState(false);
+  const [isForeFast, setIsForeFast] = useState(false);
+
 
   const [errors, setErrors] = useState({
     latitude: "",
@@ -347,14 +358,22 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
       newErrors.longitude = "Некорректные координаты";
     }
 
-    // Проверяем координаты
     if (formData.localLatitude && formData.localLongitude  && !validateCoordinates(formData.localLatitude, formData.localLongitude)) {
       newErrors.latitude = "Некорректные координаты";
       newErrors.longitude = "Некорректные координаты";
     }
 
+    if (formData.latitudeComp && formData.longitudeComp  && !validateCoordinates(formData.latitudeComp, formData.longitudeComp)) {
+      newErrors.latitude = "Некорректные координаты";
+      newErrors.longitude = "Некорректные координаты";
+    }
+
     if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset && validateDateTimeUTC(formData.date, formData.time, formData.utcOffset)) {
+<<<<<<< HEAD
+      if (isLocal && !isFore && !isForeSlow && !isForeFast){
+=======
       if (isLocal){
+>>>>>>> f50753d7e39c928295ccbf8c739348ba1ad896e8
         setBirthData({
           ...formData,
 
@@ -375,7 +394,43 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
           isCompatibility: true
         });
 
+<<<<<<< HEAD
+      } else if ((isFore && !isLocal) || (isForeSlow && !isLocal) || (isForeFast && !isLocal)){
+        setLoadAnimation(true);
+        setBirthData({
+          ...formData,
+
+          localCity: "",
+          localLatitude: "",
+          localLongitude: "",
+
+          cityComp: "",
+          latitudeComp: "",
+          longitudeComp: "",
+
+          isFore: isFore ? true : false,
+          isForeSlow: isForeSlow ? true : false, 
+          isForeFast: isForeFast? true : false
+        });
+      } else if ((isFore && isLocal) || (isForeSlow && isLocal) || (isForeFast && isLocal)){
+          setLoadAnimation(true);
+          setBirthData({
+            ...formData,
+
+            cityComp: "",
+            latitudeComp: "",
+            longitudeComp: "",
+
+            isFore: isFore ? true : false,
+            isForeSlow: isForeSlow ? true : false, 
+            isForeFast: isForeFast ? true : false,          
+            isLocal: true
+          });
+      }
+      else {
+=======
       } else {
+>>>>>>> f50753d7e39c928295ccbf8c739348ba1ad896e8
         setBirthData({
           ...formData,
 
@@ -535,7 +590,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             </div>
 
             {/* Чекбокс */}
-            {!isCompatibility && 
+            {!isCompatibility &&  
               <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
@@ -551,7 +606,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
             }
 
             {/* Чекбокс */}
-            {!isLocal && 
+            {!isLocal && !isFore && !isForeSlow && !isForeFast &&
               <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
@@ -559,6 +614,7 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                 onChange={() => {
                   setIsCompatibility(!isCompatibility)
                   if (isLocal) setIsLocal(!isLocal);
+                  if (isFore) setIsFore(!isFore);
                 }}
                 className="w-4 h-4"
               />
@@ -720,6 +776,108 @@ export default function BirthForm({ setBirthData, localTime }: BirthFormProps) {
                 </div>
               </div>
             )}
+
+            {/* Чекбокс транзиты*/}
+            {(!isCompatibility && !isForeSlow && !isForeFast) &&
+              <label className="flex items-center space-x-2 cursor-pointer ">
+              <input
+                type="checkbox"
+                checked={isFore}
+                onChange={() => {
+                  setIsFore(!isFore)
+                  if (isCompatibility) setIsCompatibility(!isCompatibility);
+                  if (isForeSlow) setIsForeSlow(!isForeSlow);
+                  if (isForeFast) setIsForeFast(!isForeFast);
+                }}
+                className="w-4 h-4"
+              />
+              <span>Транзиты</span>
+              </label>
+            }
+
+            {/* Чекбокс медленная прогрессия */}
+            {(!isCompatibility && !isFore && !isForeFast) &&
+              <label className="flex items-center space-x-2 cursor-pointer ">
+              <input
+                type="checkbox"
+                checked={isForeSlow}
+                onChange={() => {
+                  setIsForeSlow(!isForeSlow)
+                  if (isCompatibility) setIsCompatibility(!isCompatibility);
+                  if (isFore) setIsFore(!isFore);
+                  if (isForeFast) setIsForeFast(!isForeFast);
+                }}
+                className="w-4 h-4"
+              />
+              <span>Медленная прогрессия</span>
+              </label>
+            }
+
+            {/* Чекбокс быстрая прогрессия */}
+            {(!isCompatibility && !isFore && !isForeSlow) &&
+              <label className="flex items-center space-x-2 cursor-pointer ">
+              <input
+                type="checkbox"
+                checked={isForeFast}
+                onChange={() => {
+                  setIsForeFast(!isForeFast)
+                  if (isCompatibility) setIsCompatibility(!isCompatibility);
+                  if (isFore) setIsFore(!isFore);
+                  if (isForeSlow) setIsForeSlow(!isForeSlow);
+                }}
+                className="w-4 h-4"
+              />
+              <span>Быстрая прогрессия</span>
+              </label>
+            }
+
+            {(isFore || isForeSlow || isForeFast) && (
+              <div className=" px-4 py-0 rounded-lg">
+                {/* Дата, время и UTC в одну строку */}
+                <div className="flex flex-wrap gap-4">
+                  {/* Дата */}
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-gray-700 text-sm mb-1">Дата</label>
+                    <input 
+                      type="text" 
+                      name="dateFore" 
+                      value={formData.dateFore} 
+                      onChange={handleDateInput} 
+                      placeholder="ДД.ММ.ГГГГ" 
+                      className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
+                    />
+                  </div>
+
+                  {/* Время */}
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-gray-700 text-sm mb-1">Время</label>
+                    <input 
+                      type="text" 
+                      name="timeFore" 
+                      value={formData.timeFore} 
+                      onChange={handleTimeInput} 
+                      placeholder="ЧЧ:ММ" 
+                      className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
+                    />
+                  </div>
+
+                  {/* UTC */}
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-gray-700 text-sm mb-1">UTC</label>
+                    <input
+                      type="text"
+                      name="utcOffsetFore"
+                      value={formData.utcOffsetFore}
+                      onChange={handleUtcOffsetInput}
+                      placeholder={localTime || "+00:00"}
+                      className="w-full p-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:outline-none"
+                    />
+                  </div>
+                </div>                          
+              </div>
+            )}
+
+            
           </div>
 
           <button type="submit" className="mt-6 w-full p-3 bg-[#172935] text-white font-medium rounded-md hover:bg-gray-800 transition">Построить карту</button>

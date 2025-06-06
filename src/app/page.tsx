@@ -9,6 +9,10 @@ import { motion } from "framer-motion"; // Импортируем framer-motion
 import Header from "./ui/Header";
 import dynamic from 'next/dynamic';
 import Script from "next/script";
+import Calendar from "./ui/Calendar";
+import ProgressionCalendar from "./ui/ProgressionCalendar";
+import { div } from "framer-motion/client";
+import { boolean } from "zod";
 
 const NatalChart = dynamic(() => import('./ui/NatalChart'), { ssr: false });
 
@@ -42,23 +46,26 @@ export default function Home() {
     longitude: "",
     localLatitude: "",
     localLongitude: "",
-    nameComp:"",
-    dateComp:"",
-    timeComp:"",
-    cityComp:"",
-    latitudeComp:"",
-    longitudeComp:"",
+    nameComp: "",
+    dateComp: "",
+    timeComp: "",
+    cityComp: "",
+    latitudeComp: "",
+    longitudeComp: "",
     utcOffset: "",
     utcOffsetComp: "",
 
-    timeFore:"",
-    dateFore:"",
-    utcOffsetFore:"",
+    timeFore: "",
+    dateFore: "",
+    utcOffsetFore: "",
 
     houseSystem: "koch",
     style: "elements", 
     isLocal: false, 
-    isCompatibility: false
+    isCompatibility: false,
+    isFore: false, 
+    isForeSlow: false, 
+    isForeFast: false
   });
 
   const [planetPositions, setPlanetPositions] = useState<any[]>([]);
@@ -75,17 +82,39 @@ export default function Home() {
   const [compPairPositions, setCompPairPositions] = useState<any>();
   const [showPairPositions, setShowPairPositions] = useState<any>();
 
+  const [calendarPositions, setCalendarPositions] = useState<any>();
+
   const [activeTab, setActiveTab] = useState<"chart1" | "chart2">("chart1");
 
   const [localTime, setLocalTime] = useState<string | undefined>();
 
+  const [loadAnimation, setLoadAnimation] = useState<boolean>(false);
+
   // Отслеживаем изменение данных в planetPositions
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [isDataLoaded, setIsDataLoaded] = useState(true);
+
+  useEffect(() => {
+    if (birthData.longitude) setIsDataLoaded(false);
+    if (birthData.isFore || birthData.isForeSlow) {
+      setLoadAnimation(true);
+      setTimeout(() => {
+        setLoadAnimation(false);
+      }, 4000); // 4 секунды = 4000 мс
+    }
+  }, [birthData])
+
+  useEffect(() => {
+    setTimeout(() => {
+      setLoadAnimation(false);
+    }, 4000); // 4 секунды = 4000 мс
+  }, [loadAnimation])
+  
 
   useEffect(() => {
     if ((planetPositions && localAspectPositions && birthData.isLocal) || 
       (planetPositions && compPlanetPositions && birthData.isCompatibility) || 
       (planetPositions && !birthData.isCompatibility && !birthData.isLocal)) {
+
       setIsDataLoaded(true); // Когда данные загружены, запускаем анимацию
     }
     else{
@@ -93,6 +122,8 @@ export default function Home() {
     }
     setActiveTab("chart1");
   }, [planetPositions]); // useEffect срабатывает, когда planetPositions обновляются
+
+  
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] pt-3">
@@ -106,16 +137,17 @@ export default function Home() {
               animate={{ opacity: 1 }}  // Конечная прозрачность
               transition={{ duration: 1 }} // Плавное появление за 1 секунду
             >
-              <BirthForm setBirthData={setBirthData} localTime={localTime}/>
+              <BirthForm setBirthData={setBirthData} localTime={localTime} setLoadAnimation={setLoadAnimation}/>
             </motion.div>
 
+            
             {/* Плавное появление карты только после загрузки данных */}
-            <motion.div
+            {/* <motion.div
               className="w-full md:w-[48%] flex justify-center"
               initial={{ opacity: 0 }} // Начальная прозрачность
               animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
               transition={{ duration: 1 }} // Плавное появление за 1 секунду
-            >
+            > */}
               <NatalChart 
                 birthData={birthData} 
                 setPlanetPositions={setPlanetPositions} 
@@ -133,11 +165,13 @@ export default function Home() {
                 setActiveTab={setActiveTab}
                 showPairPositions={showPairPositions}
                 setShowPairPositions={setShowPairPositions}
+                setCalendarPositions={setCalendarPositions}
+                setIsDataLoaded={setLoadAnimation}
               />
-            </motion.div>
+            {/* </motion.div> */}
 
             {/* Карточка описания для мобильной версии */}
-            {birthData.isLocal && 
+            {birthData.isLocal && !showPairPositions && isDataLoaded &&
               <div className="2xl:hidden">
                 {birthData.longitude && activeTab == "chart1" && (
                   <div className="mt-2 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700">
@@ -169,7 +203,7 @@ export default function Home() {
             }
 
             {/* Карточка описания для десктопной версии c локальной картой*/}
-            {birthData.isLocal && 
+            {birthData.isLocal && !showPairPositions && isDataLoaded &&
               <div className="hidden 2xl:flex">
                 <div className="mt-2 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700 mr-3 max-w-[446px]">
                     <h3 className="text-lg font-medium">Введенные данные:</h3>
@@ -196,7 +230,7 @@ export default function Home() {
             }
 
             {/* Карточка описания для мобильной версии */}
-            {birthData.isCompatibility && !showPairPositions && 
+            {birthData.isCompatibility && !showPairPositions && isDataLoaded &&
               <div className="2xl:hidden">
                 {birthData.longitude && activeTab == "chart1" && (
                   <div className="mt-2 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700">
@@ -228,7 +262,7 @@ export default function Home() {
             }
 
             {/* Карточка описания для десктопной версии c картой совместимости*/}
-            {birthData.isCompatibility && !showPairPositions && 
+            {birthData.isCompatibility && !showPairPositions && isDataLoaded &&
               <div className="hidden 2xl:flex">
                 <div className="mt-2 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700 mr-3 max-w-[446px]">
                     <h3 className="text-lg font-medium">Введенные данные:</h3>
@@ -255,7 +289,7 @@ export default function Home() {
             }
 
             {/* Карточка описания для дефолтной версии*/}
-            {!birthData.isLocal && !birthData.isCompatibility && birthData.longitude && 
+            {!birthData.isLocal && !birthData.isCompatibility && birthData.longitude && isDataLoaded &&
               <div className="mt-2 p-4 bg-gray-100 border border-gray-300 rounded-md text-gray-700 mr-3">
                 <h3 className="text-lg font-medium">Введенные данные:</h3>
                 {/* <p><strong>Имя:</strong> {birthData.name}</p> */}
@@ -268,11 +302,8 @@ export default function Home() {
               </div>
             }
             
-            
-    
-
             {/* Данные без локальной карты */}
-            {!birthData.isLocal && !birthData.isCompatibility && planetPositions.length > 0 &&
+            {!birthData.isLocal && !birthData.isCompatibility && planetPositions.length > 0 && !showPairPositions &&
               <div>
                 {/* Плавное появление таблицы только после загрузки данных */}
                 <motion.div
@@ -310,7 +341,7 @@ export default function Home() {
             }
 
             {/* Для локальной карты мобильная версия */}
-            {birthData.isLocal && localPlanetPositions.length > 0 &&
+            {birthData.isLocal && localPlanetPositions.length > 0 && !showPairPositions && 
               <div className="2xl:hidden">
                 {activeTab == "chart1" && 
                   <div>
@@ -388,7 +419,7 @@ export default function Home() {
             }
             
             {/* Для локальной карты, десктопа больше 1536px */}
-            {birthData.isLocal && localPlanetPositions.length > 0 && 
+            {birthData.isLocal && localPlanetPositions.length > 0 && !showPairPositions &&
               <div className="hidden 2xl:flex max-w-[1600px]">
                 <div className="w-[50%] flex">
                   <div>
@@ -466,7 +497,7 @@ export default function Home() {
             }
 
             {/* Для карты совместимости мобильная версия */}
-            {birthData.isCompatibility && !showPairPositions && compPlanetPositions.length > 0 && 
+            {birthData.isCompatibility  && !showPairPositions && compPlanetPositions.length > 0 && 
               <div className="2xl:hidden">
                 {activeTab == "chart1" && 
                   <div>
@@ -481,15 +512,16 @@ export default function Home() {
                     </motion.div>
 
                     {/* Плавное появление таблицы домов только после загрузки данных */}
+                    
                     <motion.div
-                      className="w-full flex justify-center"
-                      initial={{ opacity: 0 }} // Начальная прозрачность
-                      animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
-                      transition={{ duration: 1 }} // Плавное появление за 1 секунду
+                    className="w-full flex justify-center"
+                    initial={{ opacity: 0 }} // Начальная прозрачность
+                    animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+                    transition={{ duration: 1 }} // Плавное появление за 1 секунду
                     >
                       <HouseTable housePositions={housePositions} />
                     </motion.div>
-
+                    
                     {/* Плавное появление таблицы аспектов только после загрузки данных */}
                     <motion.div
                       className="w-full flex justify-center"
@@ -621,27 +653,80 @@ export default function Home() {
               </div>
             }
 
+          
             {/* Таблица совместимости */}
             {showPairPositions && 
+              <div>
+                {/* Плавное появление таблицы только после загрузки данных */}
+                <motion.div
+                  className="w-full flex justify-center"
+                  initial={{ opacity: 0 }} // Начальная прозрачность
+                  animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+                  transition={{ duration: 1 }} // Плавное появление за 1 секунду
+                >
+                  <PlanetTable planetPositions={compPlanetPositions} />
+                </motion.div>
+
+                {/* Дома медленной и быстрой прогрессии */}
+                {(showPairPositions && birthData.isForeSlow) ||  (birthData.isForeFast && showPairPositions) &&
+                  <motion.div
+                  className="w-full flex justify-center"
+                  initial={{ opacity: 0 }} // Начальная прозрачность
+                  animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+                  transition={{ duration: 1 }} // Плавное появление за 1 секунду
+                >
+                  <HouseTable housePositions={compHousePositions} />
+                </motion.div>
+                }
+
+                <motion.div
+                  className="w-full flex justify-center"
+                  initial={{ opacity: 0 }} // Начальная прозрачность
+                  animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+                  transition={{ duration: 1 }} // Плавное появление за 1 секунду
+                >
+                <AspectTable
+                  aspectsPositions={compPairPositions ? compPairPositions.aspects : []}
+                  planets={compPairPositions ? compPairPositions.planets : []}
+                />
+                </motion.div>
+              </div>
+            }
+
+            {/* Календарь транзиты*/}
+            {showPairPositions && birthData.isFore &&
               <motion.div
-              className="w-full flex justify-center"
-              initial={{ opacity: 0 }} // Начальная прозрачность
-              animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
-              transition={{ duration: 1 }} // Плавное появление за 1 секунду
+                className="w-full flex justify-center"
+                initial={{ opacity: 0 }} // Начальная прозрачность
+                animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+                transition={{ duration: 1 }} // Плавное появление за 1 секунду
               >
-              <AspectTable
-                aspectsPositions={compPairPositions ? compPairPositions.aspects : []}
+              <Calendar
+                calendar={calendarPositions}
                 planets={compPairPositions ? compPairPositions.planets : []}
+                
               />
               </motion.div>
             }
+
             
-            
+
+            {/* Календарь медленной и быстрой прогрессии */}
+            {(showPairPositions && birthData.isForeSlow) || (showPairPositions && birthData.isForeFast)  && 
+              <motion.div
+                className="w-full flex justify-center"
+                initial={{ opacity: 0 }} // Начальная прозрачность
+                animate={{ opacity: isDataLoaded ? 1 : 0 }} // Когда данные загружены — плавное появление
+                transition={{ duration: 1 }} // Плавное появление за 1 секунду
+              >
+              <ProgressionCalendar
+                calendarData={calendarPositions}
+                planets={compPairPositions ? compPairPositions.planets : []}
+                
+              />
+              </motion.div>
+            }
           </div>
-
-
-          
-
         </div>
           {/* Футер */}
         <footer className="p-6 rounded-t-[50px] bg-[#172935]">
