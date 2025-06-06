@@ -24,6 +24,7 @@ export interface BirthData {
   isCompatibility: boolean;
   isFore: boolean;
   isForeSlow: boolean;
+  isForeFast: boolean;
 }
   // Интерфейс для координат планет
 export interface PlanetPositions {

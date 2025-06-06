@@ -5,7 +5,8 @@ import Chart from '@astrodraw/astrochart';
 import {HousePositionsList, NatalChartProps } from '../lib/definitions';
 import { createFormedAspects, getNatalChart, getAspectsBetweenCharts, getCalendarData, 
   findExactAspectTime, getAspectsBetweenChartForecast, getNatalHouses, 
-  getSlowProgressionCalendar, calculateProgressionCoefficient, calculateProgressionMoment, getProgressionChart } from '../lib/utils';
+  getSlowProgressionCalendar, getProgressionChart, 
+  getFastProgressionChart, getFastProgressionData, setProgressionHouses, getFastProgressionCalendar } from '../lib/utils';
 import Spinner from './Spiner';
 
 const NatalChart: React.FC<NatalChartProps> = ({ 
@@ -26,7 +27,6 @@ const NatalChart: React.FC<NatalChartProps> = ({
   showPairPositions, 
   setShowPairPositions,
   setCalendarPositions,
-  setIsDataLoaded
 }) => {
   const chartRefMain = useRef<HTMLDivElement>(null);
   const chartRefLeft = useRef<HTMLDivElement>(null);
@@ -53,6 +53,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
   const [isCompatibility, setIsCompatibility] = useState(false);
   const [isFore, setIsFore] = useState(false);
   const [isForeSlow, setIsForeSlow] = useState(false);
+  const [isForeFast, setIsForeFast] = useState(false);
   
   const [twoMaps, setTwoMaps] = useState(false);
 
@@ -140,6 +141,7 @@ const NatalChart: React.FC<NatalChartProps> = ({
       let isCompatibility;
       let isFore; 
       let isForeSlow; 
+      let isForeFast;
 
       if (birthData.isLocal){
         isLocal = true;
@@ -172,6 +174,14 @@ const NatalChart: React.FC<NatalChartProps> = ({
       } else{
         isForeSlow = false;
         setIsForeSlow(false);
+      }
+
+      if (birthData.isForeFast){
+        isForeFast = true;
+        setIsForeFast(true);
+      } else{
+        isForeFast = false;
+        setIsForeFast(false);
       }
 
       const natalData = getNatalChart(birthData, false, false, false);
@@ -382,6 +392,86 @@ const NatalChart: React.FC<NatalChartProps> = ({
           // run(); 
         }  
       }
+
+      let natalDataForeFast;
+      if (isForeFast){
+        let natalData; 
+        let data;
+        
+        if (isLocal) {
+          natalData = getNatalChart(birthData, true, false, false); 
+          natalDataForeFast = getFastProgressionChart(birthData); 
+        }
+        else {
+          natalData = getNatalChart(birthData, false, false, false); 
+          natalDataForeFast = getFastProgressionChart(birthData); 
+        }
+
+        if (natalDataForeFast && natalData){
+          
+          setCompChartData(natalDataForeFast.astroData);
+          setCompPlanetPositions(natalDataForeFast.planets);
+
+          if (natalDataForeFast.houses.length > 0) {
+            setCompHousePositions(natalDataForeFast.houses);
+          } else {
+            console.error("Данные домов локальной карты пустые или некорректные");
+          }
+
+          data = {
+            planets: natalDataForeFast.planets,
+            aspects: natalDataForeFast.aspects,
+          };
+
+          setCompAspectPositions(data);
+          setCompAspectsData(natalDataForeFast.aspects);
+
+          let natalHouses = getNatalHouses(birthData, isLocal? true : false, false, false);
+          let {progressedCusps} = getFastProgressionData(birthData);
+
+          let natalForecastHouses = setProgressionHouses(progressedCusps);
+          
+
+          const pairData = getAspectsBetweenChartForecast(
+            natalData.astroData,
+            natalDataForeFast.astroData,
+            natalHouses,
+            natalForecastHouses
+          );
+
+          data = {
+            planets: natalDataForeFast.planets,
+            aspects: pairData,
+          };
+          setCompPairPositions(data);
+
+          const run = async () => {
+            const calendarData = getFastProgressionCalendar(birthData);
+            console.log("calendarData", calendarData);
+        
+            const promises = [];
+        
+            // for (const item of calendarData) {
+            //   for (const aspect of item.aspects) {
+            //     const promise = findExactAspectTime(natalData, birthData, aspect);
+            //     promises.push(promise);
+            //   }
+            // }
+        
+            // const exactTime = await Promise.all(promises);
+            // console.log("exactTime", exactTime); 
+        
+            // const transitCalendar = {
+            //   filteredResult: calendarData,
+            //   exactTime: exactTime
+            // };
+        
+            setCalendarPositions(calendarData);
+          };
+        
+          run(); 
+        }  
+      }
     }
 
     if (birthData.longitude){
@@ -398,9 +488,6 @@ const NatalChart: React.FC<NatalChartProps> = ({
     //   setLoadAnimation(false);
     // }, 6000);
   }, [birthData]);
-
-  useEffect(()=>{console.log("loadAnimation", loadAnimation)}, [loadAnimation])
-
 
   // Рисуем радикс натала по дефолту
   useEffect(() => {
@@ -524,10 +611,10 @@ const NatalChart: React.FC<NatalChartProps> = ({
     <div className="flex flex-col items-center w-full" ref={containerRefMobile}>
       {(loadAnimation) && <Spinner/>} 
       {/* Локальная карта для небольших экранов */}
-      {(isLocal || isCompatibility || isFore || isForeSlow) &&
+      {(isLocal || isCompatibility || isFore || isForeSlow || isForeFast) &&
         <div>
           {/* Табы */}
-          {(isLocal || isCompatibility || isFore || isForeSlow) && 
+          {(isLocal || isCompatibility || isFore || isForeSlow || isForeFast) && 
             <div className="flex space-x-4 justify-center">
               <button
                 className={`px-4 py-2 rounded ${activeTab === "chart1" ? "bg-[#172935] text-white" : "bg-gray-200"}`}
@@ -551,12 +638,12 @@ const NatalChart: React.FC<NatalChartProps> = ({
                   </button>
                 </>
               }
-              {(isCompatibility || isFore || isForeSlow) &&
+              {(isCompatibility || isFore || isForeSlow || isForeFast) &&
                 <button
                   className={`px-4 py-2 ${showPairPositions ? "bg-[#172935] text-white rounded" : "rounded bg-gray-200"}`}
                   onClick={()=>{setShowPairPositions(!showPairPositions)}}
                 >
-                  {(isFore || isForeSlow) ? "Прогноз": "Аспекты"}
+                  {(isFore || isForeSlow || isForeFast) ? "Прогноз": "Аспекты"}
                 </button>
               }
             </div>

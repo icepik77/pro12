@@ -46,25 +46,26 @@ export default function Home() {
     longitude: "",
     localLatitude: "",
     localLongitude: "",
-    nameComp:"",
-    dateComp:"",
-    timeComp:"",
-    cityComp:"",
-    latitudeComp:"",
-    longitudeComp:"",
+    nameComp: "",
+    dateComp: "",
+    timeComp: "",
+    cityComp: "",
+    latitudeComp: "",
+    longitudeComp: "",
     utcOffset: "",
     utcOffsetComp: "",
 
-    timeFore:"",
-    dateFore:"",
-    utcOffsetFore:"",
+    timeFore: "",
+    dateFore: "",
+    utcOffsetFore: "",
 
     houseSystem: "koch",
     style: "elements", 
     isLocal: false, 
     isCompatibility: false,
     isFore: false, 
-    isForeSlow: false
+    isForeSlow: false, 
+    isForeFast: false
   });
 
   const [planetPositions, setPlanetPositions] = useState<any[]>([]);
@@ -666,8 +667,8 @@ export default function Home() {
                   <PlanetTable planetPositions={compPlanetPositions} />
                 </motion.div>
 
-                {/* Дома медленной прогрессии */}
-                {showPairPositions && birthData.isForeSlow && 
+                {/* Дома медленной и быстрой прогрессии */}
+                {(showPairPositions && birthData.isForeSlow) ||  (birthData.isForeFast && showPairPositions) &&
                   <motion.div
                   className="w-full flex justify-center"
                   initial={{ opacity: 0 }} // Начальная прозрачность
@@ -710,8 +711,8 @@ export default function Home() {
 
             
 
-            {/* Календарь медленной прогрессии */}
-            {showPairPositions && birthData.isForeSlow && 
+            {/* Календарь медленной и быстрой прогрессии */}
+            {(showPairPositions && birthData.isForeSlow) || (showPairPositions && birthData.isForeFast)  && 
               <motion.div
                 className="w-full flex justify-center"
                 initial={{ opacity: 0 }} // Начальная прозрачность

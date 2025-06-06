@@ -65,7 +65,7 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
     utcOffsetComp: "",
 
     timeFore:"12:30:00",
-    dateFore:"01.01.2000",
+    dateFore:"10.01.2000",
     utcOffsetFore:"",
 
     houseSystem: "koch",
@@ -75,12 +75,14 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
     isCompatibility: false,
     isFore: false,
     isForeSlow: false,
+    isForeFast: false
   });
 
   const [isLocal, setIsLocal] = useState(false);
   const [isCompatibility, setIsCompatibility] = useState(false);
   const [isFore, setIsFore] = useState(false);
   const [isForeSlow, setIsForeSlow] = useState(false);
+  const [isForeFast, setIsForeFast] = useState(false);
 
 
   const [errors, setErrors] = useState({
@@ -364,7 +366,7 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
     }
 
     if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset && validateDateTimeUTC(formData.date, formData.time, formData.utcOffset)) {
-      if (isLocal && !isFore && !isForeSlow){
+      if (isLocal && !isFore && !isForeSlow && !isForeFast){
         setBirthData({
           ...formData,
 
@@ -385,7 +387,7 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
           isCompatibility: true
         });
 
-      } else if ((isFore && !isLocal) || (isForeSlow && !isLocal)){
+      } else if ((isFore && !isLocal) || (isForeSlow && !isLocal) || (isForeFast && !isLocal)){
         setLoadAnimation(true);
         setBirthData({
           ...formData,
@@ -399,9 +401,10 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
           longitudeComp: "",
 
           isFore: isFore ? true : false,
-          isForeSlow: isForeSlow ? true : false 
+          isForeSlow: isForeSlow ? true : false, 
+          isForeFast: isForeFast? true : false
         });
-      } else if ((isFore && isLocal) || (isForeSlow && isLocal)){
+      } else if ((isFore && isLocal) || (isForeSlow && isLocal) || (isForeFast && isLocal)){
           setLoadAnimation(true);
           setBirthData({
             ...formData,
@@ -412,6 +415,7 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
 
             isFore: isFore ? true : false,
             isForeSlow: isForeSlow ? true : false, 
+            isForeFast: isForeFast ? true : false,          
             isLocal: true
           });
       }
@@ -591,7 +595,7 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
             }
 
             {/* Чекбокс */}
-            {!isLocal && !isFore && !isForeSlow && 
+            {!isLocal && !isFore && !isForeSlow && !isForeFast &&
               <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
@@ -763,7 +767,7 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
             )}
 
             {/* Чекбокс транзиты*/}
-            {(!isCompatibility && !isForeSlow) &&
+            {(!isCompatibility && !isForeSlow && !isForeFast) &&
               <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
@@ -771,7 +775,8 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
                 onChange={() => {
                   setIsFore(!isFore)
                   if (isCompatibility) setIsCompatibility(!isCompatibility);
-                  if (isForeSlow) setIsCompatibility(!isForeSlow);
+                  if (isForeSlow) setIsForeSlow(!isForeSlow);
+                  if (isForeFast) setIsForeFast(!isForeFast);
                 }}
                 className="w-4 h-4"
               />
@@ -780,7 +785,7 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
             }
 
             {/* Чекбокс медленная прогрессия */}
-            {(!isCompatibility && !isFore) &&
+            {(!isCompatibility && !isFore && !isForeFast) &&
               <label className="flex items-center space-x-2 cursor-pointer ">
               <input
                 type="checkbox"
@@ -788,7 +793,8 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
                 onChange={() => {
                   setIsForeSlow(!isForeSlow)
                   if (isCompatibility) setIsCompatibility(!isCompatibility);
-                  if (isFore) setIsCompatibility(!isFore);
+                  if (isFore) setIsFore(!isFore);
+                  if (isForeFast) setIsForeFast(!isForeFast);
                 }}
                 className="w-4 h-4"
               />
@@ -796,7 +802,25 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
               </label>
             }
 
-            {(isFore || isForeSlow) && (
+            {/* Чекбокс быстрая прогрессия */}
+            {(!isCompatibility && !isFore && !isForeSlow) &&
+              <label className="flex items-center space-x-2 cursor-pointer ">
+              <input
+                type="checkbox"
+                checked={isForeFast}
+                onChange={() => {
+                  setIsForeFast(!isForeFast)
+                  if (isCompatibility) setIsCompatibility(!isCompatibility);
+                  if (isFore) setIsFore(!isFore);
+                  if (isForeSlow) setIsForeSlow(!isForeSlow);
+                }}
+                className="w-4 h-4"
+              />
+              <span>Быстрая прогрессия</span>
+              </label>
+            }
+
+            {(isFore || isForeSlow || isForeFast) && (
               <div className=" px-4 py-0 rounded-lg">
                 {/* Дата, время и UTC в одну строку */}
                 <div className="flex flex-wrap gap-4">
