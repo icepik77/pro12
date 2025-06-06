@@ -73,9 +73,12 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
 
     isLocal: false,
     isCompatibility: false,
+<<<<<<< HEAD
     isFore: false,
     isForeSlow: false,
     isForeFast: false
+=======
+>>>>>>> f50753d7e39c928295ccbf8c739348ba1ad896e8
   });
 
   const [isLocal, setIsLocal] = useState(false);
@@ -366,7 +369,11 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
     }
 
     if (!newErrors.latitude && !newErrors.longitude && !newErrors.utcOffset && validateDateTimeUTC(formData.date, formData.time, formData.utcOffset)) {
+<<<<<<< HEAD
       if (isLocal && !isFore && !isForeSlow && !isForeFast){
+=======
+      if (isLocal){
+>>>>>>> f50753d7e39c928295ccbf8c739348ba1ad896e8
         setBirthData({
           ...formData,
 
@@ -387,6 +394,7 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
           isCompatibility: true
         });
 
+<<<<<<< HEAD
       } else if ((isFore && !isLocal) || (isForeSlow && !isLocal) || (isForeFast && !isLocal)){
         setLoadAnimation(true);
         setBirthData({
@@ -420,6 +428,9 @@ export default function BirthForm({ setBirthData, localTime, setLoadAnimation }:
           });
       }
       else {
+=======
+      } else {
+>>>>>>> f50753d7e39c928295ccbf8c739348ba1ad896e8
         setBirthData({
           ...formData,
 
